@@ -1,0 +1,130 @@
+views:
+  - title: "Vytápění"
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:bar-card
+            title: Kancelář
+            min: 0
+            max: 40
+            entity: sensor.teplota_kancelar
+
+          - type: custom:bar-card
+            title: Kuchyň
+            min: 0
+            max: 40
+            entity: sensor.teplota_kuchyn
+
+          - type: custom:bar-card
+            title: Perfectdoor
+            min: 0
+            max: 40
+            entity: sensor.teplota_perfectdoor
+
+          - type: custom:bar-card
+            title: Kino
+            min: 0
+            max: 40
+            entity: sensor.teplota_kino_temperature
+
+          - type: custom:bar-card
+            title: Kotelna
+            min: 0
+            max: 40
+            entity: sensor.teplota_kotelna
+
+          - type: custom:bar-card
+            title: Serverovna
+            min: 0
+            max: 60
+            entity: sensor.teplota_server
+
+
+#    - type: glance
+#      title: "Osvětlení"
+#      show_name: false
+#      show_state: false
+#      entities:
+#      - entity: light.svetlo_perfect_doors
+#        icon: mdi:spotlight-beam
+#        tap_action:
+#            action: toggle
+
+      - type: glance
+        title: "Vytápění"
+        show_name: true
+        show_state: false
+        entities:
+          - entity: switch.topeni_na_leve_strane
+            icon: mdi:radiator
+            name: "Levá strana"
+            tap_action:
+              action: toggle
+          - entity: switch.topeni_na_prave_strane
+            icon: mdi:radiator
+            name: "Pravá strana"
+            tap_action:
+              action: toggle
+          - entity: switch.levy_kotel
+            icon: mdi:fire
+            name: "Levý kotel"
+            tap_action:
+              action: toggle
+          - entity: switch.pravy_kotel
+            icon: mdi:fire
+            name: "Pravý kotel"
+            tap_action:
+              action: toggle
+
+      - type: horizontal-stack
+        cards:
+          - type: thermostat
+            name: "Hlavní"
+            entity: climate.hlavni
+          - type: thermostat
+            name: "Záloha"
+            entity: climate.zalozni
+
+  - title: "Kamery"
+    id: kamery
+    panel: true
+    cards:
+      - type: horizontal-stack # forces everything to fit in one row
+        cards:
+          - type: vertical-stack # column 1
+            cards:
+              - type: picture-entity
+                entity: camera.kancelar
+                camera_view: live
+              - type: picture-entity
+                entity: camera.prodejna
+                camera_view: live
+          - type: vertical-stack # column 2
+            cards:
+              - type: picture-entity
+                entity: camera.parador
+                camera_view: live
+              - type: picture-entity
+                entity: camera.venek
+                camera_view: live
+          - type: vertical-stack # column 3
+            cards:
+              - type: picture-entity
+                entity: camera.gerflor
+                camera_view: live
+
+  - title: "Úklid"
+    panel: true
+    cards:
+        - type: horizontal-stack # forces everything to fit in one row
+          cards:
+            - type: custom:vacuum-card
+              entity: vacuum.rockrobo
+              map: camera.rockrobo_map
+              actions:
+              - name: 'Úklid chodby'
+                service: script.uklid_chodby
+                icon: mdi:seat-recline-extra
+              - name: 'Úklid prodejny'
+                service: script.uklid_prodejny
+                icon: mdi:hotel

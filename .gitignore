@@ -1,0 +1,12 @@
+# Ignore everything by default
+*
+
+# Don't ignore directories (so we can look inside them, for other files)
+!*/
+
+# Don't ignore these
+!/*.yaml
+!/*.yml
+!/.gitattributes
+!/.gitignore
+secrets.yaml

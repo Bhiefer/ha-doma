@@ -1,0 +1,86 @@
+views:
+  - title: "Raspberry Pi"
+    cards:
+      - type: custom:simple-thermostat
+        entity: climate.termostat_socialky
+        layout:
+          step: row
+        hide:
+          state: true
+        control: false
+        header:
+        name: Sociálky
+      - type: picture-entity
+        entity: camera.evansserver_prodejna
+        camera_view: live
+      - type: glance
+        entities:
+          - entity: binary_sensor.boost_marek
+            name: Marek
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.topeni_boost
+                option: marek
+              target: {}
+          - entity: binary_sensor.boost_zkouska
+            name: Zkouška
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.topeni_boost
+                option: zkouska
+              target: {}
+          - entity: binary_sensor.boost_prodejna
+            name: Prodejna
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.topeni_boost
+                option: prace
+              target: {}
+          - entity: binary_sensor.boost_none
+            name: Vypnutý
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.topeni_boost
+                option: none
+              target: {}
+        show_icon: true
+        state_color: true
+        show_state: false
+        title: Boost
+      - type: horizontal-stack
+        cards:
+          - type: button
+            tap_action:
+              action: toggle
+            entity: switch.svetlo_marek
+            icon: mdi:desktop-classic
+            name: Marek
+          - type: button
+            tap_action:
+              action: call-service
+              service: script.obnov_mod_topeni
+              service_data: {}
+              target: {}
+            entity: input_select.topeni_mod
+            name: Obnov mod topeni
+            show_icon: true
+            icon: mdi:refresh-circle
+          - type: button
+            tap_action:
+              action: toggle
+            entity: switch.primotop_marek
+            icon: mdi:radiator
+            name: Přímotop Marek
+            show_state: true
+      - type: entities
+        entities:
+          - entity: timer.timer_topeni_boost
+            name: Časovač boost

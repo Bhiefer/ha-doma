@@ -1,0 +1,1542 @@
+- id: '1634506864195'
+  name: Pracovní doba
+  entities:
+    climate.hlavni:
+      hvac_modes:
+      - heat
+      - 'off'
+      min_temp: 10
+      max_temp: 23
+      target_temp_step: 0.1
+      preset_modes:
+      - none
+      - away
+      current_temperature: 19.1
+      temperature: 21
+      hvac_action: heating
+      preset_mode: none
+      friendly_name: Hlavní
+      supported_features: 17
+      state: heat
+    climate.zalozni:
+      hvac_modes:
+      - heat
+      - 'off'
+      min_temp: 10
+      max_temp: 23
+      target_temp_step: 0.1
+      preset_modes:
+      - none
+      - away
+      current_temperature: 19.1
+      temperature: 10
+      hvac_action: idle
+      preset_mode: none
+      friendly_name: Záložní
+      supported_features: 17
+      state: heat
+    switch.topeni_na_leve_strane:
+      friendly_name: Topení na levé straně
+      state: 'on'
+    switch.topeni_na_prave_strane:
+      friendly_name: Topení na pravé straně
+      state: 'on'
+    lock.termostat_kino_child_lock:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_child_lock
+      state: unlocked
+    switch.termostat_kino_window_detection:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_window_detection
+      icon: mdi:window-open-variant
+      state: 'on'
+    switch.termostat_kino_valve_detection:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_valve_detection
+      state: 'off'
+    climate.termostat_kino:
+      hvac_modes:
+      - heat
+      - auto
+      - 'off'
+      min_temp: 5
+      max_temp: 35
+      target_temp_step: 0.5
+      preset_modes:
+      - none
+      - away
+      - schedule
+      - manual
+      - boost
+      - complex
+      - comfort
+      - eco
+      current_temperature: 20
+      temperature: 15
+      preset_mode: manual
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino
+      supported_features: 17
+      state: heat
+    switch.termostat_kino_auto_lock:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_auto_lock
+      state: 'off'
+    switch.termostat_kino_away_mode:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_mode
+      state: 'off'
+    number.termostat_kino_away_preset_days:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_preset_days
+      state: '1'
+    number.termostat_kino_boost_time:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_boost_time
+      state: '300'
+    number.termostat_kino_comfort_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_comfort_temperature
+      state: '21'
+    number.termostat_kino_eco_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_eco_temperature
+      state: '15'
+    select.termostat_kino_force:
+      options:
+      - normal
+      - open
+      - close
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_force
+      state: open
+    number.termostat_kino_max_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_max_temperature
+      state: '23'
+    number.termostat_kino_min_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_min_temperature
+      state: '10'
+    select.termostat_kino_week:
+      options:
+      - 5+2
+      - 6+1
+      - '7'
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_week
+      state: 5+2
+    number.termostat_kino_away_preset_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 1
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: manual
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_preset_temperature
+      state: '15'
+  icon: mdi:people
+- id: '1634507251757'
+  name: Volno
+  entities:
+    lock.termostat_kino_child_lock:
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_child_lock
+      state: unlocked
+    switch.termostat_kino_window_detection:
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_window_detection
+      icon: mdi:window-open-variant
+      state: 'on'
+    switch.termostat_kino_valve_detection:
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_valve_detection
+      state: 'off'
+    climate.termostat_kino:
+      hvac_modes:
+      - heat
+      - auto
+      - 'off'
+      min_temp: 5
+      max_temp: 35
+      target_temp_step: 0.5
+      preset_modes:
+      - none
+      - away
+      - schedule
+      - manual
+      - boost
+      - complex
+      - comfort
+      - eco
+      current_temperature: 20
+      temperature: 15
+      preset_mode: away
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino
+      supported_features: 17
+      state: heat
+    switch.termostat_kino_auto_lock:
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_auto_lock
+      state: 'off'
+    switch.termostat_kino_away_mode:
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_mode
+      state: 'on'
+    number.termostat_kino_away_preset_days:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_preset_days
+      state: '10'
+    number.termostat_kino_boost_time:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_boost_time
+      state: '300'
+    number.termostat_kino_comfort_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_comfort_temperature
+      state: '21'
+    number.termostat_kino_eco_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_eco_temperature
+      state: '15'
+    select.termostat_kino_force:
+      options:
+      - normal
+      - open
+      - close
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_force
+      state: open
+    number.termostat_kino_max_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_max_temperature
+      state: '23'
+    number.termostat_kino_min_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_min_temperature
+      state: '10'
+    select.termostat_kino_week:
+      options:
+      - 5+2
+      - 6+1
+      - '7'
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_week
+      state: 5+2
+    number.termostat_kino_away_preset_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'ON'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 15
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: away
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_preset_temperature
+      state: '15'
+    climate.hlavni:
+      hvac_modes:
+      - heat
+      - 'off'
+      min_temp: 10
+      max_temp: 23
+      target_temp_step: 0.1
+      preset_modes:
+      - none
+      - away
+      current_temperature: 19.1
+      temperature: 15
+      hvac_action: idle
+      preset_mode: away
+      friendly_name: Hlavní
+      supported_features: 17
+      state: heat
+    climate.zalozni:
+      hvac_modes:
+      - heat
+      - 'off'
+      min_temp: 10
+      max_temp: 23
+      target_temp_step: 0.1
+      preset_modes:
+      - none
+      - away
+      current_temperature: 19.1
+      temperature: 10
+      hvac_action: idle
+      preset_mode: away
+      friendly_name: Záložní
+      supported_features: 17
+      state: heat
+    switch.topeni_na_leve_strane:
+      friendly_name: Topení na levé straně
+      state: 'on'
+    switch.topeni_na_prave_strane:
+      friendly_name: Topení na pravé straně
+      state: 'on'
+  icon: mdi:bed
+- id: '1634507582362'
+  name: Zkouška
+  entities:
+    lock.termostat_kino_child_lock:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_child_lock
+      state: unlocked
+    switch.termostat_kino_window_detection:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_window_detection
+      icon: mdi:window-open-variant
+      state: 'on'
+    switch.termostat_kino_valve_detection:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_valve_detection
+      state: 'off'
+    climate.termostat_kino:
+      hvac_modes:
+      - heat
+      - auto
+      - 'off'
+      min_temp: 5
+      max_temp: 35
+      target_temp_step: 0.5
+      preset_modes:
+      - none
+      - away
+      - schedule
+      - manual
+      - boost
+      - complex
+      - comfort
+      - eco
+      current_temperature: 20
+      temperature: 21
+      preset_mode: comfort
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino
+      supported_features: 17
+      state: heat
+    switch.termostat_kino_auto_lock:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_auto_lock
+      state: 'off'
+    switch.termostat_kino_away_mode:
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_mode
+      state: 'off'
+    number.termostat_kino_away_preset_days:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_preset_days
+      state: '10'
+    number.termostat_kino_boost_time:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_boost_time
+      state: '300'
+    number.termostat_kino_comfort_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_comfort_temperature
+      state: '21'
+    number.termostat_kino_eco_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_eco_temperature
+      state: '15'
+    select.termostat_kino_force:
+      options:
+      - normal
+      - open
+      - close
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_force
+      state: open
+    number.termostat_kino_max_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_max_temperature
+      state: '23'
+    number.termostat_kino_min_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_min_temperature
+      state: '10'
+    select.termostat_kino_week:
+      options:
+      - 5+2
+      - 6+1
+      - '7'
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_week
+      state: 5+2
+    number.termostat_kino_away_preset_temperature:
+      min: -65535
+      max: 65535
+      step: 1
+      auto_lock: MANUAL
+      away_mode: 'OFF'
+      away_preset_days: 10
+      away_preset_temperature: 15
+      battery_low: false
+      boost_time: 300
+      child_lock: UNLOCK
+      comfort_temperature: 21
+      current_heating_setpoint: 21
+      eco_temperature: 15
+      force: open
+      linkquality: 48
+      local_temperature: 20
+      local_temperature_calibration: 0
+      max_temperature: 23
+      min_temperature: 10
+      position: 100
+      preset: comfort
+      system_mode: heat
+      valve_detection:
+      week: 5+2
+      window_detection: 'ON'
+      window_detection_params:
+        minutes: 11
+        temperature: 3
+      friendly_name: termostat_kino_away_preset_temperature
+      state: '15'
+    climate.hlavni:
+      hvac_modes:
+      - heat
+      - 'off'
+      min_temp: 10
+      max_temp: 23
+      target_temp_step: 0.1
+      preset_modes:
+      - none
+      - away
+      current_temperature: 19.1
+      temperature: 21
+      hvac_action: heating
+      preset_mode: none
+      friendly_name: Hlavní
+      supported_features: 17
+      state: heat
+    climate.zalozni:
+      hvac_modes:
+      - heat
+      - 'off'
+      min_temp: 10
+      max_temp: 23
+      target_temp_step: 0.1
+      preset_modes:
+      - none
+      - away
+      current_temperature: 19.1
+      temperature: 18
+      hvac_action: idle
+      preset_mode: none
+      friendly_name: Záložní
+      supported_features: 17
+      state: heat
+    switch.topeni_na_leve_strane:
+      friendly_name: Topení na levé straně
+      state: 'off'
+    switch.topeni_na_prave_strane:
+      friendly_name: Topení na pravé straně
+      state: 'off'
+  icon: mdi:piano

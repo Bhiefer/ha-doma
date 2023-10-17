@@ -1,0 +1,41 @@
+views:
+  - title: "Nastavení"
+    cards:
+      - type: entities
+        entities:
+          - entity: input_number.teplota_komfort
+          - entity: input_number.teplota_eko
+          - entity: input_number.teplota_boost
+          - entity: input_number.rozdil_kotlu
+          - entity: timer.timer_topeni_boost
+            name: Časovač boost
+      - type: horizontal-stack
+        cards:
+          - show_name: true
+            show_icon: false
+            type: button
+            tap_action:
+              action: call-service
+              service: mqtt.publish
+              data:
+                payload: 'ON'
+                topic: evans/ota_mode
+                qos: '0'
+                retain: true
+              target: {}
+            show_state: false
+            name: Ota Mode ON
+          - show_name: true
+            show_icon: false
+            type: button
+            tap_action:
+              action: call-service
+              service: mqtt.publish
+              data:
+                payload: 'OFF'
+                topic: evans/ota_mode
+                qos: '0'
+                retain: true
+              target: {}
+            show_state: false
+            name: Ota Mode OFF

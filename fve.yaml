@@ -1,0 +1,195 @@
+input_number:
+  fve_denni_spotreba_prumerna_vsedni:
+    name: "FVE Denní spotřeba průměrná všední dny"
+    initial: 25
+    min: 10
+    max: 100
+    step: 1
+    mode: box
+    unit_of_measurement: kWh
+  fve_denni_spotreba_prumerna_vikend:
+    name: "FVE Denní spotřeba průměrná víkend"
+    initial: 14
+    min: 10
+    max: 100
+    step: 1
+    mode: box
+    unit_of_measurement: kWh
+  fve_baterie_kapacita:
+    name: "FVE Baterie kapacita"
+    initial: 14200
+    min: 1000
+    max: 20000
+    step: 10
+    mode: box
+    unit_of_measurement: Wh
+  spot_cena_nizky_tarif:
+    name: "Spot cena"
+    initial: 14
+    min: 10
+    max: 100
+    step: 1
+    mode: slider
+    unit_of_measurement: kWh
+  # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se topit energií ze sítě
+  spot_koeficient_ceny_topeni:
+    name: "Koeficient ceny topení"
+    initial: 100
+    min: 70
+    max: 130
+    step: 5
+    mode: slider
+    unit_of_measurement: "%"
+  # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se nabíjet baterie ze sítě
+  spot_koeficient_ceny_fve:
+    name: "Koeficient ceny FVE"
+    initial: 100
+    min: 70
+    max: 130
+    step: 5
+    mode: slider
+    unit_of_measurement: "%"
+utility_meter:
+  fve_celkova_spotreba_hodinova:
+    source: sensor.fve_celkova_spotreba
+    cycle: hourly
+  fve_celkova_spotreba_denni:
+    source: sensor.fve_celkova_spotreba
+    cycle: daily
+  fve_hodinova:
+    source: sensor.goodwe_total_pv_generation
+    cycle: hourly
+    
+  fve_denni:
+    source: sensor.goodwe_total_pv_generation
+    cycle: daily
+sensor:
+  - platform: integration
+    source: sensor.goodwe_house_consumption
+    name: "FVE Celková spotřeba"
+    unit_prefix: k
+    round: 1
+    method: left
+  - platform: filter
+    name: "Spot Cena elektřiny průměrná 24h"
+    entity_id: sensor.current_spot_electricity_buy_price
+    filters:
+      - filter: outlier
+        window_size: 3
+        radius: 2.0
+      - filter: time_simple_moving_average
+        window_size: "24:00"
+        precision: 2
+  - platform: template
+    sensors:
+    #   cena_elektriny_silova:
+    #     friendly_name: "Cena silové elektřiny"
+    #     value_template: >-
+    #         {% set CURRENT_PRICE = states("sensor.current_spot_electricity_price") | float(0) %}
+    #         {% set STROP = 5 | float %}
+    #         {% if CURRENT_PRICE>STROP %}
+    #           {{STROP}}
+    #         {%- else -%}
+    #           {{CURRENT_PRICE}}
+    #         {%- endif %}
+    #     # {% set STROP = 6.05 | float %}
+    #     unit_of_measurement: "Kč/kWh" 
+      spot_cena_elektriny_distribuce:
+        friendly_name: "Cena distribuce elektřiny"
+        value_template: >-
+          {% if is_state('binary_sensor.spot_nizky_tarif', 'on') %}
+            {{0.174 | float}}
+          {%- else -%}
+            {{0.2 | float}}
+          {%- endif %}
+        unit_of_measurement: "Kč/kWh" 
+      spot_cena_limi_fvet:
+        friendly_name: "Limit ceny elektřiny FVE"
+        value_template: "{{ states('input_number.spot_koeficient_ceny_fve') | float * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
+        unit_of_measurement: "Kč/kWh" 
+      spot_cena_limit_topeni:
+        friendly_name: "Limit ceny elektřiny topení"
+        value_template: "{{ states('input_number.spot_koeficient_ceny_topeni') | float * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
+        unit_of_measurement: "Kč/kWh" 
+      fve_baterie_stav:
+        friendly_name: "FVE Baterie Stav"
+        value_template: >-
+            {% set MODE = states("sensor.goodwe_battery_mode_code") | int(1) %}
+            {% if MODE == 3 | int  %}
+              Nabíjení
+            {% elif MODE == 2 | int  %}
+              Vybíjení
+            {% elif MODE == 1 | int  %}
+              Nečinný
+            {%- else -%}
+              Neznámý
+            {%- endif %}
+      fve_denni_spotreba_prumerna:
+        friendly_name: "FVE Denní spotřeba průměrná"
+        unit_of_measurement: "kWh"
+        value_template: >-
+          {{ states('input_number.fve_denni_spotreba_prumerna_vsedni') if is_state('binary_sensor.pracovni_den', 'on') else states('input_number.fve_denni_spotreba_prumerna_vikend') }}
+      fve_dnes_k_nabiti:
+        friendly_name: "FVE Dnes k nabití"
+        unit_of_measurement: "kWh"
+        value_template: >-
+          {% set denni = states('sensor.fve_denni_spotreba_prumerna') | float(0) %}
+          {{ denni - states('sensor.fve_celkova_spotreba_denni') | float(0) 
+           - states('sensor.energy_production_today_remaining') | float(0) 
+           - states('sensor.fve_baterie_nabito') | float(0)  }}
+    #   fve_dnes_jeste_nasviti:
+    #     friendly_name: "FVE Dnes ještě nasvítí"
+    #     unit_of_measurement: "kWh"
+    #     value_template: >-
+    #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
+      fve_baterie_nabito:
+        friendly_name: "FVE Baterie Nabito"
+        # 14,2 kWh kapacita baterii
+        value_template: >-
+          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * 0.142 }} 
+        unit_of_measurement: "kWh"
+binary_sensor:
+  - platform: template
+    sensors:
+      fve_vybijeni_baterie:
+        value_template: "{{ not(is_state('binary_sensor.fve_nabijeni_ze_site', 'on') or (is_state('binary_sensor.spot_podprumerna_cena_topeni', 'on') and is_state('input_boolean.fve_topeni_na_baterii', 'off'))) }}"
+      fve_nabijeni_ze_site:
+        value_template: "{{ states('sensor.goodwe_battery_state_of_charge') | float(0) < 90 and is_state('binary_sensor.spot_podprumerna_cena_fve', 'on') and states('sensor.energy_current_hour') | float(0) < 0.25}}"
+      fve_dostatecne_nabito:
+        value_template: "{{ states('sensor.fve_dnes_k_nabiti') | float(0) < 0}}"
+      spot_nejlevnejsi_hodina:
+        friendly_name: "Spot Nejlevnější hodina"
+        value_template: >-
+          {{ now().hour == state_attr('sensor.spot_cheapest_electricity_today', 'hour') | int(0) }}
+      spot_nejdrazsi_hodina:
+        friendly_name: "Spot Nejdražší hodina"
+        value_template: >-
+          {{ now().hour == state_attr('sensor.spot_most_expensive_electricity_today', 'hour') | int(0) }}
+      spot_podprumerna_cena_fve:
+        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float < states('sensor.spot_cena_limit_fve') | float }}"
+      spot_podprumerna_cena_topeni:
+        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float < states('sensor.spot_cena_limit_topeni') | float }}"
+      spot_nizky_tarif:
+        friendly_name: "Spot Nízký tarif"
+        value_template: >-
+            {% set state = now() %}
+            {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
+
+recorder:
+  exclude:
+    entity_globs:
+      - sensor.goodwe_*
+  include:
+    entities:
+      - sensor.goodwe_pv_power
+      - sensor.goodwe_battery_state_of_charge
+      - sensor.goodwe_battery_mode
+      - sensor.goodwe_battery_mode_code
+      - sensor.goodwe_battery_power
+      - sensor.goodwe_total_battery_discharge
+      - sensor.goodwe_total_battery_charge
+      - sensor.goodwe_total_pv_generation
+      - sensor.goodwe_meter_total_energy_import
+      - sensor.goodwe_meter_total_energy_export
+      - sensor.goodwe_meter_total_energy_import_cost
+      - sensor.goodwe_meter_total_energy_export_compensation

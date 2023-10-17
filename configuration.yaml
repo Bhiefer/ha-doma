@@ -1,0 +1,1188 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+ffmpeg:
+
+# Example configuration.yaml entry to enable the cloud component
+cloud:
+
+homeassistant:
+  allowlist_external_dirs:
+    - /config
+  packages:
+    fve: !include fve.yaml
+
+# influxdb:
+#   api_version: 2
+#   ssl: false
+#   host: 10.0.0.138
+#   port: 8086
+#   token: "x8QayiPaExMxMh_jFzYx0ljVYeihRqSwl-xREjrMJORwudcDG2J3aHxuTgrxN0CXQwx9wM9eBw4dYP_bJxq-Fg=="
+#   organization: evans
+#   bucket: homeassistant
+
+# Text to speech
+# AIzaSyBUM6lCO9nitHFtF8WKmMuMmP1S6P8Wll4
+tts:
+  - platform: google_translate
+    language: "cs"
+    tld: cz
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+lovelace:
+  mode: storage
+  resources:
+    - url: /hacsfiles/bar-card/bar-card.js
+      type: module
+    - url: /local/vacuum-card.js
+      type: module
+    - url: /local/battery-state-card.js
+      type: module
+#   dashboards:
+#     lovelace-yaml:
+#       mode: yaml
+#       title: Vlastni
+#       icon: mdi:script
+#       show_in_sidebar: true
+#       filename: lovelace.yaml
+#     lovelace-pi:
+#       mode: yaml
+#       title: Raspberry Pi
+#       show_in_sidebar: true
+#       filename: raspi.yaml
+
+# google:
+#   client_id: !secret google_client_id
+#   client_secret: !secret google_secret
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+# vacuum:
+#   - platform: xiaomi_miio
+#     name: Frantisek
+#     host: 10.0.0.32
+#     token: !secret frantisek_token
+
+# camera:
+#   - platform: generic
+#     name: prodejna
+#     stream_source: "rtsp://syno:a31341fc5ab25ed03f4b18ce4a9ff3d0@10.0.0.138:554/Sms=4.unicast"
+
+timer:
+  timer_topeni_boost:
+    duration: "02:00:00"
+input_select:
+  topeni_mod:
+    name: Mód topení
+    options:
+      - volno
+      - prace
+      - marek
+      - kino
+      - zkouska
+      - zima
+      - none
+    icon: mdi:radiator
+
+  topeni_boost:
+    name: Boost topení
+    options:
+      - none
+      - marek
+      - prace
+      - kino
+      - zkouska
+    icon: mdi:fire-circle
+
+counter:
+  plynomer_pocitadlo:
+    initial: 0
+    step: 1
+
+input_number:
+  teplota_komfort:
+    name: "Komfortní teplota"
+    unit_of_measurement: "°C"
+    min: 10
+    max: 25
+    step: 1
+
+  teplota_eko:
+    name: "Eko teplota"
+    unit_of_measurement: "°C"
+    min: 10
+    max: 25
+    step: 1
+
+  teplota_boost:
+    name: "Boost teplota"
+    unit_of_measurement: "°C"
+    min: 10
+    max: 25
+    step: 1
+
+  rozdil_kotlu:
+    name: "Rozdil kotlu"
+    unit_of_measurement: "°C"
+    min: 1
+    max: 5
+    step: 1
+
+input_text:
+  timers_active:
+    name: Active Timers
+    max: 255
+  timers_paused:
+    name: Paused Timers
+    max: 255
+
+schedule:
+  doba_vytapeni_0_schedule:
+    name: "Doba vytapeni 0"
+    monday:
+      - from: "5:00:00"
+        to: "15:30:00"
+    tuesday:
+      - from: "5:00:00"
+        to: "15:30:00"
+    wednesday:
+      - from: "5:00:00"
+        to: "15:30:00"
+    thursday:
+      - from: "5:00:00"
+        to: "17:00:00"
+    friday:
+      - from: "5:00:00"
+        to: "15:30:00"
+
+# utility_meter:
+#   celkova_spotreba_hodinova:
+#     source: sensor.celkova_spotreba
+#     cycle: hourly
+
+#   fve_hodinova:
+#     source: sensor.goodwe_total_pv_generation
+#     cycle: hourly
+
+#   fve_denni:
+#     source: sensor.goodwe_total_pv_generation
+#     cycle: daily
+
+#   celkova_spotreba_denni:
+#     source: sensor.celkova_spotreba
+#     cycle: daily
+
+sensor:
+  #   - platform: wundergroundpws
+  #     api_key: 0f45e6a3ddec4c4985e6a3ddec3c4997
+  #     pws_id: IBAKA11
+  #     numeric_precision: none
+  #     monitored_conditions:
+  #       - temp
+  #       - dewpt
+  #       - heatIndex
+  #   - platform: filesize
+  #     file_paths:
+  #       - /config/home-assistant_v2.db
+  - platform: min_max
+    name: "Teplota nejnižší"
+    type: min
+    entity_ids:
+      - sensor.sonoff_perfectdoor_temperature
+      - sensor.sonoff_kotelna_temperature
+      - sensor.kancelar_teplota
+      - sensor.kino_teplomer_temperature
+      - sensor.marek_ovzdusi_temperature
+      - sensor.teplomer_kuchyn_temperature
+      - sensor.zkusebna_teplomer_temperature
+
+  - platform: min_max
+    name: "Sociálky teplota min"
+    type: min
+    entity_ids:
+      - sensor.marek_ovzdusi_temperature
+      - sensor.kuchyn_teplota
+  - platform: min_max
+    name: "Zkušebna teplota"
+    type: max
+    entity_ids:
+      - sensor.zkusebna_teplomer_temperature
+  - platform: min_max
+    name: "Teplota cílová zkušebna"
+    type: max
+    entity_ids:
+      - sensor.zkusebna_trv_cilova_teplota
+
+    #   {% if now().weekday() in [1,3] and 15 <= now().hour <= 17 -%}
+    #     joga
+    #   {%- elif states('calendar.zbujnik') == 'on' or
+
+  #   - platform: ote_rate
+  #     name: "Cena elektřiny"
+
+  #   - platform: fixer
+  #     api_key: "cff797a88a44c57b2f6fdd6771db5359"
+  #     target: CZK
+
+  #   - platform: statistics
+  #     name: "Cleaned price"
+  #     entity_id: sensor.cena_elektriny_celkem
+  #     state_characteristic: median
+  #     max_age:
+  #       minutes: 120
+
+  #   - platform: statistics
+  #     name: "Meaned price"
+  #     entity_id: sensor.cena_elektriny_celkem
+  #     state_characteristic: mean
+  #     sampling_size: 10
+  #     max_age:
+  #       minutes: 120
+
+  #   - platform: filter
+  #     name: "Cena elektřiny průměrná 18h"
+  #     entity_id: sensor.cena_elektriny_celkem
+  #     filters:
+  #       - filter: outlier
+  #         window_size: 3
+  #         radius: 2.0
+  #       - filter: time_simple_moving_average
+  #         window_size: "18:00"
+  #         precision: 2
+
+  #   - platform: filter
+  #     name: "Cena elektřiny průměrná 24h"
+  #     entity_id: sensor.cena_elektriny_celkem
+  #     filters:
+  #       - filter: outlier
+  #         window_size: 3
+  #         radius: 2.0
+  #       - filter: time_simple_moving_average
+  #         window_size: "24:00"
+  #         precision: 2
+
+  #   - platform: filter
+  #     name: "Cena elektřiny průměrná 36h"
+  #     entity_id: sensor.cena_elektriny_celkem
+  #     filters:
+  #       - filter: outlier
+  #         window_size: 3
+  #         radius: 2.0
+  #       - filter: time_simple_moving_average
+  #         window_size: "36:00"
+  #         precision: 2
+
+  - platform: filter
+    name: "Marek Ovzduší Temperature Filtr"
+    entity_id: sensor.marek_ovzdusi_temperature
+    filters:
+      - filter: lowpass
+        time_constant: 5
+        precision: 2
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "Marek Ovzduší VOC Filtr"
+    entity_id: sensor.marek_ovzdusi_voc
+    filters:
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "Marek Ovzduší Formaldehyd Filtr"
+    entity_id: sensor.marek_ovzdusi_formaldehyd
+    filters:
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "Marek Ovzduší CO2 Filtr"
+    entity_id: sensor.marek_ovzdusi_co2
+    filters:
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "M Koupelna Ovzduší Temperature Filtr"
+    entity_id: sensor.m_koupelna_ovzdusi_temperature
+    filters:
+      - filter: lowpass
+        time_constant: 5
+        precision: 2
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "M Koupelna Ovzduší Humidity Filtr"
+    entity_id: sensor.m_koupelna_ovzdusi_humidity
+    filters:
+      - filter: lowpass
+        time_constant: 5
+        precision: 2
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "M Koupelna Ovzduší Humidity Filtr"
+    entity_id: sensor.m_koupelna_ovzdusi_co2
+    filters:
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "M Koupelna Ovzduší Formaldehyd Filtr"
+    entity_id: sensor.m_koupelna_ovzdusi_formaldehyd
+    filters:
+      - filter: time_throttle
+        window_size: "0:15"
+
+  - platform: filter
+    name: "M Koupelna Ovzduší VOC Filtr"
+    entity_id: sensor.m_koupelna_ovzdusi_voc
+    filters:
+      - filter: time_throttle
+        window_size: "0:15"
+
+  #   - platform: filter
+  #     name: "Kotel peletkový kolmá plnost Filtr"
+  #     entity_id: sensor.zasobnik_plnost_1
+  #     filters:
+  #       - filter: lowpass
+  #         time_constant: 60
+  #   - platform: filter
+  #     name: "Kotel peletkový kolmá plnost Filtr2"
+  #     entity_id: sensor.zasobnik_plnost_1
+  #     filters:
+  #       - filter: lowpass
+  #         time_constant: 30
+  #   - platform: integration
+  #     name: "Celková spotřeba"
+  #     source: sensor.goodwe_pv_power
+  #     unit_prefix: k
+  #     round: 1
+  #     method: left
+  #   # Sensor for Riemann sum of energy bought (W -> Wh)
+  #   - platform: integration
+  #     source: sensor.goodwe_house_consumption
+  #     name: "Celková spotřeba"
+  #     unit_prefix: k
+  #     round: 1
+  #     method: left
+  #   # Sensor for Riemann sum of energy sold (W -> Wh)
+  #   - platform: integration
+  #     source: sensor.energy_sell
+  #     name: "Prodaná energie"
+  #     unit_prefix: k
+  #     round: 1
+  #     method: left
+  # Sensor for Riemann sum of energy bought (W -> Wh)
+  - platform: integration
+    source: sensor.marek_primotop_prikon
+    name: "Marek Přímotop Spotřeba"
+    unit_prefix: k
+    round: 1
+    method: left
+
+    # Sensor for Riemann sum of energy bought (W -> Wh)
+  - platform: integration
+    source: sensor.marek_zasuvka_hlavni_power
+    name: "Marek Zásuvka Spotřeba"
+    unit_prefix: k
+    round: 1
+    method: left
+
+  - platform: statistics
+    name: "Celkem pytlů kolmý"
+    entity_id: sensor.zasobnik_kolmy_pytle
+    state_characteristic: sum_differences_nonnegative
+    max_age:
+      hours: 1
+    precision: 3
+
+  - platform: template
+    sensors:
+      marek_trv_battery:
+        friendly_name: "Marek TRV Baterie"
+        unit_of_measurement: "%"
+        value_template: >-
+          {% if is_state('binary_sensor.marek_trv_battery_low', 'on') %}
+            {{ 20 }}
+          {% else %}
+            {{ 100 }}
+          {% endif %}
+      kino_trv_battery:
+        friendly_name: "Kino TRV Baterie"
+        unit_of_measurement: "%"
+        value_template: >-
+          {% if is_state('binary_sensor.kino_trv_battery_low', 'on') %}
+            {{ 20 }}
+          {% else %}
+            {{ 100 }}
+          {% endif %}
+      kino_trv2_battery:
+        friendly_name: "Kino TRV2 Baterie"
+        unit_of_measurement: "%"
+        value_template: >-
+          {% if is_state('binary_sensor.kino_trv2_battery_low', 'on') %}
+            {{ 20 }}
+          {% else %}
+            {{ 100 }}
+          {% endif %}
+      zkusebna_trv_battery:
+        friendly_name: "Zkušebna TRV Baterie"
+        unit_of_measurement: "%"
+        value_template: >-
+          {% if is_state('binary_sensor.zkusebna_trv_battery_low', 'on') %}
+            {{ 20 }}
+          {% else %}
+            {{ 100 }}
+          {% endif %}
+      #   # Template sensor for values of energy bought (goodwe_active_power < 0)
+      #   energy_buy:
+      #     friendly_name: "Energy Buy"
+      #     unit_of_measurement: 'W'
+      #     value_template: >-
+      #       {% if states('sensor.goodwe_active_power')|float < 0 %}
+      #         {{ states('sensor.goodwe_active_power')|float * -1 }}
+      #       {% else %}
+      #         {{ 0 }}
+      #       {% endif %}
+      #   # Template sensor for values of energy sold (goodwe_active_power > 0)
+      #   energy_sell:
+      #     friendly_name: "Energy Sell"
+      #     unit_of_measurement: 'W'
+      #     value_template: >-
+      #       {% if states('sensor.goodwe_active_power')|float > 0 %}
+      #         {{ states('sensor.goodwe_active_power')|float }}
+      #       {% else %}
+      #         {{ 0 }}
+      #       {% endif %}
+      prodejna_teplota:
+        friendly_name: "Prodejna teplota"
+        value_template: >-
+          {% if is_state('sensor.kancelar_teplota', 'unknown') or is_state('sensor.kancelar_teplota', 'unavailable') %}
+            {{ states('sensor.sonoff_perfectdoor_temperature') }}
+          {% else %}
+            {{ states('sensor.kancelar_teplota') }}
+          {% endif %}
+      socialky_teplota:
+        friendly_name: "Sociálky teplota"
+        value_template: >-
+          {% if is_state('input_select.topeni_mod', 'marek') %}
+            {{ states('sensor.marek_ovzdusi_temperature') }}
+          {% else %}
+            {{ states('sensor.socialky_teplota_min') }}
+          {% endif %}
+      teplota_zdrojova:
+        value_template: >-
+          {% if is_state('input_select.topeni_mod', 'zima' ) %}
+            {{ states('sensor.teplota_nejnizsi') }}
+          {% elif is_state('input_select.topeni_mod', 'kino') %}
+            {{ states('sensor.kino_teplomer_temperature') }}
+          {% elif is_state('input_select.topeni_mod', 'zkouska') %}
+            {{ states('sensor.zkusebna_teplota') }}
+          {% elif is_state('input_select.topeni_mod', 'marek') %}
+            {{ states('sensor.marek_ovzdusi_temperature') }}
+          {% else %}
+            {{ states('sensor.prodejna_teplota') }}
+          {% endif %}
+        unit_of_measurement: "°C"
+      kino_trv_teplota:
+        value_template: "{{ state_attr('climate.kino_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      kino_trv2_teplota:
+        value_template: "{{ state_attr('climate.kino_trv2', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      zkusebna_trv_teplota:
+        value_template: "{{ state_attr('climate.zkusebna_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      zkusebna_trv_cilova_teplota:
+        value_template: "{{ state_attr('climate.zkusebna_trv', 'temperature') }}"
+        unit_of_measurement: "°C"
+      marek_trv_teplota:
+        value_template: "{{ state_attr('climate.marek_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      m_detsky_trv_teplota:
+        value_template: "{{ state_attr('climate.m_detsky_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      m_obyvak_trv_teplota:
+        value_template: "{{ state_attr('climate.m_obyvak_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      m_loznice_trv_teplota:
+        value_template: "{{ state_attr('climate.m_loznice_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      m_kuchyn_trv_teplota:
+        value_template: "{{ state_attr('climate.m_kuchyn_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      kotel_peletkovy_teplota_koure:
+        value_template: "{{ state_attr('climate.kotel_peletkovy', 'smoke_temperature') }}"
+        unit_of_measurement: "°C"
+      kotel_peletkovy_aktualni_vykon:
+        value_template: "{{ state_attr('climate.kotel_peletkovy', 'real_power') }}"
+      kotel_peletkovy_chyba:
+        value_template: "{{ state_attr('climate.kotel_peletkovy', 'alarm_code') }}"
+        #130 - pozastaveno
+        #16 - dosly pelety
+      kotel_peletkovy_stav:
+        value_template: >-
+          {% set stav = state_attr('climate.kotel_peletkovy', 'device_status') %}
+          {% if stav == 0 %}
+            Vypnuto
+          {% elif stav == 1 %}
+            Start
+          {% elif stav == 2 %}
+            Příprava pelet
+          {% elif stav == 3 %}
+            Zapálení
+          {% elif stav == 4 %}
+            Zapnuto
+          {% elif stav == 5 %}
+            Čištění ohniště
+          {% elif stav == 6 %}
+            Konečné čištění
+          {% elif stav == 7 %}
+            Pozastaveno
+          {% elif stav == 8 %}
+            Nedostatek pelet
+          {% elif stav == 9 %}
+            Chyba podpalu
+          {%- else -%}
+            Neznámý
+          {%- endif %}
+      kino_trv_heat:
+        value_template: >-
+          {% if state_attr('climate.kino_trv', 'position') | float > 0 %}
+            on
+          {%- else -%}
+            off
+          {%- endif %}
+      #   cena_elektriny_silova:
+      #     friendly_name: "Cena silové elektřiny"
+      #     value_template: >-
+      #         {% set CURRENT_PRICE = states("sensor.current_spot_electricity_price") | float %}
+      #         {% set STROP = 5 | float %}
+      #         {% if CURRENT_PRICE>STROP %}
+      #           {{STROP}}
+      #         {%- else -%}
+      #           {{CURRENT_PRICE}}
+      #         {%- endif %}
+      #     # {% set STROP = 6.05 | float %}
+      #     unit_of_measurement: "Kč/kWh"
+      #   cena_elektriny_distribuce:
+      #     friendly_name: "Cena distribuce elektřiny"
+      #     value_template: >-
+      #       {% if is_state('binary_sensor.elektrina_nizky_tarif', 'on') %}
+      #         {{0.174 | float}}
+      #       {%- else -%}
+      #         {{1.816 | float}}
+      #       {%- endif %}
+      #     unit_of_measurement: "Kč/kWh"
+      #   cena_elektriny_celkem:
+      #     friendly_name: "Cena elektřiny celkem"
+      #     value_template: >-
+      #       {{( states('sensor.cena_elektriny_silova') | float) + ( states('sensor.cena_elektriny_distribuce') | float)}}
+      #     unit_of_measurement: "Kč/kWh"
+
+      #   cena_elektriny_vykup_celkem:
+      #     friendly_name: "Cena elektřiny výkup celkem"
+      #     value_template: >-
+      #       {{ states('sensor.cena_elektriny_silova') | float * 0.75 }}
+      #     unit_of_measurement: "Kč/kWh"
+
+      spotreba_ostatni:
+        friendly_name: "Spotřeba energie ostatní"
+        value_template: >-
+          {{( states('sensor.goodwe_house_consumption') | float(0)) 
+          - ( states('sensor.bojler_zasuvka_energy_power') | float(0)) 
+          - ( states('sensor.server_zasuvka_power') | float(0)) 
+          - ( states('sensor.marek_zasuvka_hlavni_power') | float(0)) 
+          - ( states('sensor.marek_primotop_prikon') | float(0)) 
+          - ( states('sensor.goodwe_spotreba_stridac') | float(0)) 
+          - ( states('sensor.marek_zasuvka_lednice_power') | float(0))}}
+        unit_of_measurement: "W"
+      goodwe_spotreba_stridac:
+        friendly_name: "Goodwe Spotřeba střídače"
+        value_template: >-
+          {{( states('sensor.goodwe_house_consumption') | float(0)) 
+          - ( states('sensor.goodwe_back_up_load') | float(0)) 
+          - ( states('sensor.goodwe_load') | float(0))}}
+        unit_of_measurement: "W"
+
+template:
+  - sensor:
+      #   - name: "Spot Dnes K Nabití"
+      #     unit_of_measurement: "kWh"
+      #     state: >-
+      #       {% set denni = 25 if is_state('binary_sensor.pracovni_den', 'on') else 14 %}
+      #       {{ denni - states('sensor.celkova_spotreba_denni') | float(0)
+      #       - states('sensor.goodwe_dnes_jeste_nasviti') | float(0)
+      #       - states('sensor.goodwe_baterie_nabito') | float(0)  }}
+      #   - name: "Goodwe dnes ještě nasvítí"
+      #     unit_of_measurement: "kWh"
+      #     state: >-
+      #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
+      #   - name: "Goodwe Baterie Nabito"
+      #     # 10,65 kWh kapacita baterii
+      #     state: >-
+      #       {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * 0.1065 }}
+      #     unit_of_measurement: "kWh"
+      - name: "Plynoměr"
+        unique_id: plynomer_stav
+        state: >-
+          {{( states('counter.plynomer_pocitadlo') | float(0)) * 0.1 }}
+        unit_of_measurement: "m³"
+        device_class: gas
+        state_class: total_increasing
+      - name: "Plynoměr kWh"
+        unique_id: plynomer_stav_kwh
+        state: >-
+          {{( states('counter.plynomer_pocitadlo') | float(0)) * 1.055 }}
+        unit_of_measurement: "kWh"
+        device_class: gas
+        state_class: total_increasing
+
+    #   - name: "Cena elektřiny průměrná 24h snížená"
+    #     state: >-
+    #       {{( states('sensor.cena_elektriny_prumerna_24h') | float(0) * 0.8) }}
+    #     unit_of_measurement: "Kč/kWh"
+  - binary_sensor:
+      - name: "Topení Prodejna"
+        state: >-
+          {{ on }}
+  - binary_sensor:
+      - name: "Topení Vlevo"
+        state: >-
+          {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}
+  - binary_sensor:
+      - name: "Topení Sociálky"
+        state: >-
+          {{ is_state_attr('climate.kuchyn_termostat', 'hvac_action','heating') or is_state_attr('climate.marek_termostat', 'hvac_action','heating') }}
+
+  - binary_sensor:
+      - name: "Topení Vpravo"
+        state: >-
+          {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
+binary_sensor:
+  #   - platform: workday
+  #     country: CZ
+  #     add_holidays:
+  #       - "2021-10-29"
+  - platform: template
+    sensors:
+      # spot_dostatecne_nabito:
+      #   value_template: "{{ states('sensor.spot_dnes_k_nabiti') | float(0) < 0}}"
+      pracovni_den:
+        value_template: "{{ is_state('binary_sensor.workday_sensor', 'on') and is_state('calendar.evans_volno', 'off') }}"
+      pracovni_doba:
+        value_template: "{{ is_state('binary_sensor.pracovni_den', 'on') and is_state('schedule.doba_pracovni', 'on') }}"
+      boost_marek:
+        value_template: "{{ is_state('input_select.topeni_boost', 'marek') }}"
+      boost_zkouska:
+        value_template: "{{ is_state('input_select.topeni_boost', 'zkouska') }}"
+      boost_prodejna:
+        value_template: "{{ is_state('input_select.topeni_boost', 'prace') }}"
+      boost_kino:
+        value_template: "{{ is_state('input_select.topeni_boost', 'kino') }}"
+      boost_none:
+        value_template: "{{ is_state('input_select.topeni_boost', 'none') }}"
+      # podprumerna_cena_24h:
+      #   value_template: "{{ states('sensor.cena_elektriny_celkem') | float(0) < states('sensor.cena_elektriny_prumerna_24h_snizena') | float(0) }}"
+      # elektrina_nizky_tarif:
+      #     friendly_name: "Elektřína Nízký tarif"
+      #     value_template: >-
+      #       {% set state = now() %}
+      #       {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
+
+switch:
+  - platform: template
+    switches:
+      kino_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.kino_trv', 'hvac_action','heating') and is_state_attr('climate.kino_trv2', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          - service: script.zapnout_trv
+            data:
+              trv: climate.kino_trv
+          - service: script.zapnout_trv
+            data:
+              trv: climate.kino_trv2
+        turn_off:
+          - service: script.vypnout_trv
+            data:
+              trv: climate.kino_trv
+          - service: script.vypnout_trv
+            data:
+              trv: climate.kino_trv2
+      marek_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.marek_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.marek_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.marek_trv
+      zkusebna_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.zkusebna_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.zkusebna_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.zkusebna_trv
+      kuchyn_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.kuchyn_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.kuchyn_trv
+      m_obyvak_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.m_obyvak_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.m_obyvak_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.m_obyvak_trv
+      m_kuchyn_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.m_kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.m_kuchyn_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.m_kuchyn_trv
+      m_loznice_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.m_loznice_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.m_loznice_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.m_loznice_trv
+      m_detsky_termostat_spinac:
+        value_template: "{% if is_state_attr('climate.m_detsky_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: script.zapnout_trv
+          data:
+            trv: climate.m_detsky_trv
+        turn_off:
+          service: script.vypnout_trv
+          data:
+            trv: climate.m_detsky_trv
+      topeni_hlavni_spinac:
+        value_template: >-
+          {% set state = states('input_select.topeni_kotel_hlavni') %}
+          {% if state == "Plynový kondenzační" %}
+            {{ states('switch.sonoff_kotelna3') }}
+          {% elif state == "Plynový starý" %}
+            {{ states('switch.sonoff_kotelna2') }}
+          {%- else -%}
+            {{ states('switch.sonoff_kotelna4') }}
+          {%- endif %}
+        turn_on:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_hlavni
+                    state: "Plynový kondenzační"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.sonoff_kotelna3
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_hlavni
+                    state: "Plynový starý"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.sonoff_kotelna2
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_hlavni
+                    state: "Peletkový"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.sonoff_kotelna4
+        turn_off:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_hlavni
+                    state: "Plynový kondenzační"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: switch.sonoff_kotelna3
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_hlavni
+                    state: "Plynový starý"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: switch.sonoff_kotelna2
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_hlavni
+                    state: "Peletkový"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: switch.sonoff_kotelna4
+      topeni_zalozni_spinac:
+        value_template: >-
+          {% set state = states('input_select.topeni_kotel_zalozni') %}
+          {% if state == "Plynový kondenzační" %}
+            {{ states('switch.sonoff_kotelna3') }}
+          {% elif state == "Plynový starý" %}
+            {{ states('switch.sonoff_kotelna2') }}
+          {%- else -%}
+            {{ states('switch.sonoff_kotelna4') }}
+          {%- endif %}
+        turn_on:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_zalozni
+                    state: "Plynový kondenzační"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.sonoff_kotelna3
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_zalozni
+                    state: "Plynový starý"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.sonoff_kotelna2
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_zalozni
+                    state: "Peletkový"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: switch.sonoff_kotelna4
+        turn_off:
+          - choose:
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_zalozni
+                    state: "Plynový kondenzační"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: switch.sonoff_kotelna3
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_zalozni
+                    state: "Plynový starý"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: switch.sonoff_kotelna2
+              - conditions:
+                  - condition: state
+                    entity_id: input_select.topeni_kotel_zalozni
+                    state: "Peletkový"
+                sequence:
+                  - service: switch.turn_off
+                    target:
+                      entity_id: switch.sonoff_kotelna4
+
+climate:
+  - platform: generic_thermostat
+    name: "Kotel hlavní"
+    heater: switch.topeni_hlavni_spinac
+    target_sensor: sensor.teplota_zdrojova
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 1.0
+    hot_tolerance: 1.0
+    min_cycle_duration:
+      minutes: 20
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Kotel záložní"
+    heater: switch.topeni_zalozni_spinac
+    target_sensor: sensor.teplota_zdrojova
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 16
+    cold_tolerance: 1.0
+    hot_tolerance: 1.0
+    min_cycle_duration:
+      minutes: 20
+    away_temp: 10
+
+  #   - platform: generic_thermostat
+  #     name: "Peletkový"
+  #     heater: switch.sonoff_kotelna4
+  #     target_sensor: sensor.teplota_zdrojova
+  #     min_temp: 10
+  #     max_temp: 23
+  #     ac_mode: false
+  #     target_temp: 16
+  #     cold_tolerance: 1.0
+  #     hot_tolerance: 1.0
+  #     min_cycle_duration:
+  #       minutes: 20
+  #     away_temp: 10
+
+  - platform: generic_thermostat
+    name: "Sociálky termostat"
+    heater: switch.sonoff_gerflor
+    target_sensor: sensor.socialky_teplota
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    min_cycle_duration:
+      minutes: 1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Prodejna termostat"
+    heater: switch.sonoff_kotelna1
+    target_sensor: sensor.prodejna_teplota
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    min_cycle_duration:
+      minutes: 1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Marek Termostat Přímotop"
+    heater: switch.marek_primotop_prepinac
+    target_sensor: sensor.marek_ovzdusi_temperature
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    min_cycle_duration:
+      minutes: 1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Marek Termostat"
+    heater: switch.marek_termostat_spinac
+    target_sensor: sensor.marek_ovzdusi_temperature_filtr
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.3
+    hot_tolerance: 0.3
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Kino Termostat"
+    heater: switch.kino_termostat_spinac
+    target_sensor: sensor.kino_teplomer_temperature
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Zkušebna Termostat"
+    heater: switch.zkusebna_termostat_spinac
+    target_sensor: sensor.zkusebna_trv_teplota
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Kuchyň Termostat"
+    heater: switch.kuchyn_termostat_spinac
+    target_sensor: sensor.kuchyn_teplota
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "M Obývák Termostat"
+    heater: switch.m_obyvak_termostat_spinac
+    target_sensor: sensor.m_obyvak_teplomer_temperature
+    min_temp: 5
+    max_temp: 25
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "M Kuchyň Termostat"
+    heater: switch.m_kuchyn_termostat_spinac
+    target_sensor: sensor.m_obyvak_teplomer_temperature
+    min_temp: 5
+    max_temp: 25
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "M Ložnice Termostat"
+    heater: switch.m_loznice_termostat_spinac
+    target_sensor: sensor.m_loznice_trv_teplota
+    min_temp: 5
+    max_temp: 25
+    ac_mode: false
+    target_temp: 19
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "M Dětský Termostat"
+    heater: switch.m_detsky_termostat_spinac
+    target_sensor: sensor.m_detsky_trv_teplota
+    min_temp: 5
+    max_temp: 25
+    ac_mode: false
+    target_temp: 19
+    cold_tolerance: 0.1
+    hot_tolerance: 0.1
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+recorder:
+  purge_keep_days: 3
+  auto_repack: true
+  auto_purge: true
+  commit_interval: 60
+  exclude:
+    domains:
+      - device_tracker
+      - media_player
+      - uptime
+      - time_date
+      - worldclock
+      - automation
+      - button
+    entities:
+      - automation.m_obyvak_lampa_prepni
+      - alarm_control_panel.dvere_alarm
+      - automation.aktualizace_planovace
+      - binary_sensor.octoprint_printing_error
+      - binary_sensor.plynomer_impuls
+      - binary_sensor.workday_sensor
+      - binary_sensor.updater
+      - sensor.marek_ovzdusi_humidity
+      - climate.marek_termostat_primotop
+      - sensor.marek_ovzdusi_temperature
+      - sensor.tasmota_wifi_connect_count_2
+      - sensor.tasmota_mqtt_connect_count_2
+      - sensor.tasmota_ssid_2
+      - sensor.timestamp
+      - counter.plynomer_pocitadlo
+
+    entity_globs:
+      - binary_sensor.boost*
+      - binary_sensor.evansserver*
+      - binary_sensor.*_battery_low
+      - binary_sensor.*_window_open
+      - binary_sensor.*_is_charging
+      - binary_sensor.*_is_charging
+      - sensor.marek_ovzdusi_*
+      - sensor.vstup_zasuvka_*
+      - sensor.naradi_zasuvka_*
+      - sensor.m_koupelna_ovzdusi_*
+    #   - sensor.goodwe_*
+  include:
+    entities:
+      - automation.nabijeni_baterie
+      - automation.nabijeni_baterie_stop
+      - automation.kotelna_prehrata_voda
+      #   - sensor.goodwe_pv_power
+      #   - sensor.goodwe_battery_state_of_charge
+      #   - sensor.goodwe_battery_mode
+      #   - sensor.goodwe_battery_mode_code
+      #   - sensor.goodwe_battery_power
+      #   - sensor.goodwe_total_battery_discharge
+      #   - sensor.goodwe_total_battery_charge
+      #   - sensor.goodwe_house_consumption
+      #   - sensor.goodwe_total_pv_generation
+      #   - sensor.goodwe_meter_total_energy_import
+      #   - sensor.goodwe_meter_total_energy_export
+      #   - sensor.goodwe_meter_total_energy_import_cost
+      #   - sensor.goodwe_meter_total_energy_export_compensation
+      - sensor.m_koupelna_ovzdusi_humidity_filtr
+      - sensor.m_koupelna_ovzdusi_temperature_filtr
+      - sensor.m_koupelna_ovzdusi_co2_filtr
+      - sensor.m_koupelna_ovzdusi_formaldehyd_filtr
+      - sensor.m_koupelna_ovzdusi_voc_filtr
+      - sensor.marek_ovzdusi_co2_filtr
+      - sensor.marek_ovzdusi_formaldehyd_filtr
+      - sensor.marek_ovzdusi_temperature_filtr
+      - sensor.marek_ovzdusi_voc_filtr

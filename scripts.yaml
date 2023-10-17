@@ -1,0 +1,266 @@
+zapnout_trv:
+  alias: Zapnuti TRV termostatu
+  mode: queued
+  sequence:
+  - service: climate.turn_on
+    target:
+      entity_id: '{{trv}}'
+  - delay: 3
+  - service: climate.set_preset_mode
+    target:
+      entity_id: '{{trv}}'
+    data:
+      preset_mode: manual
+vypnout_trv:
+  alias: Vypnuti TRV termostatu
+  mode: queued
+  sequence:
+  - service: climate.set_preset_mode
+    target:
+      entity_id: '{{trv}}'
+    data:
+      preset_mode: manual
+  - delay: 3
+  - service: climate.turn_off
+    target:
+      entity_id: '{{trv}}'
+google_home_tts_screen:
+  alias: Google Home - Send TTS with picture and information
+  description: Script to send a TTS with picture and text to a player with screen
+  icon: mdi:cast-audio
+  mode: parallel
+  max: 20
+  sequence:
+  - alias: Version number
+    variables:
+      version: 2.0.1
+  - wait_for_trigger:
+    - platform: event
+      event_type: call_service
+      event_data:
+        domain: media_player
+        service: play_media
+        service_data:
+          media_content_type: music
+          entity_id: '{{ [ dummy_player ] }}'
+  - alias: Send TTS message with picture
+    service: media_player.play_media
+    target:
+      entity_id: '{{ target }}'
+    data:
+      media_content_id: '{{ wait.trigger.event.data.service_data.media_content_id
+        }}'
+      media_content_type: music
+      extra:
+        metadata:
+          metadataType: 3
+          title: '{{ large_text }}'
+          artist: '{{ small_text }}'
+          images:
+          - url: '{{ picture_url }}'
+dinner_ready:
+  alias: TTS with picture when dinner is ready
+  icon: mdi:food
+  sequence:
+  - alias: Call the script with the additional data as script variables
+    service: script.turn_on
+    target:
+      entity_id: script.google_home_tts_screen
+    data:
+      variables:
+        dummy_player: media_player.vlc_telnet
+        target: media_player.nesthubd799
+        large_text: DINNER!
+        small_text: Pelety dochazi
+        picture_url: http://10.0.0.42:8123/local/pelety.jpg
+  - alias: Send the TTS service call to the dummy player
+    service: tts.google_translate_say
+    target:
+      entity_id: media_player.vlc_telnet
+    data:
+      message: Problém s kotlem. Problém s kotlem. Problém s kotlem
+      cache: false
+  mode: single
+restart_modu_topeni:
+  alias: Restart módu topení
+  description: Nastav mod topeni na výchozí hodnotu. Při restartu HA se tak hodnoty
+    správně aktualizují.
+  sequence:
+  - delay: 90
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.topeni_mod
+    data:
+      option: zima
+  - delay: 10
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.topeni_mod
+    data:
+      option: volno
+zmena_kotle:
+  alias: Nastavení módu topení po změně kotle
+  sequence:
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.topeni_boost
+    data:
+      option: none
+  - delay: 3
+  - service: script.obnov_mod_topeni
+obnov_mod_topeni:
+  sequence:
+  - service: input_select.select_option
+    target:
+      entity_id: input_select.topeni_mod
+    data:
+      option: "{% if (states('sensor.teplota_nejnizsi')|float < states('input_number.teplota_kriticka')|float
+        )%}\n  zima\n{% elif is_state('input_select.topeni_boost', 'marek') %}\n  marek\n{%
+        elif is_state('input_select.topeni_boost', 'kino') or states('calendar.kinosalek')
+        == 'on'  -%}\n  kino\n{% elif is_state('input_select.topeni_boost', 'zkouska')
+        or states('calendar.zkusebna') == 'on' -%}\n  zkouska\n{%- elif is_state('input_select.topeni_boost',
+        'prace') or (is_state('binary_sensor.workday_sensor', 'on') and states('calendar.evans_volno')
+        != 'on' and states('schedule.doba_vytapeni_0_schedule') == 'on') -%}\n  prace\n{%-
+        else -%}\n  volno\n{%- endif %}"
+uklid_chodby:
+  alias: Úklid chodby
+  sequence:
+  - service: vacuum.send_command
+    data:
+      entity_id: vacuum.rockrobo
+      command: app_zoned_clean
+      params:
+        zone_ids:
+        - Chodba
+uklid_prodejny:
+  alias: Úklid prodejny
+  sequence:
+  - service: vacuum.send_command
+    data:
+      entity_id: vacuum.rockrobo
+      command: app_zoned_clean
+      params:
+        zone_ids:
+        - Prodejna
+notifikace_urgentni:
+  alias: Notifikace - urgentní
+  sequence:
+  - service: notify.mobile_app_marek_mobil
+    data:
+      message: TTS
+      data:
+        ttl: 0
+        priority: high
+        media_stream: alarm_stream
+        tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava
+          }} Ťuk ťuk!" '
+      title: Chyba kotle
+  - service: notify.mobile_app_filip_mobil
+    data:
+      message: TTS
+      data:
+        ttl: 0
+        priority: high
+        media_stream: alarm_stream
+        tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava
+          }} Ťuk ťuk!" '
+      title: Chyba kotle
+  - service: tts.google_translate_say
+    target:
+      entity_id: media_player.nesthubd799
+    data:
+      message: Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk
+        ťuk!
+      cache: false
+  - device_id: 2dfa5ffcae33a17cfd8a076db390f90e
+    domain: mobile_app
+    type: notify
+    message: '{{ zprava }}'
+  - device_id: a8fb4761989faaf6c0af70569f1fed10
+    domain: mobile_app
+    type: notify
+    message: '{{ zprava }}'
+  mode: queued
+  icon: mdi:bell-alert
+  max: 10
+alarm_vstup:
+  alias: Alarm - Vstup
+  sequence:
+  - device_id: 1460a61b527fc67df2ae70213f560539
+    domain: select
+    entity_id: 94116a90e1ff6afd5124f9ffad2b6a1c
+    type: select_option
+    option: low
+  - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+    domain: select
+    entity_id: cb7a49370b3e1fcc9fd56722ce9176b5
+    type: select_option
+    option: low
+  - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+    domain: select
+    entity_id: e8de016425940dd53e58a33162e03a3d
+    type: select_option
+    option: medium
+  - device_id: 9703f8d0e4d197d3a920ac7da7161382
+    domain: select
+    entity_id: 4406031d50fa737f15a13b0527209da5
+    type: select_option
+    option: medium
+  - device_id: 1460a61b527fc67df2ae70213f560539
+    domain: number
+    entity_id: baf6aba8678528e558c1cbec267dc6f5
+    type: set_value
+    value: 4
+  - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+    domain: number
+    entity_id: 082e6947d3baac557c15244a7929957c
+    type: set_value
+    value: 4
+  - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+    domain: number
+    entity_id: acdca289f4139cf13b1395625fb41f22
+    type: set_value
+    value: 4
+  - device_id: 9703f8d0e4d197d3a920ac7da7161382
+    domain: number
+    entity_id: 701216167974a2f42cc3759e9842bd8e
+    type: set_value
+    value: 4
+  - device_id: 1460a61b527fc67df2ae70213f560539
+    domain: select
+    entity_id: de27d9c9716aff79bde437c7931af5a4
+    type: select_option
+    option: '18'
+  - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+    domain: select
+    entity_id: 23fe7777abb063b4c5b73f1a8c290a27
+    type: select_option
+    option: '18'
+  - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+    domain: select
+    entity_id: cb1b4ce6ff0001168fbe8e0f3ee787ad
+    type: select_option
+    option: '18'
+  - device_id: 9703f8d0e4d197d3a920ac7da7161382
+    domain: select
+    entity_id: e508ebeae8666d8c7b401720d9b646cc
+    type: select_option
+    option: '18'
+  - type: turn_on
+    device_id: 1460a61b527fc67df2ae70213f560539
+    entity_id: 85293a758b717b69874741ad9f843a46
+    domain: switch
+  - type: turn_on
+    device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+    entity_id: 1ceb8cb7c0206de48a7202ee66fbcabf
+    domain: switch
+  - type: turn_on
+    device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+    entity_id: 83d6c481aa3a20ae78ff40520965d9a5
+    domain: switch
+  - type: turn_on
+    device_id: 9703f8d0e4d197d3a920ac7da7161382
+    entity_id: 049695d77ed30cb1063c48c5db6fb0c2
+    domain: switch
+  mode: single
+  icon: mdi:alarm-light
