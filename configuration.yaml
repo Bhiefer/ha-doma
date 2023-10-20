@@ -171,7 +171,7 @@ sensor:
         time_constant: 5
         precision: 2
       - filter: time_throttle
-        window_size: "0:15"
+        window_size: "0:05"
 
   - platform: filter
     name: "Marek Ovzduší VOC Filtr"
@@ -265,7 +265,7 @@ sensor:
         friendly_name: "Marek TRV Baterie"
         unit_of_measurement: "%"
         value_template: >-
-          {% if is_state('binary_sensor.marek_trv_x_battery_low', 'on') %}
+          {% if is_state('binary_sensor.marek_trv_battery_low', 'on') %}
             {{ 20 }}
           {% else %}
             {{ 100 }}
@@ -340,7 +340,7 @@ sensor:
         value_template: "{{ state_attr('climate.zkusebna_trv', 'temperature') }}"
         unit_of_measurement: "°C"
       marek_trv_teplota:
-        value_template: "{{ state_attr('climate.marek_trv_x', 'current_temperature') }}"
+        value_template: "{{ state_attr('climate.marek_trv', 'current_temperature') }}"
         unit_of_measurement: "°C"
       m_detsky_trv_teplota:
         value_template: "{{ state_attr('climate.m_detsky_trv', 'current_temperature') }}"
@@ -434,7 +434,9 @@ template:
         state_class: total_increasing
   - binary_sensor:
       - name: "Topení Prodejna"
-        state: "on"
+        state: >-
+          # TODO vymenit termostaty az budou v prodejne a v kanclu
+          {{ is_state('binary_sensor.prodejna_stul_termostat', 'on') or is_state_attr('climate.prodejna_parador_termostat', 'hvac_action','heating') }}
       - name: "Topení Vlevo"
         state: >-
           {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}
@@ -482,15 +484,15 @@ switch:
             data:
               trv: climate.kino_trv2
       marek_termostat_spinac:
-        value_template: "{% if is_state_attr('climate.marek_trv_x', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        value_template: "{% if is_state_attr('climate.marek_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
           service: script.zapnout_trv
           data:
-            trv: climate.marek_trv_x
+            trv: climate.marek_trv
         turn_off:
           service: script.vypnout_trv
           data:
-            trv: climate.marek_trv_x
+            trv: climate.marek_trv
       zkusebna_termostat_spinac:
         value_template: "{% if is_state_attr('climate.zkusebna_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -705,20 +707,6 @@ climate:
       minutes: 20
     away_temp: 10
 
-  #   - platform: generic_thermostat
-  #     name: "Peletkový"
-  #     heater: switch.sonoff_kotelna4
-  #     target_sensor: sensor.teplota_zdrojova
-  #     min_temp: 10
-  #     max_temp: 23
-  #     ac_mode: false
-  #     target_temp: 16
-  #     cold_tolerance: 1.0
-  #     hot_tolerance: 1.0
-  #     min_cycle_duration:
-  #       minutes: 20
-  #     away_temp: 10
-
   - platform: generic_thermostat
     name: "Sociálky termostat"
     heater: switch.sonoff_gerflor
@@ -768,6 +756,48 @@ climate:
     away_temp: 13
 
   - platform: generic_thermostat
+    name: "Prodejna Stul Termostat"
+    heater: switch.prodejna_rele_topeni_l1
+    target_sensor: sensor.sonoff_perfectdoor_temperature
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Prodejna Stul Termostat"
+    heater: switch.prodejna_rele_topeni_l1
+    target_sensor: sensor.sonoff_perfectdoor_temperature
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
+    name: "Prodejna Parador Termostat"
+    heater: switch.prodejna_rele_topeni_l2
+    target_sensor: sensor.sonoff_perfectdoor_temperature
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  - platform: generic_thermostat
     name: "Marek Termostat"
     heater: switch.marek_termostat_spinac
     target_sensor: sensor.marek_ovzdusi_temperature_filtr
@@ -775,8 +805,8 @@ climate:
     max_temp: 23
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.3
-    hot_tolerance: 0.3
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
@@ -789,8 +819,8 @@ climate:
     max_temp: 23
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
@@ -798,13 +828,13 @@ climate:
   - platform: generic_thermostat
     name: "Zkušebna Termostat"
     heater: switch.zkusebna_termostat_spinac
-    target_sensor: sensor.zkusebna_trv_teplota
+    target_sensor: sensor.zkusebna_teplomer_temperature
     min_temp: 5
     max_temp: 23
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
@@ -817,8 +847,8 @@ climate:
     max_temp: 23
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
@@ -831,12 +861,11 @@ climate:
     max_temp: 25
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
-
   - platform: generic_thermostat
     name: "M Kuchyň Termostat"
     heater: switch.m_kuchyn_termostat_spinac
@@ -845,8 +874,8 @@ climate:
     max_temp: 25
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
@@ -859,8 +888,8 @@ climate:
     max_temp: 25
     ac_mode: false
     target_temp: 19
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13
@@ -873,8 +902,8 @@ climate:
     max_temp: 25
     ac_mode: false
     target_temp: 19
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     keep_alive:
       hours: 3
     away_temp: 13

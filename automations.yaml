@@ -1182,3 +1182,27 @@
       domain: light
       brightness_pct: 30
   mode: single
+- id: '1697801575296'
+  alias: Topení Prodejna Ventil
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.topeni_prodejna
+  condition: []
+  action:
+  - if:
+    - condition: state
+      entity_id: binary_sensor.topeni_prodejna
+      state: 'on'
+    then:
+    - type: turn_on
+      device_id: 510eb7e429584a311435891b3123cca7
+      entity_id: c731b4200bbb60fd7711d79ff38a5bb0
+      domain: switch
+    else:
+    - type: turn_off
+      device_id: 510eb7e429584a311435891b3123cca7
+      entity_id: c731b4200bbb60fd7711d79ff38a5bb0
+      domain: switch
+  mode: single
