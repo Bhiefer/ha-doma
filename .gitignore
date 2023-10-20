@@ -9,4 +9,5 @@
 !/*.yml
 !/.gitattributes
 !/.gitignore
+!/fve/fve.yaml
 secrets.yaml

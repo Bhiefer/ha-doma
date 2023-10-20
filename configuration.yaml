@@ -10,7 +10,7 @@ homeassistant:
   allowlist_external_dirs:
     - /config
   packages:
-    fve: !include fve.yaml
+    fve: !include fve/fve.yaml
 
 # influxdb:
 #   api_version: 2

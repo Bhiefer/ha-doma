@@ -59,7 +59,7 @@ utility_meter:
   fve_hodinova:
     source: sensor.goodwe_total_pv_generation
     cycle: hourly
-    
+
   fve_denni:
     source: sensor.goodwe_total_pv_generation
     cycle: daily
@@ -82,18 +82,18 @@ sensor:
         precision: 2
   - platform: template
     sensors:
-    #   cena_elektriny_silova:
-    #     friendly_name: "Cena silové elektřiny"
-    #     value_template: >-
-    #         {% set CURRENT_PRICE = states("sensor.current_spot_electricity_price") | float(0) %}
-    #         {% set STROP = 5 | float %}
-    #         {% if CURRENT_PRICE>STROP %}
-    #           {{STROP}}
-    #         {%- else -%}
-    #           {{CURRENT_PRICE}}
-    #         {%- endif %}
-    #     # {% set STROP = 6.05 | float %}
-    #     unit_of_measurement: "Kč/kWh" 
+      #   cena_elektriny_silova:
+      #     friendly_name: "Cena silové elektřiny"
+      #     value_template: >-
+      #         {% set CURRENT_PRICE = states("sensor.current_spot_electricity_price") | float(0) %}
+      #         {% set STROP = 5 | float %}
+      #         {% if CURRENT_PRICE>STROP %}
+      #           {{STROP}}
+      #         {%- else -%}
+      #           {{CURRENT_PRICE}}
+      #         {%- endif %}
+      #     # {% set STROP = 6.05 | float %}
+      #     unit_of_measurement: "Kč/kWh"
       spot_cena_elektriny_distribuce:
         friendly_name: "Cena distribuce elektřiny"
         value_template: >-
@@ -102,28 +102,28 @@ sensor:
           {%- else -%}
             {{0.2 | float}}
           {%- endif %}
-        unit_of_measurement: "Kč/kWh" 
+        unit_of_measurement: "Kč/kWh"
       spot_cena_limi_fvet:
         friendly_name: "Limit ceny elektřiny FVE"
         value_template: "{{ states('input_number.spot_koeficient_ceny_fve') | float * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
-        unit_of_measurement: "Kč/kWh" 
+        unit_of_measurement: "Kč/kWh"
       spot_cena_limit_topeni:
         friendly_name: "Limit ceny elektřiny topení"
         value_template: "{{ states('input_number.spot_koeficient_ceny_topeni') | float * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
-        unit_of_measurement: "Kč/kWh" 
+        unit_of_measurement: "Kč/kWh"
       fve_baterie_stav:
         friendly_name: "FVE Baterie Stav"
         value_template: >-
-            {% set MODE = states("sensor.goodwe_battery_mode_code") | int(1) %}
-            {% if MODE == 3 | int  %}
-              Nabíjení
-            {% elif MODE == 2 | int  %}
-              Vybíjení
-            {% elif MODE == 1 | int  %}
-              Nečinný
-            {%- else -%}
-              Neznámý
-            {%- endif %}
+          {% set MODE = states("sensor.goodwe_battery_mode_code") | int(1) %}
+          {% if MODE == 3 | int  %}
+            Nabíjení
+          {% elif MODE == 2 | int  %}
+            Vybíjení
+          {% elif MODE == 1 | int  %}
+            Nečinný
+          {%- else -%}
+            Neznámý
+          {%- endif %}
       fve_denni_spotreba_prumerna:
         friendly_name: "FVE Denní spotřeba průměrná"
         unit_of_measurement: "kWh"
@@ -137,16 +137,16 @@ sensor:
           {{ denni - states('sensor.fve_celkova_spotreba_denni') | float(0) 
            - states('sensor.energy_production_today_remaining') | float(0) 
            - states('sensor.fve_baterie_nabito') | float(0)  }}
-    #   fve_dnes_jeste_nasviti:
-    #     friendly_name: "FVE Dnes ještě nasvítí"
-    #     unit_of_measurement: "kWh"
-    #     value_template: >-
-    #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
+      #   fve_dnes_jeste_nasviti:
+      #     friendly_name: "FVE Dnes ještě nasvítí"
+      #     unit_of_measurement: "kWh"
+      #     value_template: >-
+      #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
       fve_baterie_nabito:
         friendly_name: "FVE Baterie Nabito"
         # 14,2 kWh kapacita baterii
         value_template: >-
-          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * 0.142 }} 
+          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * 0.142 }}
         unit_of_measurement: "kWh"
 binary_sensor:
   - platform: template
@@ -172,8 +172,8 @@ binary_sensor:
       spot_nizky_tarif:
         friendly_name: "Spot Nízký tarif"
         value_template: >-
-            {% set state = now() %}
-            {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
+          {% set state = now() %}
+          {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
 
 recorder:
   exclude:
