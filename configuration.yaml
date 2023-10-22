@@ -78,33 +78,33 @@ counter:
     step: 1
 
 input_number:
-  teplota_komfort:
-    name: "Komfortní teplota"
-    unit_of_measurement: "°C"
-    min: 10
-    max: 25
-    step: 1
+  # teplota_komfort:
+  #   name: "Komfortní teplota"
+  #   unit_of_measurement: "°C"
+  #   min: 10
+  #   max: 25
+  #   step: 1
 
-  teplota_eko:
-    name: "Eko teplota"
-    unit_of_measurement: "°C"
-    min: 10
-    max: 25
-    step: 1
+  # teplota_eko:
+  #   name: "Eko teplota"
+  #   unit_of_measurement: "°C"
+  #   min: 10
+  #   max: 25
+  #   step: 1
 
-  teplota_boost:
-    name: "Boost teplota"
-    unit_of_measurement: "°C"
-    min: 10
-    max: 25
-    step: 1
+  # teplota_boost:
+  #   name: "Boost teplota"
+  #   unit_of_measurement: "°C"
+  #   min: 10
+  #   max: 25
+  #   step: 1
 
-  rozdil_kotlu:
-    name: "Rozdil kotlu"
-    unit_of_measurement: "°C"
-    min: 1
-    max: 5
-    step: 1
+  # rozdil_kotlu:
+  #   name: "Rozdil kotlu"
+  #   unit_of_measurement: "°C"
+  #   min: 1
+  #   max: 5
+  #   step: 1
 
 input_text:
   timers_active:
@@ -295,36 +295,6 @@ sensor:
           {% else %}
             {{ 100 }}
           {% endif %}
-      # prodejna_teplota:
-      #   friendly_name: "Prodejna teplota"
-      #   value_template: >-
-      #     {% if is_state('sensor.kancelar_teplota', 'unknown') or is_state('sensor.kancelar_teplota', 'unavailable') %}
-      #       {{ states('sensor.sonoff_perfectdoor_temperature') }}
-      #     {% else %}
-      #       {{ states('sensor.kancelar_teplota') }}
-      #     {% endif %}
-      # socialky_teplota:
-      #   friendly_name: "Sociálky teplota"
-      #   value_template: >-
-      #     {% if is_state('input_select.topeni_mod', 'marek') %}
-      #       {{ states('sensor.marek_ovzdusi_temperature') }}
-      #     {% else %}
-      #       {{ states('sensor.socialky_teplota_min') }}
-      #     {% endif %}
-      # teplota_zdrojova:
-      #   value_template: >-
-      #     {% if is_state('input_select.topeni_mod', 'zima' ) %}
-      #       {{ states('sensor.teplota_nejnizsi') }}
-      #     {% elif is_state('input_select.topeni_mod', 'kino') %}
-      #       {{ states('sensor.kino_teplomer_temperature') }}
-      #     {% elif is_state('input_select.topeni_mod', 'zkouska') %}
-      #       {{ states('sensor.zkusebna_teplota') }}
-      #     {% elif is_state('input_select.topeni_mod', 'marek') %}
-      #       {{ states('sensor.marek_ovzdusi_temperature') }}
-      #     {% else %}
-      #       {{ states('sensor.prodejna_teplota') }}
-      #     {% endif %}
-      #   unit_of_measurement: "°C"
       kino_trv_teplota:
         value_template: "{{ state_attr('climate.kino_trv', 'current_temperature') }}"
         unit_of_measurement: "°C"
@@ -567,15 +537,15 @@ switch:
           data:
             trv: climate.zkusebna_trv
       kuchyn_termostat_spinac:
-        value_template: "{% if is_state_attr('climate.kuchyn_trv_x', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        value_template: "{% if is_state_attr('climate.kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
           service: script.zapnout_trv
           data:
-            trv: climate.kuchyn_trv_x
+            trv: climate.kuchyn_trv
         turn_off:
           service: script.vypnout_trv
           data:
-            trv: climate.kuchyn_trv_x
+            trv: climate.kuchyn_trv
       m_obyvak_termostat_spinac:
         value_template: "{% if is_state_attr('climate.m_obyvak_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
