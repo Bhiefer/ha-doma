@@ -295,33 +295,7 @@ sensor:
           {% else %}
             {{ 100 }}
           {% endif %}
-      kino_trv_teplota:
-        value_template: "{{ state_attr('climate.kino_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      kino_trv2_teplota:
-        value_template: "{{ state_attr('climate.kino_trv2', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      zkusebna_trv_teplota:
-        value_template: "{{ state_attr('climate.zkusebna_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      zkusebna_trv_cilova_teplota:
-        value_template: "{{ state_attr('climate.zkusebna_trv', 'temperature') }}"
-        unit_of_measurement: "°C"
-      marek_trv_teplota:
-        value_template: "{{ state_attr('climate.marek_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      m_detsky_trv_teplota:
-        value_template: "{{ state_attr('climate.m_detsky_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      m_obyvak_trv_teplota:
-        value_template: "{{ state_attr('climate.m_obyvak_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      m_loznice_trv_teplota:
-        value_template: "{{ state_attr('climate.m_loznice_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
-      m_kuchyn_trv_teplota:
-        value_template: "{{ state_attr('climate.m_kuchyn_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
+
       kotel_peletkovy_teplota_koure:
         value_template: "{{ state_attr('climate.kotel_peletkovy', 'smoke_temperature') }}"
         unit_of_measurement: "°C"
@@ -365,9 +339,10 @@ sensor:
             off
           {%- endif %}
 
-      spotreba_ostatni:
-        friendly_name: "Spotřeba energie ostatní"
-        value_template: >-
+template:
+  - sensor:
+      - name: "Spotřeba ostatní"
+        state: >-
           {{( states('sensor.goodwe_house_consumption') | float(0)) 
           - ( states('sensor.bojler_zasuvka_energy_power') | float(0)) 
           - ( states('sensor.server_zasuvka_power') | float(0)) 
@@ -376,16 +351,12 @@ sensor:
           - ( states('sensor.goodwe_spotreba_stridac') | float(0)) 
           - ( states('sensor.marek_zasuvka_lednice_power') | float(0))}}
         unit_of_measurement: "W"
-      goodwe_spotreba_stridac:
-        friendly_name: "Goodwe Spotřeba střídače"
-        value_template: >-
+      - name: "Goodwe Spotřeba střídač"
+        state: >-
           {{( states('sensor.goodwe_house_consumption') | float(0)) 
           - ( states('sensor.goodwe_back_up_load') | float(0)) 
           - ( states('sensor.goodwe_load') | float(0))}}
         unit_of_measurement: "W"
-
-template:
-  - sensor:
       - name: "Plynoměr"
         unique_id: plynomer_stav
         state: >-
@@ -400,6 +371,42 @@ template:
         unit_of_measurement: "kWh"
         device_class: gas
         state_class: total_increasing
+      - name: "Topení Kotel Teplota Vody"
+        # {{ 21 + (80-21)*((( state_attr('weather.evans', 'temperature')-21)/(-12-21))**(1/2)) | int(0) }}
+        state: >-
+          {% set t = (21 + 59*((( state_attr('weather.evans', 'temperature')-21)/-33)**(0.5))) | int(0) %}
+          {% if t < 50 %}
+            {{ 50 | int }}
+          {% elif t > 80 %}
+            {{ 80 | int }}
+          {%- else -%}
+            {{ t | int }}
+          {%- endif %}
+      - name: "Kino TRV teplota"
+        state: "{{ state_attr('climate.kino_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "Kino TRV2 teplota"
+        state: "{{ state_attr('climate.kino_trv2', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "Zkušebna TRV teplota"
+        state: "{{ state_attr('climate.zkusebna_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "Marek TRV teplota"
+        state: "{{ state_attr('climate.marek_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "M Dětský TRV teplota"
+        state: "{{ state_attr('climate.m_detsky_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "M Obyvak TRV teplota"
+        state: "{{ state_attr('climate.m_obyvak_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "M Loznice TRV teplota"
+        state: "{{ state_attr('climate.m_loznice_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "M Kuchyň TRV teplota"
+        state: "{{ state_attr('climate.m_kuchyn_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+
   - binary_sensor:
       - name: "Topení Mód Volno"
         state: "{{ is_state_attr('climate.kancelar_termostat', 'hvac_action','heating') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}"
@@ -455,23 +462,20 @@ template:
           {{ is_state('binary_sensor.topeni_socialky', 'on') or is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
       - name: "Topení Peletkový Kotel Chyba"
         state: "off"
-binary_sensor:
-  - platform: template
-    sensors:
-      pracovni_den:
-        value_template: "{{ is_state('binary_sensor.workday_sensor', 'on') and is_state('calendar.evans_volno', 'off') }}"
-      pracovni_doba:
-        value_template: "{{ is_state('binary_sensor.pracovni_den', 'on') and is_state('schedule.doba_pracovni', 'on') }}"
-      boost_marek:
-        value_template: "{{ is_state('input_select.topeni_boost', 'marek') }}"
-      boost_zkouska:
-        value_template: "{{ is_state('input_select.topeni_boost', 'zkouska') }}"
-      boost_prodejna:
-        value_template: "{{ is_state('input_select.topeni_boost', 'prace') }}"
-      boost_kino:
-        value_template: "{{ is_state('input_select.topeni_boost', 'kino') }}"
-      boost_none:
-        value_template: "{{ is_state('input_select.topeni_boost', 'none') }}"
+      - name: "Pracovní den"
+        state: "{{ is_state('binary_sensor.workday_sensor', 'on') and is_state('calendar.evans_volno', 'off') }}"
+      - name: "Pracovní doba"
+        state: "{{ is_state('binary_sensor.pracovni_den', 'on') and is_state('schedule.doba_pracovni', 'on') }}"
+      - name: "Boost Marek"
+        state: "{{ is_state('input_select.topeni_boost', 'marek') }}"
+      - name: "Boost Zkouška"
+        state: "{{ is_state('input_select.topeni_boost', 'zkouska') }}"
+      - name: "Boost Prodejna"
+        state: "{{ is_state('input_select.topeni_boost', 'prace') }}"
+      - name: "Boost Kino"
+        state: "{{ is_state('input_select.topeni_boost', 'kino') }}"
+      - name: "Boost none"
+        state: "{{ is_state('input_select.topeni_boost', 'none') }}"
 
 switch:
   - platform: template
@@ -723,34 +727,6 @@ switch:
                       entity_id: switch.sonoff_kotelna4
 
 climate:
-  # - platform: generic_thermostat
-  #   name: "Kotel hlavní"
-  #   heater: switch.topeni_hlavni_spinac
-  #   target_sensor: sensor.teplota_zdrojova
-  #   min_temp: 5
-  #   max_temp: 23
-  #   ac_mode: false
-  #   target_temp: 21
-  #   cold_tolerance: 1.0
-  #   hot_tolerance: 1.0
-  #   min_cycle_duration:
-  #     minutes: 20
-  #   away_temp: 13
-
-  # - platform: generic_thermostat
-  #   name: "Kotel záložní"
-  #   heater: switch.topeni_zalozni_spinac
-  #   target_sensor: sensor.teplota_zdrojova
-  #   min_temp: 5
-  #   max_temp: 23
-  #   ac_mode: false
-  #   target_temp: 16
-  #   cold_tolerance: 1.0
-  #   hot_tolerance: 1.0
-  #   min_cycle_duration:
-  #     minutes: 20
-  #   away_temp: 10
-
   - platform: generic_thermostat
     name: "Marek Termostat Přímotop"
     heater: switch.marek_primotop_prepinac
