@@ -264,3 +264,12 @@ alarm_vstup:
     domain: switch
   mode: single
   icon: mdi:alarm-light
+hloupy:
+  alias: Hloupý
+  sequence:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 1
+  mode: single

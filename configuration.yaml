@@ -170,8 +170,6 @@ sensor:
       - filter: lowpass
         time_constant: 5
         precision: 2
-      - filter: time_throttle
-        window_size: "0:05"
 
   - platform: filter
     name: "Marek Ovzduší VOC Filtr"
@@ -433,10 +431,12 @@ template:
         device_class: gas
         state_class: total_increasing
   - binary_sensor:
+      - name: "Topení Kotel Volno"
+        state: "{{ is_state_attr('climate.prodejna_stul_termostat', 'hvac_action','heating') or is_state_attr('climate.prodejna_parador_termostat', 'hvac_action','heating') }}"
+
+      # TODO vymenit termostaty az budou v prodejne a v kanclu
       - name: "Topení Prodejna"
-        state: >-
-          # TODO vymenit termostaty az budou v prodejne a v kanclu
-          {{ is_state('binary_sensor.prodejna_stul_termostat', 'on') or is_state_attr('climate.prodejna_parador_termostat', 'hvac_action','heating') }}
+        state: "{{ is_state_attr('climate.prodejna_stul_termostat', 'hvac_action','heating') or is_state_attr('climate.prodejna_parador_termostat', 'hvac_action','heating') }}"
       - name: "Topení Vlevo"
         state: >-
           {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}
@@ -445,7 +445,7 @@ template:
           {{ is_state_attr('climate.kuchyn_termostat', 'hvac_action','heating') or is_state_attr('climate.marek_termostat', 'hvac_action','heating') }}
       - name: "Topení Vpravo"
         state: >-
-          {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
+          {{ is_state('binary_sensor.topeni_socialky', 'on') or is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
 binary_sensor:
   - platform: template
     sensors:
@@ -467,6 +467,30 @@ binary_sensor:
 switch:
   - platform: template
     switches:
+      termohlavice_pavla:
+        value_template: "on"
+        turn_on:
+          - service: script.hloupy
+        turn_off:
+          - service: script.hloupy
+      termohlavice_ivan:
+        value_template: "on"
+        turn_on:
+          - service: script.hloupy
+        turn_off:
+          - service: script.hloupy
+      termohlavice_kancelar:
+        value_template: "on"
+        turn_on:
+          - service: script.hloupy
+        turn_off:
+          - service: script.hloupy
+      termohlavice_prodejna_recepce:
+        value_template: "on"
+        turn_on:
+          - service: script.hloupy
+        turn_off:
+          - service: script.hloupy
       kino_termostat_spinac:
         value_template: "{% if is_state_attr('climate.kino_trv', 'hvac_action','heating') and is_state_attr('climate.kino_trv2', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -708,38 +732,6 @@ climate:
     away_temp: 10
 
   - platform: generic_thermostat
-    name: "Sociálky termostat"
-    heater: switch.sonoff_gerflor
-    target_sensor: sensor.socialky_teplota
-    min_temp: 5
-    max_temp: 23
-    ac_mode: false
-    target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
-    min_cycle_duration:
-      minutes: 1
-    keep_alive:
-      hours: 3
-    away_temp: 13
-
-  - platform: generic_thermostat
-    name: "Prodejna termostat"
-    heater: switch.sonoff_kotelna1
-    target_sensor: sensor.prodejna_teplota
-    min_temp: 5
-    max_temp: 23
-    ac_mode: false
-    target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
-    min_cycle_duration:
-      minutes: 1
-    keep_alive:
-      hours: 3
-    away_temp: 13
-
-  - platform: generic_thermostat
     name: "Marek Termostat Přímotop"
     heater: switch.marek_primotop_prepinac
     target_sensor: sensor.marek_ovzdusi_temperature
@@ -747,18 +739,64 @@ climate:
     max_temp: 23
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.1
-    hot_tolerance: 0.1
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
     min_cycle_duration:
       minutes: 1
     keep_alive:
       hours: 3
     away_temp: 13
 
+    # TODO Pridat thermohlavici
   - platform: generic_thermostat
-    name: "Prodejna Stul Termostat"
-    heater: switch.prodejna_rele_topeni_l1
-    target_sensor: sensor.sonoff_perfectdoor_temperature
+    name: "Prodejna Recepce Termostat"
+    heater: switch.termohlavice_prodejna_recepce
+    target_sensor: sensor.prodejna_recepce_teplomer_temperature
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+    # TODO Pridat thermohlavici
+  - platform: generic_thermostat
+    name: "Kancelar Termostat"
+    heater: switch.termohlavice_kancelar
+    target_sensor: sensor.kancelar_teplota
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+  # TODO Pridat teplomer a thermohlavici
+  - platform: generic_thermostat
+    name: "Pavla Termostat"
+    heater: switch.termohlavice_pavla
+    target_sensor: sensor.kancelar_teplota
+    min_temp: 5
+    max_temp: 23
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 0.5
+    hot_tolerance: 0.5
+    keep_alive:
+      hours: 3
+    away_temp: 13
+
+    # TODO Pridat teplomer a thermohlavici
+  - platform: generic_thermostat
+    name: "Ivan Termostat"
+    heater: switch.termohlavice_ivan
+    target_sensor: sensor.kancelar_teplota
     min_temp: 5
     max_temp: 23
     ac_mode: false
