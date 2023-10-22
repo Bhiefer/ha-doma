@@ -105,11 +105,11 @@ sensor:
         unit_of_measurement: "Kč/kWh"
       spot_cena_limi_fvet:
         friendly_name: "Limit ceny elektřiny FVE"
-        value_template: "{{ states('input_number.spot_koeficient_ceny_fve') | float * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
+        value_template: "{{ states('input_number.spot_koeficient_ceny_fve') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
         unit_of_measurement: "Kč/kWh"
       spot_cena_limit_topeni:
         friendly_name: "Limit ceny elektřiny topení"
-        value_template: "{{ states('input_number.spot_koeficient_ceny_topeni') | float * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
+        value_template: "{{ states('input_number.spot_koeficient_ceny_topeni') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
         unit_of_measurement: "Kč/kWh"
       fve_baterie_stav:
         friendly_name: "FVE Baterie Stav"
@@ -166,9 +166,9 @@ binary_sensor:
         value_template: >-
           {{ now().hour == state_attr('sensor.spot_most_expensive_electricity_today', 'hour') | int(0) }}
       spot_podprumerna_cena_fve:
-        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float < states('sensor.spot_cena_limit_fve') | float }}"
+        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_fve') | float(0) }}"
       spot_podprumerna_cena_topeni:
-        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float < states('sensor.spot_cena_limit_topeni') | float }}"
+        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
       spot_nizky_tarif:
         friendly_name: "Spot Nízký tarif"
         value_template: >-
