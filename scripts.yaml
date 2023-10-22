@@ -82,7 +82,7 @@ dinner_ready:
       cache: false
   mode: single
 restart_modu_topeni:
-  alias: Restart módu topení
+  alias: Topení - Restart módu
   description: Nastav mod topeni na výchozí hodnotu. Při restartu HA se tak hodnoty
     správně aktualizují.
   sequence:
@@ -98,6 +98,8 @@ restart_modu_topeni:
       entity_id: input_select.topeni_mod
     data:
       option: volno
+  mode: single
+  icon: mdi:restart
 zmena_kotle:
   alias: Nastavení módu topení po změně kotle
   sequence:
@@ -273,3 +275,42 @@ hloupy:
       seconds: 0
       milliseconds: 1
   mode: single
+topeni_kotel_zapnout:
+  alias: Topení - Kotel zapnout
+  sequence:
+  - if:
+    - condition: state
+      entity_id: binary_sensor.topeni_peletkovy_kotel_chyba
+      state: 'on'
+    then:
+    - type: turn_on
+      device_id: 3a54f78f0b1d25a04e0d19ef481febff
+      entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+      domain: switch
+    - type: turn_off
+      device_id: 3a54f78f0b1d25a04e0d19ef481febff
+      entity_id: 55b3b2a4c43968757835dad1da5e8c33
+      domain: switch
+    else:
+    - type: turn_on
+      device_id: 3a54f78f0b1d25a04e0d19ef481febff
+      entity_id: 55b3b2a4c43968757835dad1da5e8c33
+      domain: switch
+    - type: turn_off
+      device_id: 3a54f78f0b1d25a04e0d19ef481febff
+      entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+      domain: switch
+  mode: single
+topeni_kotel_vypnout:
+  alias: Topení - Kotel vypnout
+  sequence:
+  - type: turn_off
+    device_id: 3a54f78f0b1d25a04e0d19ef481febff
+    entity_id: 55b3b2a4c43968757835dad1da5e8c33
+    domain: switch
+  - type: turn_off
+    device_id: 3a54f78f0b1d25a04e0d19ef481febff
+    entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+    domain: switch
+  mode: single
+  icon: mdi:heating-coil
