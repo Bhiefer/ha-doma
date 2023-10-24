@@ -167,9 +167,8 @@ sensor:
     name: "Marek Ovzduší Temperature Filtr"
     entity_id: sensor.marek_ovzdusi_temperature
     filters:
-      - filter: lowpass
-        time_constant: 5
-        precision: 2
+      - filter: time_throttle
+        window_size: "0:03"
 
   - platform: filter
     name: "Marek Ovzduší VOC Filtr"
@@ -286,15 +285,6 @@ sensor:
           {% else %}
             {{ 100 }}
           {% endif %}
-      zkusebna_trv_battery:
-        friendly_name: "Zkušebna TRV Baterie"
-        unit_of_measurement: "%"
-        value_template: >-
-          {% if is_state('binary_sensor.zkusebna_trv_battery_low', 'on') %}
-            {{ 20 }}
-          {% else %}
-            {{ 100 }}
-          {% endif %}
 
       kotel_peletkovy_teplota_koure:
         value_template: "{{ state_attr('climate.kotel_peletkovy', 'smoke_temperature') }}"
@@ -382,6 +372,8 @@ template:
           {%- else -%}
             {{ t | int }}
           {%- endif %}
+        unit_of_measurement: "°C"
+        device_class: temperature
       - name: "Kino TRV teplota"
         state: "{{ state_attr('climate.kino_trv', 'current_temperature') }}"
         unit_of_measurement: "°C"
@@ -405,6 +397,9 @@ template:
         unit_of_measurement: "°C"
       - name: "M Kuchyň TRV teplota"
         state: "{{ state_attr('climate.m_kuchyn_trv', 'current_temperature') }}"
+        unit_of_measurement: "°C"
+      - name: "Venek teplota"
+        state: "{{ state_attr('weather.evans', 'temperature') }}"
         unit_of_measurement: "°C"
 
   - binary_sensor:
@@ -480,30 +475,6 @@ template:
 switch:
   - platform: template
     switches:
-      termohlavice_pavla:
-        value_template: "off"
-        turn_on:
-          - service: script.hloupy
-        turn_off:
-          - service: script.hloupy
-      termohlavice_ivan:
-        value_template: "off"
-        turn_on:
-          - service: script.hloupy
-        turn_off:
-          - service: script.hloupy
-      termohlavice_kancelar:
-        value_template: "off"
-        turn_on:
-          - service: script.hloupy
-        turn_off:
-          - service: script.hloupy
-      termohlavice_prodejna_recepce:
-        value_template: "off"
-        turn_on:
-          - service: script.hloupy
-        turn_off:
-          - service: script.hloupy
       kino_termostat_spinac:
         value_template: "{% if is_state_attr('climate.kino_trv', 'hvac_action','heating') and is_state_attr('climate.kino_trv2', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -601,130 +572,6 @@ switch:
           - service: script.topeni_kotel_zapnout
         turn_off:
           - service: script.topeni_kotel_vypnout
-      topeni_hlavni_spinac:
-        value_template: >-
-          {% set state = states('input_select.topeni_kotel_hlavni') %}
-          {% if state == "Plynový kondenzační" %}
-            {{ states('switch.sonoff_kotelna3') }}
-          {% elif state == "Plynový starý" %}
-            {{ states('switch.sonoff_kotelna2') }}
-          {%- else -%}
-            {{ states('switch.sonoff_kotelna4') }}
-          {%- endif %}
-        turn_on:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_hlavni
-                    state: "Plynový kondenzační"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: switch.sonoff_kotelna3
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_hlavni
-                    state: "Plynový starý"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: switch.sonoff_kotelna2
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_hlavni
-                    state: "Peletkový"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: switch.sonoff_kotelna4
-        turn_off:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_hlavni
-                    state: "Plynový kondenzační"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: switch.sonoff_kotelna3
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_hlavni
-                    state: "Plynový starý"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: switch.sonoff_kotelna2
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_hlavni
-                    state: "Peletkový"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: switch.sonoff_kotelna4
-      topeni_zalozni_spinac:
-        value_template: >-
-          {% set state = states('input_select.topeni_kotel_zalozni') %}
-          {% if state == "Plynový kondenzační" %}
-            {{ states('switch.sonoff_kotelna3') }}
-          {% elif state == "Plynový starý" %}
-            {{ states('switch.sonoff_kotelna2') }}
-          {%- else -%}
-            {{ states('switch.sonoff_kotelna4') }}
-          {%- endif %}
-        turn_on:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_zalozni
-                    state: "Plynový kondenzační"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: switch.sonoff_kotelna3
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_zalozni
-                    state: "Plynový starý"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: switch.sonoff_kotelna2
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_zalozni
-                    state: "Peletkový"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: switch.sonoff_kotelna4
-        turn_off:
-          - choose:
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_zalozni
-                    state: "Plynový kondenzační"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: switch.sonoff_kotelna3
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_zalozni
-                    state: "Plynový starý"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: switch.sonoff_kotelna2
-              - conditions:
-                  - condition: state
-                    entity_id: input_select.topeni_kotel_zalozni
-                    state: "Peletkový"
-                sequence:
-                  - service: switch.turn_off
-                    target:
-                      entity_id: switch.sonoff_kotelna4
 
 climate:
   - platform: generic_thermostat
@@ -732,7 +579,7 @@ climate:
     heater: switch.marek_primotop_prepinac
     target_sensor: sensor.marek_ovzdusi_temperature
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -746,10 +593,10 @@ climate:
     # TODO Pridat thermohlavici
   - platform: generic_thermostat
     name: "Prodejna Recepce Termostat"
-    heater: switch.termohlavice_prodejna_recepce
+    heater: switch.kancelar_rele_l2
     target_sensor: sensor.prodejna_recepce_teplomer_temperature
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -761,10 +608,10 @@ climate:
     # TODO Pridat thermohlavici
   - platform: generic_thermostat
     name: "Kancelar Termostat"
-    heater: switch.termohlavice_kancelar
+    heater: switch.kancelar_rele_l1
     target_sensor: sensor.kancelar_teplota
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -776,10 +623,10 @@ climate:
   # TODO Pridat teplomer a thermohlavici
   - platform: generic_thermostat
     name: "Pavla Termostat"
-    heater: switch.termohlavice_pavla
-    target_sensor: sensor.kancelar_teplota
+    heater: input_boolean.pavla_trv_temp
+    target_sensor: sensor.pavla_teplomer_teplota
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -791,10 +638,10 @@ climate:
     # TODO Pridat teplomer a thermohlavici
   - platform: generic_thermostat
     name: "Ivan Termostat"
-    heater: switch.termohlavice_ivan
-    target_sensor: sensor.kancelar_teplota
+    heater: input_boolean.ivan_trv_temp
+    target_sensor: sensor.ivan_teplomer_teplota
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -805,10 +652,10 @@ climate:
 
   - platform: generic_thermostat
     name: "Prodejna Stul Termostat"
-    heater: switch.prodejna_rele_topeni_l1
-    target_sensor: sensor.sonoff_perfectdoor_temperature
+    heater: switch.prodejna_rele_topeni_l4
+    target_sensor: sensor.prodejna_parador_teplomer_temperature
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -819,10 +666,10 @@ climate:
 
   - platform: generic_thermostat
     name: "Prodejna Parador Termostat"
-    heater: switch.prodejna_rele_topeni_l2
-    target_sensor: sensor.sonoff_perfectdoor_temperature
+    heater: switch.prodejna_rele_topeni_l3
+    target_sensor: sensor.prodejna_parador_teplomer_temperature
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -836,7 +683,7 @@ climate:
     heater: switch.marek_termostat_spinac
     target_sensor: sensor.marek_ovzdusi_temperature_filtr
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -850,7 +697,7 @@ climate:
     heater: switch.kino_termostat_spinac
     target_sensor: sensor.kino_teplomer_temperature
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -864,7 +711,7 @@ climate:
     heater: switch.zkusebna_termostat_spinac
     target_sensor: sensor.zkusebna_teplomer_temperature
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5
@@ -875,10 +722,10 @@ climate:
 
   - platform: generic_thermostat
     name: "Kuchyň Termostat"
-    heater: switch.kuchyn_termostat_spinac
+    heater: switch.skladek_rele_kuchyn_trv
     target_sensor: sensor.kuchyn_teplota
     min_temp: 5
-    max_temp: 23
+    max_temp: 26
     ac_mode: false
     target_temp: 21
     cold_tolerance: 0.5

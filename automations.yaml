@@ -296,71 +296,6 @@
     entity_id: light.m_lampa_obyvak
     domain: light
   mode: single
-- id: '1670792209711'
-  alias: Vypnuti plynoveho kondenzacniho kotle
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - input_select.topeni_kotel_hlavni
-    from: Plynový kondenzační
-  - platform: state
-    entity_id:
-    - input_select.topeni_kotel_zalozni
-    from: Plynový kondenzační
-  condition: []
-  action:
-  - service: switch.turn_off
-    data: {}
-    target:
-      entity_id: switch.sonoff_kotelna3
-  - service: script.zmena_kotle
-    data: {}
-  mode: single
-- id: '1670792327499'
-  alias: Vypnuti plynoveho stareho kotle
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - input_select.topeni_kotel_hlavni
-    from: Plynový starý
-  - platform: state
-    entity_id:
-    - input_select.topeni_kotel_zalozni
-    from: Plynový starý
-  condition: []
-  action:
-  - service: switch.turn_off
-    data: {}
-    target:
-      entity_id: switch.sonoff_kotelna2
-  - service: script.zmena_kotle
-    data: {}
-  mode: single
-- id: '1670792505854'
-  alias: Vypnuti peletkoveho kotle
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - input_select.topeni_kotel_hlavni
-    - input_select.topeni_kotel_zalozni
-    from: Peletkový
-  condition: []
-  action:
-  - service: switch.turn_off
-    data: {}
-    target:
-      entity_id: switch.sonoff_kotelna4
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 3
-      milliseconds: 0
-  - service: script.zmena_kotle
-    data: {}
-  mode: single
 - id: '1671031072397'
   alias: Bojler - Zapnout
   description: ''
@@ -957,12 +892,12 @@
     then:
     - type: turn_on
       device_id: 510eb7e429584a311435891b3123cca7
-      entity_id: c731b4200bbb60fd7711d79ff38a5bb0
+      entity_id: e266ea58448a51f647f90f9f441c63cc
       domain: switch
     else:
     - type: turn_off
       device_id: 510eb7e429584a311435891b3123cca7
-      entity_id: c731b4200bbb60fd7711d79ff38a5bb0
+      entity_id: e266ea58448a51f647f90f9f441c63cc
       domain: switch
   mode: single
 - id: '1697825813623'
