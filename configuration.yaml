@@ -590,7 +590,6 @@ climate:
       hours: 3
     away_temp: 13
 
-    # TODO Pridat thermohlavici
   - platform: generic_thermostat
     name: "Prodejna Recepce Termostat"
     heater: switch.kancelar_rele_l2
@@ -605,7 +604,6 @@ climate:
       hours: 3
     away_temp: 13
 
-    # TODO Pridat thermohlavici
   - platform: generic_thermostat
     name: "Kancelar Termostat"
     heater: switch.kancelar_rele_l1
@@ -620,10 +618,9 @@ climate:
       hours: 3
     away_temp: 13
 
-  # TODO Pridat teplomer a thermohlavici
   - platform: generic_thermostat
     name: "Pavla Termostat"
-    heater: input_boolean.pavla_trv_temp
+    heater: switch.pavla_rele_l1
     target_sensor: sensor.pavla_teplomer_teplota
     min_temp: 5
     max_temp: 26
@@ -635,10 +632,9 @@ climate:
       hours: 3
     away_temp: 13
 
-    # TODO Pridat teplomer a thermohlavici
   - platform: generic_thermostat
     name: "Ivan Termostat"
-    heater: input_boolean.ivan_trv_temp
+    heater: switch.pavla_rele_l2
     target_sensor: sensor.ivan_teplomer_teplota
     min_temp: 5
     max_temp: 26
