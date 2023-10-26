@@ -365,8 +365,8 @@ template:
         # {{ 21 + (80-21)*((( state_attr('weather.evans', 'temperature')-21)/(-12-21))**(1/2)) | int(0) }}
         state: >-
           {% set t = (21 + 59*((( state_attr('weather.evans', 'temperature')-21)/-33)**(0.5))) | int(0) %}
-          {% if t < 50 %}
-            {{ 50 | int }}
+          {% if t < 56 %}
+            {{ 56 | int }}
           {% elif t > 80 %}
             {{ 80 | int }}
           {%- else -%}
@@ -403,45 +403,32 @@ template:
         unit_of_measurement: "°C"
 
   - binary_sensor:
-      - name: "Topení Mód Volno"
-        state: "{{ is_state_attr('climate.kancelar_termostat', 'hvac_action','heating') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}"
-      - name: "Topení Mód Práce"
-        state: >-
-          {{ is_state_attr('climate.kancelar_termostat', 'hvac_action','heating') or is_state_attr('climate.prodejna_recepce_termostat', 'hvac_action','heating')
-          or is_state_attr('climate.kuchyn_termostat', 'hvac_action','heating') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating')
-          or is_state_attr('climate.marek_termostat', 'hvac_action','heating') }}
+      - name: "Topení Voda Alarm"
+        state: "{{ states('sensor.topeni_6')|float(0) > 70 or state_attr('climate.kotel_peletkovy', 'current_temperature')|float(0) > 80 }}"
       - name: "Topení Mód Kino"
         state: >-
-          {{ is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
+          {{ is_state('input_select.topeni_boost', 'kino') or states('calendar.kinosalek') == 'on' }}
       - name: "Topení Mód Marek"
         state: >-
-          {{ is_state_attr('climate.marek_termostat', 'hvac_action','heating') }}
+          {{ is_state('input_select.topeni_boost', 'marek') }}
       - name: "Topení Mód Zkušebna"
         state: >-
-          {{ is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}
+          {{ true or is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on' }}
       - name: "Topení Mód Práce"
         state: >-
-          {{ is_state_attr('climate.kancelar_termostat', 'hvac_action','heating') or is_state_attr('climate.marek_termostat', 'hvac_action','heating')
-          or is_state_attr('climate.kuchyn_termostat', 'hvac_action','heating') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') 
-          or is_state_attr('climate.kino_termostat', 'hvac_action','heating')}}
+          {{ is_state('input_select.topeni_boost', 'prace') or ( is_state('binary_sensor.workday_sensor', 'on') and states('calendar.evans_volno') != 'on' and states('schedule.doba_vytapeni_0_schedule') == 'on') }}
+      - name: "Topení Mód Ivan"
+        state: >-
+          {{ is_state('binary_sensor.topeni_mod_prace', 'on') and is_state('input_boolean.topeni_ivan', 'on')}}
+      - name: "Topení Mód Pavla"
+        state: >-
+          {{ is_state('binary_sensor.topeni_mod_prace', 'on') and is_state('input_boolean.topeni_pavla', 'on') }}
       - name: "Topení Mód Zima"
         state: >-
-          {{ is_state_attr('climate.kancelar_termostat', 'hvac_action','heating') or is_state_attr('climate.marek_termostat', 'hvac_action','heating')
-          or is_state_attr('climate.kuchyn_termostat', 'hvac_action','heating') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') 
-          or is_state_attr('climate.kino_termostat', 'hvac_action','heating')}}
+          {{ (states('sensor.teplota_nejnizsi')|float(0) < states('input_number.teplota_kriticka')|float(0)) }}
       - name: "Topení Kotel Stav"
         state: >-
-          {% if is_state('input_select.topeni_mod', 'zima' ) %}
-            {{ states('binary_sensor.topeni_mod_zima') }}
-          {% elif is_state('input_select.topeni_mod', 'kino') %}
-            {{ states('binary_sensor.topeni_mod_kino') }}
-          {% elif is_state('input_select.topeni_mod', 'zkouska') %}
-            {{ states('binary_sensor.topeni_mod_zkouska') }}
-          {% elif is_state('input_select.topeni_mod', 'marek') %}
-            {{ states('binary_sensor.topeni_mod_marek') }}
-          {% else %}
-            {{ states('binary_sensor.topeni_mod_prace') }}
-          {% endif %}
+          {{ (is_state('binary_sensor.topeni_vlevo', 'on') or is_state('binary_sensor.topeni_vpravo', 'on')) and is_state('binary_sensor.topeni_voda_alarm', 'off') }}
       - name: "Topení Prodejna"
         state: >-
           {{ is_state_attr('climate.prodejna_recepce_termostat', 'hvac_action','heating') or is_state_attr('climate.kancelar_termostat', 'hvac_action','heating') or
@@ -653,7 +640,7 @@ climate:
     min_temp: 5
     max_temp: 26
     ac_mode: false
-    target_temp: 21
+    target_temp: 20
     cold_tolerance: 0.5
     hot_tolerance: 0.5
     keep_alive:
@@ -667,7 +654,7 @@ climate:
     min_temp: 5
     max_temp: 26
     ac_mode: false
-    target_temp: 21
+    target_temp: 19
     cold_tolerance: 0.5
     hot_tolerance: 0.5
     keep_alive:
