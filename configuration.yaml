@@ -653,8 +653,8 @@ climate:
 
   - platform: generic_thermostat
     name: "Marek Termostat"
-    heater: switch.marek_trv
-    target_sensor: sensor.marek_ovzdusi_temperature_filtr
+    heater: switch.marek_rele_trv
+    target_sensor: sensor.marek_ovzdusi_temperature
     min_temp: 5
     max_temp: 26
     ac_mode: false
