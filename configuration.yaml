@@ -478,16 +478,6 @@ switch:
           - service: script.vypnout_trv
             data:
               trv: climate.kino_trv2
-      marek_termostat_spinac:
-        value_template: "{% if is_state_attr('climate.marek_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
-        turn_on:
-          service: script.zapnout_trv
-          data:
-            trv: climate.marek_trv
-        turn_off:
-          service: script.vypnout_trv
-          data:
-            trv: climate.marek_trv
       zkusebna_termostat_spinac:
         value_template: "{% if is_state_attr('climate.zkusebna_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -663,7 +653,7 @@ climate:
 
   - platform: generic_thermostat
     name: "Marek Termostat"
-    heater: switch.marek_termostat_spinac
+    heater: switch.marek_trv
     target_sensor: sensor.marek_ovzdusi_temperature_filtr
     min_temp: 5
     max_temp: 26

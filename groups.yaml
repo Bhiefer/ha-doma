@@ -5,6 +5,4 @@ prodejna_termostaty:
     - climate.prodejna_recepce_termostat
     - climate.prodejna_parador_termostat
     - climate.prodejna_stul_termostat
-    - climate.ivan_termostat
-    - climate.pavla_termostat
     - climate.kuchyn_termostat
