@@ -102,7 +102,7 @@ sensor:
             {{0.2 | float}}
           {%- endif %}
         unit_of_measurement: "Kč/kWh"
-      spot_cena_limi_fvet:
+      spot_cena_limit_fve:
         friendly_name: "Limit ceny elektřiny FVE"
         value_template: "{{ states('input_number.spot_koeficient_ceny_fve') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 }}"
         unit_of_measurement: "Kč/kWh"
