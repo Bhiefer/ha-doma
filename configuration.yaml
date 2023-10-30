@@ -574,9 +574,9 @@ climate:
     min_temp: 5
     max_temp: 26
     ac_mode: false
-    target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    target_temp: 20
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -589,8 +589,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -603,8 +603,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -617,8 +617,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -630,9 +630,9 @@ climate:
     min_temp: 5
     max_temp: 26
     ac_mode: false
-    target_temp: 20
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    target_temp: 19
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -644,9 +644,9 @@ climate:
     min_temp: 5
     max_temp: 26
     ac_mode: false
-    target_temp: 19
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    target_temp: 18.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -673,8 +673,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -687,8 +687,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13
@@ -701,8 +701,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 0.5
-    hot_tolerance: 0.5
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
     keep_alive:
       hours: 3
     away_temp: 13

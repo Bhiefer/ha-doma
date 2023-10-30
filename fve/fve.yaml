@@ -59,7 +59,6 @@ utility_meter:
   fve_hodinova:
     source: sensor.goodwe_total_pv_generation
     cycle: hourly
-
   fve_denni:
     source: sensor.goodwe_total_pv_generation
     cycle: daily
