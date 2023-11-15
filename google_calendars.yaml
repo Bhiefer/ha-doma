@@ -1,87 +1,92 @@
 - cal_id: pasicnyk.com_7pvu06eakernmq66kned0r2uto@group.calendar.google.com
   entities:
-  - device_id: zarovec
-    ignore_availability: true
-    name: Zarovec
-    track: false
+    - device_id: zarovec
+      ignore_availability: true
+      name: Zarovec
+      track: false
 
 - cal_id: pasicnyk.com_38q28mtjheural3c1lh4mbd0lk@group.calendar.google.com
   entities:
-  - device_id: nas
-    ignore_availability: true
-    name: "N\xE1\u0161"
-    track: false
+    - device_id: nas
+      ignore_availability: true
+      name: "N\xE1\u0161"
+      track: false
 
 - cal_id: marek@pasicnyk.com
   entities:
-  - device_id: marek_pasicnyk_com
-    ignore_availability: true
-    name: marek@pasicnyk.com
-    track: false
+    - device_id: marek_pasicnyk_com
+      ignore_availability: true
+      name: marek@pasicnyk.com
+      track: false
 
 - cal_id: pasicnyk.com_2bjhvoukst2g77jf2u3idsvtjk@group.calendar.google.com
   entities:
-  - device_id: zbujnik
-    ignore_availability: true
-    name: Zbujnik
-    search: 'Zkouška'
-    track: true
+    - device_id: kinosalek
+      ignore_availability: true
+      name: Kinosálek
+      search: "Zkouška"
+      track: true
 
 - cal_id: s@brina.cz
   entities:
-  - device_id: s_brina_cz
-    ignore_availability: true
-    name: s@brina.cz
-    track: false
+    - device_id: s_brina_cz
+      ignore_availability: true
+      name: s@brina.cz
+      track: false
 
 - cal_id: pasicnyk.com_fvto1am6gk9glen3197n7uf4ro@group.calendar.google.com
   entities:
-  - device_id: ptacoroko
-    ignore_availability: true
-    name: "Pta\u010Doroko"
-    track: false
+    - device_id: ptacoroko
+      ignore_availability: true
+      name: "Pta\u010Doroko"
+      track: false
 
 - cal_id: pasicnyk.com_h20pcnad0a86euav5f4mbjnt0k@group.calendar.google.com
   entities:
-  - device_id: chessneck
-    ignore_availability: true
-    name: Chessneck
-    search: 'Zkouška'
-    track: true
+    - device_id: zkusebna
+      ignore_availability: true
+      name: Zkušebna
+      search: "Zkouška"
+      track: true
 
 - cal_id: evans.cz_qlthmg1e8dbsieukpiiqtkaiec@group.calendar.google.com
   entities:
-  - device_id: evans_volno
-    ignore_availability: true
-    name: Evans_volno
-    search: 'Volno'
-    track: true    
-    
+    - device_id: evans_volno
+      ignore_availability: true
+      name: Evans_volno
+      search: "Volno"
+      track: true
 
 - cal_id: pasicnyk.com_8s8872iq75i0pda8cg54584h5o@group.calendar.google.com
   entities:
-  - device_id: grunik
-    ignore_availability: true
-    name: Grunik
-    track: false
+    - device_id: grunik
+      ignore_availability: true
+      name: Grunik
+      track: false
 
 - cal_id: brina.cz_l73ni9c13t4b7b8cr5a7htq1t8@group.calendar.google.com
   entities:
-  - device_id: vmp_sabca_prace
-    ignore_availability: true
-    name: "VMP Sab\u010Da pr\xE1ce"
-    track: false
+    - device_id: vmp_sabca_prace
+      ignore_availability: true
+      name: "VMP Sab\u010Da pr\xE1ce"
+      track: false
 
 - cal_id: addressbook#contacts@group.v.calendar.google.com
   entities:
-  - device_id: contacts
-    ignore_availability: true
-    name: Contacts
-    track: false
+    - device_id: contacts
+      ignore_availability: true
+      name: Contacts
+      track: false
 
 - cal_id: cs.czech#holiday@group.v.calendar.google.com
   entities:
-  - device_id: ceske_statni_svatky
-    ignore_availability: true
-    name: "\u010Cesk\xE9 st\xE1tn\xED sv\xE1tky"
-    track: false
+    - device_id: ceske_statni_svatky
+      ignore_availability: true
+      name: "\u010Cesk\xE9 st\xE1tn\xED sv\xE1tky"
+      track: false
+
+- cal_id: c_f654cfe248f5ed5f8cac5d476e268b8c252ba310b68b02149e6897012c225471@group.calendar.google.com
+  entities:
+    - device_id: pavla_topeni
+      ignore_availability: true
+      name: "Pavla - topení"

@@ -296,6 +296,34 @@
     device_id: 6f272126d336b2c099128c19be861e91
     entity_id: light.m_lampa_obyvak
     domain: light
+  - type: turn_off
+    device_id: a558818d6e5d2a9c806d4a1946faba6c
+    entity_id: 5c65927bb39fd2497b7efa58a12b3a0f
+    domain: switch
+  - type: turn_off
+    device_id: 37ac45c40e4d34ad8e871f98c952ff8c
+    entity_id: a23970f94cbeb75e7e5be2385685c0e1
+    domain: switch
+  - type: turn_off
+    device_id: 8ef52bc50359d755ac61b2177b3d0ebe
+    entity_id: 7ce5ed1035c2e9514805b6ff893a852a
+    domain: switch
+  - type: turn_off
+    device_id: 8ef52bc50359d755ac61b2177b3d0ebe
+    entity_id: d8d954b8bfc28585b062524973190e0b
+    domain: switch
+  - type: turn_off
+    device_id: c677fa36c732a39816d02b22554f0276
+    entity_id: 538ddfb78c952c289767fccb804a171a
+    domain: switch
+  - type: turn_off
+    device_id: c677fa36c732a39816d02b22554f0276
+    entity_id: cb0247c4e2dee5a40745ce8ca226a3c5
+    domain: switch
+  - type: turn_off
+    device_id: e6516dd2ef93b75f9f268114004c1bb7
+    entity_id: 0f9aeb6328e62f1b0c3af8679e6aaf12
+    domain: switch
   mode: single
 - id: '1671031072397'
   alias: Bojler - Zapnout
@@ -305,6 +333,8 @@
     entity_id:
     - binary_sensor.spot_nejlevnejsi_hodina
     to: 'on'
+  - platform: time
+    at: '18:03:00'
   condition:
   - condition: state
     entity_id: binary_sensor.workday_sensor
@@ -328,6 +358,8 @@
     entity_id:
     - binary_sensor.spot_nejlevnejsi_hodina
     to: 'off'
+  - platform: time
+    at: '18:57:00'
   condition: []
   action:
   - type: turn_off
@@ -739,13 +771,6 @@
       option: marek
     target:
       entity_id: input_select.topeni_boost
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 3
-      milliseconds: 0
-  - service: script.obnov_mod_topeni
-    data: {}
   mode: single
 - id: '1691962989823'
   alias: M Koupelna - Vlhkost
@@ -1141,17 +1166,15 @@
         entity_id: binary_sensor.topeni_mod_zima
         state: 'on'
     then:
-    - service: climate.set_preset_mode
-      data:
-        preset_mode: none
-      target:
-        entity_id: climate.zkusebna_termostat
+    - type: turn_off
+      device_id: 40f2e21601a296718d4800a80d6fc92d
+      entity_id: 71fd409dd67b7aad8975f6d6f5145fce
+      domain: switch
     else:
-    - service: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id: climate.zkusebna_termostat
+    - type: turn_on
+      device_id: 40f2e21601a296718d4800a80d6fc92d
+      entity_id: 71fd409dd67b7aad8975f6d6f5145fce
+      domain: switch
   - if:
     - condition: or
       conditions:

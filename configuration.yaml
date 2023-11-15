@@ -3,8 +3,11 @@ default_config:
 
 ffmpeg:
 
-# Example configuration.yaml entry to enable the cloud component
+# Enable the cloud component
 cloud:
+
+# Expose REST api
+api:
 
 homeassistant:
   allowlist_external_dirs:
@@ -70,6 +73,7 @@ input_select:
       - prace
       - kino
       - zkouska
+      - vse
     icon: mdi:fire-circle
 
 counter:
@@ -152,16 +156,6 @@ sensor:
     entity_ids:
       - sensor.marek_ovzdusi_temperature_filtr
       - sensor.kuchyn_teplota
-  - platform: min_max
-    name: "Zkušebna teplota"
-    type: max
-    entity_ids:
-      - sensor.zkusebna_teplomer_temperature
-  - platform: min_max
-    name: "Teplota cílová zkušebna"
-    type: max
-    entity_ids:
-      - sensor.zkusebna_trv_cilova_teplota
 
   - platform: filter
     name: "Marek Ovzduší Temperature Filtr"
@@ -328,6 +322,13 @@ sensor:
           {%- else -%}
             off
           {%- endif %}
+      zkusebna_trv_heat:
+        value_template: >-
+          {% if states('sensor.zkusebna_trv_position') | float > 0 %}
+            on
+          {%- else -%}
+            off
+          {%- endif %}
 
 template:
   - sensor:
@@ -380,9 +381,6 @@ template:
       - name: "Kino TRV2 teplota"
         state: "{{ state_attr('climate.kino_trv2', 'current_temperature') }}"
         unit_of_measurement: "°C"
-      - name: "Zkušebna TRV teplota"
-        state: "{{ state_attr('climate.zkusebna_trv', 'current_temperature') }}"
-        unit_of_measurement: "°C"
       - name: "Marek TRV teplota"
         state: "{{ state_attr('climate.marek_trv', 'current_temperature') }}"
         unit_of_measurement: "°C"
@@ -422,10 +420,10 @@ template:
           {{ is_state('binary_sensor.topeni_mod_prace', 'on') and is_state('input_boolean.topeni_ivan', 'on')}}
       - name: "Topení Mód Pavla"
         state: >-
-          {{ is_state('binary_sensor.topeni_mod_prace', 'on') and is_state('input_boolean.topeni_pavla', 'on') }}
+          {{ is_state('binary_sensor.topeni_mod_prace', 'on') and (is_state('input_boolean.topeni_pavla', 'on') or is_state('calendar.pavla_topeni','on')) }}
       - name: "Topení Mód Zima"
         state: >-
-          {{ (states('sensor.teplota_nejnizsi')|float(0) < states('input_number.teplota_kriticka')|float(0)) }}
+          {{ is_state('input_select.topeni_boost', 'vse') or (states('sensor.teplota_nejnizsi')|float(0) < states('input_number.teplota_kriticka')|float(0)) }}
       - name: "Topení Kotel Stav"
         state: >-
           {{ (is_state('binary_sensor.topeni_vlevo', 'on') or is_state('binary_sensor.topeni_vpravo', 'on')) and is_state('binary_sensor.topeni_voda_alarm', 'off') }}
@@ -435,7 +433,7 @@ template:
           is_state_attr('climate.pavla_termostat', 'hvac_action','heating') or is_state_attr('climate.ivan_termostat', 'hvac_action','heating') }}
       - name: "Topení Vlevo"
         state: >-
-          {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state_attr('climate.zkusebna_termostat', 'hvac_action','heating') }}
+          {{ is_state('binary_sensor.topeni_prodejna', 'on') or is_state('binary_sensor.zkusebna_trv_valve_state','on') }}
       - name: "Topení Sociálky"
         state: >-
           {{ is_state_attr('climate.kuchyn_termostat', 'hvac_action','heating') or is_state_attr('climate.marek_termostat', 'hvac_action','heating') }}
@@ -458,6 +456,8 @@ template:
         state: "{{ is_state('input_select.topeni_boost', 'kino') }}"
       - name: "Boost none"
         state: "{{ is_state('input_select.topeni_boost', 'none') }}"
+      - name: "Boost Vše"
+        state: "{{ is_state('input_select.topeni_boost', 'vse') }}"
 
 switch:
   - platform: template
@@ -478,16 +478,16 @@ switch:
           - service: script.vypnout_trv
             data:
               trv: climate.kino_trv2
-      zkusebna_termostat_spinac:
-        value_template: "{% if is_state_attr('climate.zkusebna_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
-        turn_on:
-          service: script.zapnout_trv
-          data:
-            trv: climate.zkusebna_trv
-        turn_off:
-          service: script.vypnout_trv
-          data:
-            trv: climate.zkusebna_trv
+      # zkusebna_termostat_spinac:
+      #   value_template: "{% if is_state_attr('climate.zkusebna_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+      #   turn_on:
+      #     service: script.zapnout_trv
+      #     data:
+      #       trv: climate.zkusebna_trv
+      #   turn_off:
+      #     service: script.vypnout_trv
+      #     data:
+      #       trv: climate.zkusebna_trv
       kuchyn_termostat_spinac:
         value_template: "{% if is_state_attr('climate.kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -679,19 +679,19 @@ climate:
       hours: 3
     away_temp: 13
 
-  - platform: generic_thermostat
-    name: "Zkušebna Termostat"
-    heater: switch.zkusebna_termostat_spinac
-    target_sensor: sensor.zkusebna_teplomer_temperature
-    min_temp: 5
-    max_temp: 26
-    ac_mode: false
-    target_temp: 21
-    cold_tolerance: 1.0
-    hot_tolerance: 0.0
-    keep_alive:
-      hours: 3
-    away_temp: 13
+  # - platform: generic_thermostat
+  #   name: "Zkušebna Termostat"
+  #   heater: switch.zkusebna_termostat_spinac
+  #   target_sensor: sensor.zkusebna_teplomer_temperature
+  #   min_temp: 5
+  #   max_temp: 26
+  #   ac_mode: false
+  #   target_temp: 21
+  #   cold_tolerance: 1.0
+  #   hot_tolerance: 0.0
+  #   keep_alive:
+  #     hours: 3
+  #   away_temp: 13
 
   - platform: generic_thermostat
     name: "Kuchyň Termostat"

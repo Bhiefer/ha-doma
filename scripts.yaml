@@ -82,22 +82,86 @@ dinner_ready:
       cache: false
   mode: single
 restart_modu_topeni:
-  alias: Topení - Restart módu
+  alias: Topení - Inicializace
   description: Nastav mod topeni na výchozí hodnotu. Při restartu HA se tak hodnoty
     správně aktualizují.
   sequence:
   - delay: 90
   - service: input_select.select_option
-    target:
-      entity_id: input_select.topeni_mod
     data:
-      option: zima
-  - delay: 10
+      option: vse
+    target:
+      entity_id: input_select.topeni_boost
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.topeni_termostaty_nastav
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
   - service: input_select.select_option
-    target:
-      entity_id: input_select.topeni_mod
     data:
-      option: volno
+      option: none
+    target:
+      entity_id: input_select.topeni_boost
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.topeni_termostaty_nastav
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.topeni_ventil_socialky
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.topeni_prodejna_ventil
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.topeni_ventil_vlevo
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.topeni_kotel_ovladani
   mode: single
   icon: mdi:restart
 zmena_kotle:
@@ -110,20 +174,6 @@ zmena_kotle:
       option: none
   - delay: 3
   - service: script.obnov_mod_topeni
-obnov_mod_topeni:
-  sequence:
-  - service: input_select.select_option
-    target:
-      entity_id: input_select.topeni_mod
-    data:
-      option: "{% if (states('sensor.teplota_nejnizsi')|float < states('input_number.teplota_kriticka')|float
-        )%}\n  zima\n{% elif is_state('input_select.topeni_boost', 'marek') %}\n  marek\n{%
-        elif is_state('input_select.topeni_boost', 'kino') or states('calendar.kinosalek')
-        == 'on'  -%}\n  kino\n{% elif is_state('input_select.topeni_boost', 'zkouska')
-        or states('calendar.zkusebna') == 'on' -%}\n  zkouska\n{%- elif is_state('input_select.topeni_boost',
-        'prace') or (is_state('binary_sensor.workday_sensor', 'on') and states('calendar.evans_volno')
-        != 'on' and states('schedule.doba_vytapeni_0_schedule') == 'on') -%}\n  prace\n{%-
-        else -%}\n  volno\n{%- endif %}"
 uklid_chodby:
   alias: Úklid chodby
   sequence:
