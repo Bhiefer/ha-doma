@@ -280,41 +280,41 @@ sensor:
             {{ 100 }}
           {% endif %}
 
-      kotel_peletkovy_teplota_koure:
-        value_template: "{{ state_attr('climate.kotel_peletkovy', 'smoke_temperature') }}"
-        unit_of_measurement: "°C"
-      kotel_peletkovy_aktualni_vykon:
-        value_template: "{{ state_attr('climate.kotel_peletkovy', 'real_power') }}"
-      kotel_peletkovy_chyba:
-        value_template: "{{ state_attr('climate.kotel_peletkovy', 'alarm_code') }}"
-        #130 - pozastaveno
-        #16 - dosly pelety
-      kotel_peletkovy_stav:
-        value_template: >-
-          {% set stav = state_attr('climate.kotel_peletkovy', 'device_status') %}
-          {% if stav == 0 %}
-            Vypnuto
-          {% elif stav == 1 %}
-            Start
-          {% elif stav == 2 %}
-            Příprava pelet
-          {% elif stav == 3 %}
-            Zapálení
-          {% elif stav == 4 %}
-            Zapnuto
-          {% elif stav == 5 %}
-            Čištění ohniště
-          {% elif stav == 6 %}
-            Konečné čištění
-          {% elif stav == 7 %}
-            Pozastaveno
-          {% elif stav == 8 %}
-            Nedostatek pelet
-          {% elif stav == 9 %}
-            Chyba podpalu
-          {%- else -%}
-            Neznámý
-          {%- endif %}
+      # kotel_peletkovy_teplota_koure:
+      #   value_template: "{{ state_attr('climate.kotel_peletkovy', 'smoke_temperature') }}"
+      #   unit_of_measurement: "°C"
+      # kotel_peletkovy_aktualni_vykon:
+      #   value_template: "{{ state_attr('climate.kotel_peletkovy', 'real_power') }}"
+      # kotel_peletkovy_chyba:
+      #   value_template: "{{ state_attr('climate.kotel_peletkovy', 'alarm_code') }}"
+      #   #130 - pozastaveno
+      #   #16 - dosly pelety
+      # kotel_peletkovy_stav:
+      #   value_template: >-
+      #     {% set stav = state_attr('climate.kotel_peletkovy', 'device_status') %}
+      #     {% if stav == 0 %}
+      #       Vypnuto
+      #     {% elif stav == 1 %}
+      #       Start
+      #     {% elif stav == 2 %}
+      #       Příprava pelet
+      #     {% elif stav == 3 %}
+      #       Zapálení
+      #     {% elif stav == 4 %}
+      #       Zapnuto
+      #     {% elif stav == 5 %}
+      #       Čištění ohniště
+      #     {% elif stav == 6 %}
+      #       Konečné čištění
+      #     {% elif stav == 7 %}
+      #       Pozastaveno
+      #     {% elif stav == 8 %}
+      #       Nedostatek pelet
+      #     {% elif stav == 9 %}
+      #       Chyba podpalu
+      #     {%- else -%}
+      #       Neznámý
+      #     {%- endif %}
       kino_trv_heat:
         value_template: >-
           {% if state_attr('climate.kino_trv', 'position') | float > 0 %}
@@ -441,7 +441,8 @@ template:
         state: >-
           {{ is_state('binary_sensor.topeni_socialky', 'on') or is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
       - name: "Topení Peletkový Kotel Chyba"
-        state: "off"
+        state: >-
+          {{ is_state('sensor.kotel_peletkovy_status', 'MEMORY ALLARM') }}
       - name: "Pracovní den"
         state: "{{ is_state('binary_sensor.workday_sensor', 'on') and is_state('calendar.evans_volno', 'off') }}"
       - name: "Pracovní doba"
@@ -538,17 +539,17 @@ switch:
           service: script.vypnout_trv
           data:
             trv: climate.m_detsky_trv
-      topeni_spinac:
-        value_template: >-
-          {% if is_state('binary_sensor.topeni_peletkovy_kotel_chyba', 'on') %}
-            {{ states('switch.sonoff_kotelna3') }}
-          {% else %}
-            {{ states('switch.sonoff_kotelna4') }}
-          {% endif %}
-        turn_on:
-          - service: script.topeni_kotel_zapnout
-        turn_off:
-          - service: script.topeni_kotel_vypnout
+      # topeni_spinac:
+      #   value_template: >-
+      #     {% if is_state('binary_sensor.topeni_peletkovy_kotel_chyba', 'on') %}
+      #       {{ states('switch.sonoff_kotelna3') }}
+      #     {% else %}
+      #       {{ states('switch.sonoff_kotelna4') }}
+      #     {% endif %}
+      #   turn_on:
+      #     - service: script.topeni_kotel_zapnout
+      #   turn_off:
+      #     - service: script.topeni_kotel_vypnout
 
 climate:
   - platform: generic_thermostat

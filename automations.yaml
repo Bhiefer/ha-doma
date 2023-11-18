@@ -1099,6 +1099,9 @@
   - platform: state
     entity_id:
     - binary_sensor.topeni_kotel_stav
+  - platform: state
+    entity_id:
+    - binary_sensor.topeni_peletkovy_kotel_chyba
   condition: []
   action:
   - if:

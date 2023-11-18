@@ -9,7 +9,7 @@
   entities:
     - device_id: nas
       ignore_availability: true
-      name: "N\xE1\u0161"
+      name: "Náš"
       track: false
 
 - cal_id: marek@pasicnyk.com
@@ -24,7 +24,6 @@
     - device_id: kinosalek
       ignore_availability: true
       name: Kinosálek
-      search: "Zkouška"
       track: true
 
 - cal_id: s@brina.cz
@@ -38,7 +37,7 @@
   entities:
     - device_id: ptacoroko
       ignore_availability: true
-      name: "Pta\u010Doroko"
+      name: "Ptačoroko"
       track: false
 
 - cal_id: pasicnyk.com_h20pcnad0a86euav5f4mbjnt0k@group.calendar.google.com
@@ -46,7 +45,6 @@
     - device_id: zkusebna
       ignore_availability: true
       name: Zkušebna
-      search: "Zkouška"
       track: true
 
 - cal_id: evans.cz_qlthmg1e8dbsieukpiiqtkaiec@group.calendar.google.com
