@@ -542,9 +542,12 @@
   trigger:
   - platform: state
     entity_id:
-    - sensor.kotel_peletkovy_chyba
-    to: '16'
-  condition: []
+    - sensor.kotel_peletkovy_alarm
+    to: NO PELLET
+  condition:
+  - condition: time
+    after: 07:00:00
+    before: '21:00:00'
   action:
   - service: script.notifikace_urgentni
     data:
@@ -580,7 +583,10 @@
   - platform: numeric_state
     entity_id: sensor.zasobnik_kolmy_3
     above: 85
-  condition: []
+  condition:
+  - condition: time
+    after: 07:00:00
+    before: '21:00:00'
   action:
   - service: script.notifikace_urgentni
     data:
@@ -1173,11 +1179,25 @@
       device_id: 40f2e21601a296718d4800a80d6fc92d
       entity_id: 71fd409dd67b7aad8975f6d6f5145fce
       domain: switch
+      enabled: false
+    - service: climate.set_preset_mode
+      data:
+        preset_mode: none
+      target:
+        entity_id:
+        - climate.zkusebna_termostat
     else:
     - type: turn_on
       device_id: 40f2e21601a296718d4800a80d6fc92d
       entity_id: 71fd409dd67b7aad8975f6d6f5145fce
       domain: switch
+      enabled: false
+    - service: climate.set_preset_mode
+      data:
+        preset_mode: away
+      target:
+        entity_id:
+        - climate.zkusebna_termostat
   - if:
     - condition: or
       conditions:

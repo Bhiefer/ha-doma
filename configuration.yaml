@@ -479,16 +479,18 @@ switch:
           - service: script.vypnout_trv
             data:
               trv: climate.kino_trv2
-      # zkusebna_termostat_spinac:
-      #   value_template: "{% if is_state_attr('climate.zkusebna_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
-      #   turn_on:
-      #     service: script.zapnout_trv
-      #     data:
-      #       trv: climate.zkusebna_trv
-      #   turn_off:
-      #     service: script.vypnout_trv
-      #     data:
-      #       trv: climate.zkusebna_trv
+      zkusebna_termostat_spinac:
+        value_template: "{% if is_state('switch.zkusebna_trv_eco_mode', 'off') %}on{% else %}off{% endif %}"
+        turn_on:
+          service: switch.turn_off
+          data:
+            entity_id:
+              - switch.zkusebna_trv_eco_mode
+        turn_off:
+          service: switch.turn_on
+          data:
+            entity_id:
+              - switch.zkusebna_trv_eco_mode
       kuchyn_termostat_spinac:
         value_template: "{% if is_state_attr('climate.kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -680,19 +682,19 @@ climate:
       hours: 3
     away_temp: 13
 
-  # - platform: generic_thermostat
-  #   name: "Zkušebna Termostat"
-  #   heater: switch.zkusebna_termostat_spinac
-  #   target_sensor: sensor.zkusebna_teplomer_temperature
-  #   min_temp: 5
-  #   max_temp: 26
-  #   ac_mode: false
-  #   target_temp: 21
-  #   cold_tolerance: 1.0
-  #   hot_tolerance: 0.0
-  #   keep_alive:
-  #     hours: 3
-  #   away_temp: 13
+  - platform: generic_thermostat
+    name: "Zkušebna Termostat"
+    heater: switch.zkusebna_termostat_spinac
+    target_sensor: sensor.zkusebna_teplomer_temperature
+    min_temp: 5
+    max_temp: 26
+    ac_mode: false
+    target_temp: 21
+    cold_tolerance: 1.0
+    hot_tolerance: 0.0
+    keep_alive:
+      hours: 3
+    away_temp: 13
 
   - platform: generic_thermostat
     name: "Kuchyň Termostat"
