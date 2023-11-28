@@ -1,7 +1,6 @@
 input_number:
   fve_denni_spotreba_prumerna_vsedni:
     name: "FVE Denní spotřeba průměrná všední dny"
-    initial: 25
     min: 10
     max: 100
     step: 1
@@ -9,7 +8,6 @@ input_number:
     unit_of_measurement: kWh
   fve_denni_spotreba_prumerna_vikend:
     name: "FVE Denní spotřeba průměrná víkend"
-    initial: 14
     min: 10
     max: 100
     step: 1
@@ -17,7 +15,6 @@ input_number:
     unit_of_measurement: kWh
   fve_baterie_kapacita:
     name: "FVE Baterie kapacita"
-    initial: 14200
     min: 1000
     max: 20000
     step: 10
@@ -25,7 +22,6 @@ input_number:
     unit_of_measurement: Wh
   spot_cena_nizky_tarif:
     name: "Spot cena"
-    initial: 14
     min: 10
     max: 100
     step: 1
@@ -34,7 +30,6 @@ input_number:
   # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se topit energií ze sítě
   spot_koeficient_ceny_topeni:
     name: "Koeficient ceny topení"
-    initial: 100
     min: 70
     max: 130
     step: 5
@@ -43,7 +38,6 @@ input_number:
   # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se nabíjet baterie ze sítě
   spot_koeficient_ceny_fve:
     name: "Koeficient ceny FVE"
-    initial: 100
     min: 70
     max: 130
     step: 5

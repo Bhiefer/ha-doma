@@ -60,8 +60,8 @@
     entity_id: switch.sonoff_billboardy
     domain: switch
   - type: turn_on
-    device_id: 62f64199595bf569f975860b574014f1
-    entity_id: 67170f888fd5ec49d2efbc82484bc991
+    device_id: e4343ba21f0a044aa5244068c54179e5
+    entity_id: 52c71bdbd0d198707251b479d79ab01e
     domain: switch
   mode: single
 - id: '1634139005202'
@@ -79,8 +79,8 @@
     entity_id: switch.sonoff_billboardy
     domain: switch
   - type: turn_off
-    device_id: 62f64199595bf569f975860b574014f1
-    entity_id: 67170f888fd5ec49d2efbc82484bc991
+    device_id: e4343ba21f0a044aa5244068c54179e5
+    entity_id: 52c71bdbd0d198707251b479d79ab01e
     domain: switch
   mode: single
 - id: '1638303867848'
