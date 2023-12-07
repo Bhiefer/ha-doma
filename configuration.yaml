@@ -247,8 +247,8 @@ sensor:
     entity_id: sensor.zasobnik_kolmy_pytle
     state_characteristic: sum_differences_nonnegative
     max_age:
-      hours: 1
-    precision: 3
+      days: 365
+    precision: 2
 
   - platform: template
     sensors:
@@ -442,7 +442,7 @@ template:
           {{ is_state('binary_sensor.topeni_socialky', 'on') or is_state_attr('climate.kino_termostat', 'hvac_action','heating') }}
       - name: "Topení Peletkový Kotel Chyba"
         state: >-
-          {{ is_state('sensor.kotel_peletkovy_status', 'MEMORY ALLARM') }}
+          {{ is_state('sensor.kotel_peletkovy_status', 'MEMORY ALLARM') or is_state('sensor.kotel_peletkovy_status', 'OFF') or is_state('sensor.kotel_peletkovy_status', 'ALARM ACTIVE') }}
       - name: "Pracovní den"
         state: "{{ is_state('binary_sensor.workday_sensor', 'on') and is_state('calendar.evans_volno', 'off') }}"
       - name: "Pracovní doba"
