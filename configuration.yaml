@@ -411,7 +411,7 @@ template:
           {{ is_state('input_select.topeni_boost', 'marek') }}
       - name: "Topení Mód Zkušebna"
         state: >-
-          {{ true or is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on' }}
+          {{ is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on' }}
       - name: "Topení Mód Práce"
         state: >-
           {{ is_state('input_select.topeni_boost', 'prace') or ( is_state('binary_sensor.workday_sensor', 'on') and states('calendar.evans_volno') != 'on' and states('schedule.doba_vytapeni_0_schedule') == 'on') }}

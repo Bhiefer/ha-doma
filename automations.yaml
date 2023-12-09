@@ -575,13 +575,16 @@
   description: ''
   trigger:
   - platform: numeric_state
-    entity_id: sensor.zasobnik_kolmy_3
+    entity_id:
+    - sensor.zasobnik_kolmy_filtr
     above: 75
   - platform: numeric_state
-    entity_id: sensor.zasobnik_kolmy_3
+    entity_id:
+    - sensor.zasobnik_kolmy_filtr
     above: 80
   - platform: numeric_state
-    entity_id: sensor.zasobnik_kolmy_3
+    entity_id:
+    - sensor.zasobnik_kolmy_filtr
     above: 85
   condition:
   - condition: time
@@ -598,7 +601,7 @@
   trigger:
   - platform: state
     entity_id:
-    - sensor.kotel_peletkovy_stav
+    - sensor.kotel_peletkovy_status
     to: unavailable
     for:
       hours: 0
@@ -615,8 +618,8 @@
   trigger:
   - platform: state
     entity_id:
-    - sensor.kotel_peletkovy_chyba
-    to: '64'
+    - binary_sensor.topeni_peletkovy_kotel_chyba
+    to: 'on'
   condition: []
   action:
   - service: script.notifikace_urgentni
@@ -856,6 +859,11 @@
     platform: device
     device_id: 79d2de0dad3a0afd348fde69ecd4e316
     entity_id: 3e69712d387297607d9377073c64037d
+    domain: binary_sensor
+  - type: motion
+    platform: device
+    device_id: 6c6667e7afc6890b69f73fed5e4afb16
+    entity_id: 39cc4e5d4e2dd7bf492f523e514b2ee9
     domain: binary_sensor
   condition: []
   action:
