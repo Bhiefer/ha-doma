@@ -147,7 +147,7 @@ binary_sensor:
       fve_vybijeni_baterie:
         value_template: "{{ not(is_state('binary_sensor.fve_nabijeni_ze_site', 'on') or (is_state('binary_sensor.spot_podprumerna_cena_topeni', 'on') and is_state('input_boolean.fve_topeni_na_baterii', 'off'))) }}"
       fve_nabijeni_ze_site:
-        value_template: "{{ states('sensor.goodwe_battery_state_of_charge') | float(0) < 90 and is_state('binary_sensor.spot_podprumerna_cena_fve', 'on') and states('sensor.energy_current_hour') | float(0) < 0.25}}"
+        value_template: "{{ states('sensor.goodwe_battery_state_of_charge') | float(0) < 90 and is_state('binary_sensor.spot_podprumerna_cena_fve', 'on') and states('sensor.energy_current_hour') | float(0) < 1.0}}"
       fve_dostatecne_nabito:
         value_template: "{{ states('sensor.fve_dnes_k_nabiti') | float(0) < 0}}"
       spot_nejlevnejsi_hodina:
