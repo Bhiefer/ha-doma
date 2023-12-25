@@ -30,16 +30,16 @@ input_number:
   # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se topit energií ze sítě
   spot_koeficient_ceny_topeni:
     name: "Koeficient ceny topení"
-    min: 70
-    max: 130
+    min: 30
+    max: 300
     step: 5
     mode: slider
     unit_of_measurement: "%"
   # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se nabíjet baterie ze sítě
   spot_koeficient_ceny_fve:
     name: "Koeficient ceny FVE"
-    min: 70
-    max: 130
+    min: 30
+    max: 300
     step: 5
     mode: slider
     unit_of_measurement: "%"
