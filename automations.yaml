@@ -1311,3 +1311,28 @@
     target:
       entity_id: input_boolean.topeni_pavla
   mode: single
+- id: '1703501739554'
+  alias: FVE - Opravit Eco mode SoC
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - number.eco_mode_soc
+  - platform: time_pattern
+    minutes: /10
+  condition:
+  - condition: template
+    value_template: '{{(states(''number.eco_mode_soc'')|round(0)) != 100}}'
+  action:
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+      milliseconds: 0
+  - service: number.set_value
+    data:
+      value: '100'
+    target:
+      entity_id:
+      - number.eco_mode_soc
+  mode: single
