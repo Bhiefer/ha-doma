@@ -92,29 +92,29 @@ sensor:
         value_template: >-
           {% if is_state('binary_sensor.spot_nizky_tarif', 'on') %}
             {{0.174 | float}}
-          {%- else -%}
+          {% else %}
             {{0.2 | float}}
-          {%- endif %}
+          {% endif %}
         unit_of_measurement: "Kč/kWh"
       spot_cena_limit_fve:
         friendly_name: "Limit ceny elektřiny FVE"
         value_template: >-
-          {% set cena = states('input_number.spot_koeficient_ceny_fve') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 %}"
+          {% set cena = states('input_number.spot_koeficient_ceny_fve') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 %}
           {% if cena < 0.5 | float  %}
-          {{ 0.5 | float }}
-          {% else  %}
-          {{ cena }}
-          {%- endif %}
+            {{0.5 | float }}
+          {% else %}
+            {{cena | float }}
+          {% endif %}
         unit_of_measurement: "Kč/kWh"
       spot_cena_limit_topeni:
         friendly_name: "Limit ceny elektřiny topení"
         value_template: >-
-          {% set cena = states('input_number.spot_koeficient_ceny_topeni') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 %}"
+          {% set cena = states('input_number.spot_koeficient_ceny_topeni') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 %}
           {% if cena < 0.5 | float  %}
-          {{ 0.5 | float }}
-          {% else  %}
-          {{ cena }}
-          {%- endif %}
+            {{0.5 | float }}
+          {% else %}
+            {{cena | float }}
+          {% endif %}
         unit_of_measurement: "Kč/kWh"
       fve_baterie_stav:
         friendly_name: "FVE Baterie Stav"
