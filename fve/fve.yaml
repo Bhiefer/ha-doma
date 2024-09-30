@@ -43,6 +43,14 @@ input_number:
     step: 5
     mode: slider
     unit_of_measurement: "%"
+  # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se nabíjet auto ze sítě
+  spot_koeficient_ceny_auto:
+    name: "Koeficient ceny auto"
+    min: 30
+    max: 300
+    step: 5
+    mode: slider
+    unit_of_measurement: "%"
 utility_meter:
   fve_celkova_spotreba_hodinova:
     source: sensor.fve_celkova_spotreba
@@ -116,6 +124,16 @@ sensor:
             {{cena | float }}
           {% endif %}
         unit_of_measurement: "Kč/kWh"
+      spot_cena_limit_auto:
+        friendly_name: "Limit ceny elektřiny auto"
+        value_template: >-
+          {% set cena = states('input_number.spot_koeficient_ceny_auto') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) * 0.01 %}
+          {% if cena < 0.5 | float  %}
+            {{0.5 | float }}
+          {% else %}
+            {{cena | float }}
+          {% endif %}
+        unit_of_measurement: "Kč/kWh"
       fve_baterie_stav:
         friendly_name: "FVE Baterie Stav"
         value_template: >-
@@ -174,6 +192,8 @@ binary_sensor:
         value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_fve') | float(0) }}"
       spot_podprumerna_cena_topeni:
         value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
+      spot_podprumerna_cena_auto:
+        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
       spot_nizky_tarif:
         friendly_name: "Spot Nízký tarif"
         value_template: >-

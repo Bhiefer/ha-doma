@@ -149,6 +149,12 @@ sensor:
       - sensor.marek_ovzdusi_temperature_filtr
       - sensor.teplomer_kuchyn_temperature
       - sensor.zkusebna_teplomer_temperature
+      - sensor.esp_tilo_temperature
+      - sensor.prodejna_recepce_teplomer_temperature
+      - sensor.kuchyn_teplota
+      - sensor.ivan_teplomer_teplota
+      - sensor.pavla_teplomer_teplota
+      - sensor.prodejna_parador_teplomer_temperature
 
   - platform: min_max
     name: "Sociálky teplota min"
