@@ -417,7 +417,7 @@ template:
           {{ is_state('input_select.topeni_boost', 'marek') }}
       - name: "Topení Mód Zkušebna"
         state: >-
-          {{ is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on' }}
+          {{ (is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on') and is_state('binary_sensor.zkusebna_okno_contact', 'off') }}
       - name: "Topení Mód Práce"
         state: >-
           {{ is_state('input_select.topeni_boost', 'prace') or ( is_state('binary_sensor.workday_sensor', 'on') and states('calendar.evans_volno') != 'on' and states('schedule.doba_vytapeni_0_schedule') == 'on') }}
@@ -472,79 +472,79 @@ switch:
       kino_termostat_spinac:
         value_template: "{% if is_state_attr('climate.kino_trv', 'hvac_action','heating') and is_state_attr('climate.kino_trv2', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
-          - service: script.zapnout_trv
+          - action: script.zapnout_trv
             data:
               trv: climate.kino_trv
-          - service: script.zapnout_trv
+          - action: script.zapnout_trv
             data:
               trv: climate.kino_trv2
         turn_off:
-          - service: script.vypnout_trv
+          - action: script.vypnout_trv
             data:
               trv: climate.kino_trv
-          - service: script.vypnout_trv
+          - action: script.vypnout_trv
             data:
               trv: climate.kino_trv2
       zkusebna_termostat_spinac:
         value_template: "{% if is_state('switch.zkusebna_trv_eco_mode', 'off') %}on{% else %}off{% endif %}"
         turn_on:
-          service: switch.turn_off
+          action: switch.turn_off
           data:
             entity_id:
               - switch.zkusebna_trv_eco_mode
         turn_off:
-          service: switch.turn_on
+          action: switch.turn_on
           data:
             entity_id:
               - switch.zkusebna_trv_eco_mode
       kuchyn_termostat_spinac:
         value_template: "{% if is_state_attr('climate.kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
-          service: script.zapnout_trv
+          action: script.zapnout_trv
           data:
             trv: climate.kuchyn_trv
         turn_off:
-          service: script.vypnout_trv
+          action: script.vypnout_trv
           data:
             trv: climate.kuchyn_trv
       m_obyvak_termostat_spinac:
         value_template: "{% if is_state_attr('climate.m_obyvak_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
-          service: script.zapnout_trv
+          action: script.zapnout_trv
           data:
             trv: climate.m_obyvak_trv
         turn_off:
-          service: script.vypnout_trv
+          action: script.vypnout_trv
           data:
             trv: climate.m_obyvak_trv
       m_kuchyn_termostat_spinac:
         value_template: "{% if is_state_attr('climate.m_kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
-          service: script.zapnout_trv
+          action: script.zapnout_trv
           data:
             trv: climate.m_kuchyn_trv
         turn_off:
-          service: script.vypnout_trv
+          action: script.vypnout_trv
           data:
             trv: climate.m_kuchyn_trv
       m_loznice_termostat_spinac:
         value_template: "{% if is_state_attr('climate.m_loznice_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
-          service: script.zapnout_trv
+          action: script.zapnout_trv
           data:
             trv: climate.m_loznice_trv
         turn_off:
-          service: script.vypnout_trv
+          action: script.vypnout_trv
           data:
             trv: climate.m_loznice_trv
       m_detsky_termostat_spinac:
         value_template: "{% if is_state_attr('climate.m_detsky_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
-          service: script.zapnout_trv
+          action: script.zapnout_trv
           data:
             trv: climate.m_detsky_trv
         turn_off:
-          service: script.vypnout_trv
+          action: script.vypnout_trv
           data:
             trv: climate.m_detsky_trv
       # topeni_spinac:
@@ -555,9 +555,9 @@ switch:
       #       {{ states('switch.sonoff_kotelna4') }}
       #     {% endif %}
       #   turn_on:
-      #     - service: script.topeni_kotel_zapnout
+      #     - action: script.topeni_kotel_zapnout
       #   turn_off:
-      #     - service: script.topeni_kotel_vypnout
+      #     - action: script.topeni_kotel_vypnout
 
 climate:
   - platform: generic_thermostat
@@ -700,7 +700,7 @@ climate:
     hot_tolerance: 0.0
     keep_alive:
       hours: 3
-    away_temp: 13
+    away_temp: 18
 
   - platform: generic_thermostat
     name: "Kuchyň Termostat"
@@ -783,7 +783,6 @@ recorder:
       - uptime
       - time_date
       - worldclock
-      - automation
       - button
     entities:
       - automation.m_obyvak_lampa_prepni

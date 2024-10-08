@@ -126,7 +126,7 @@
   alias: Topení - Boost - Timer Stop
   description: ""
   trigger:
-    - platform: event
+    - trigger: event
       event_type: timer.finished
       event_data:
         entity_id: timer.timer_topeni_boost
@@ -141,7 +141,7 @@
   alias: Světlo Marek
   description: ""
   trigger:
-    - platform: device
+    - trigger: device
       domain: mqtt
       device_id: e8bbce2805ab08618682b5fbb50521d9
       type: action
