@@ -82,33 +82,11 @@ counter:
     step: 1
 
 input_number:
-  # teplota_komfort:
-  #   name: "Komfortní teplota"
-  #   unit_of_measurement: "°C"
-  #   min: 10
-  #   max: 25
-  #   step: 1
-
-  # teplota_eko:
-  #   name: "Eko teplota"
-  #   unit_of_measurement: "°C"
-  #   min: 10
-  #   max: 25
-  #   step: 1
-
-  # teplota_boost:
-  #   name: "Boost teplota"
-  #   unit_of_measurement: "°C"
-  #   min: 10
-  #   max: 25
-  #   step: 1
-
-  # rozdil_kotlu:
-  #   name: "Rozdil kotlu"
-  #   unit_of_measurement: "°C"
-  #   min: 1
-  #   max: 5
-  #   step: 1
+  # kotel_peletkovy_pytle_posledni_hodnota:
+  #   initial: 0
+  #   min: 0
+  #   max: 100
+  #   step: 0.01
 
 input_text:
   timers_active:
@@ -136,6 +114,14 @@ schedule:
     friday:
       - from: "5:00:00"
         to: "15:30:00"
+
+utility_meter:
+  kotel_peletkovy_spotreba_denni:
+    source: sensor.kotel_peletkovy_spotreba
+    cycle: daily
+  kotel_peletkovy_spotreba_mesicni:
+    source: sensor.kotel_peletkovy_spotreba
+    cycle: monthly
 
 sensor:
   - platform: min_max
@@ -247,14 +233,6 @@ sensor:
     unit_prefix: k
     round: 1
     method: left
-
-  - platform: statistics
-    name: "Celkem pytlů kolmý"
-    entity_id: sensor.zasobnik_kolmy_pytle
-    state_characteristic: sum_differences_nonnegative
-    max_age:
-      days: 365
-    precision: 2
 
   - platform: template
     sensors:
@@ -371,7 +349,7 @@ template:
       - name: "Topení Kotel Teplota Vody"
         # {{ 21 + (80-21)*((( state_attr('weather.evans', 'temperature')-21)/(-12-21))**(1/2)) | int(0) }}
         state: >-
-          {% set t = (21 + 59*((( state_attr('weather.evans', 'temperature')-21)/-33)**(0.5))) | int(0) %}
+          {% set t = (21 + 59*(((( states('sensor.evans_teplota') | float(0))-21)/-33)**(0.5))) | int(0) %}
           {% if t < 56 %}
             {{ 56 | int }}
           {% elif t > 80 %}
@@ -812,25 +790,11 @@ recorder:
       - sensor.vstup_zasuvka_*
       - sensor.naradi_zasuvka_*
       - sensor.m_koupelna_ovzdusi_*
-    #   - sensor.goodwe_*
   include:
     entities:
       - automation.nabijeni_baterie
       - automation.nabijeni_baterie_stop
       - automation.kotelna_prehrata_voda
-      #   - sensor.goodwe_pv_power
-      #   - sensor.goodwe_battery_state_of_charge
-      #   - sensor.goodwe_battery_mode
-      #   - sensor.goodwe_battery_mode_code
-      #   - sensor.goodwe_battery_power
-      #   - sensor.goodwe_total_battery_discharge
-      #   - sensor.goodwe_total_battery_charge
-      #   - sensor.goodwe_house_consumption
-      #   - sensor.goodwe_total_pv_generation
-      #   - sensor.goodwe_meter_total_energy_import
-      #   - sensor.goodwe_meter_total_energy_export
-      #   - sensor.goodwe_meter_total_energy_import_cost
-      #   - sensor.goodwe_meter_total_energy_export_compensation
       - sensor.m_koupelna_ovzdusi_humidity_filtr
       - sensor.m_koupelna_ovzdusi_temperature_filtr
       - sensor.m_koupelna_ovzdusi_co2_filtr

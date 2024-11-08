@@ -51,6 +51,13 @@ input_number:
     step: 5
     mode: slider
     unit_of_measurement: "%"
+counter:
+  fve_celkova_spotreba_pocitadlo_dni_workday:
+    initial: 0
+    step: 1
+  fve_celkova_spotreba_pocitadlo_dni_holiday:
+    initial: 0
+    step: 1
 utility_meter:
   fve_celkova_spotreba_hodinova:
     source: sensor.fve_celkova_spotreba
@@ -58,6 +65,11 @@ utility_meter:
   fve_celkova_spotreba_denni:
     source: sensor.fve_celkova_spotreba
     cycle: daily
+  fve_celkova_spotreba_tarify:
+    source: sensor.fve_celkova_spotreba
+    tariffs:
+      - workday
+      - holiday
   fve_hodinova:
     source: sensor.goodwe_total_pv_generation
     cycle: hourly
@@ -81,8 +93,54 @@ sensor:
       - filter: time_simple_moving_average
         window_size: "24:00"
         precision: 2
+  - platform: history_stats
+    name: spot_podprumerna_cena_fve_on_stats
+    entity_id: binary_sensor.spot_podprumerna_cena_fve
+    state: "on"
+    type: ratio
+    end: "{{ today_at('00:00') }}"
+    duration:
+      days: 14
+  - platform: history_stats
+    name: spot_podprumerna_cena_topeni_on_stats
+    entity_id: binary_sensor.spot_podprumerna_cena_topeni
+    state: "on"
+    type: ratio
+    end: "{{ today_at('00:00') }}"
+    duration:
+      days: 14
+  - platform: history_stats
+    name: spot_podprumerna_cena_auto_on_stats
+    entity_id: binary_sensor.spot_podprumerna_cena_auto
+    state: "on"
+    type: ratio
+    end: "{{ today_at('00:00') }}"
+    duration:
+      days: 14
   - platform: template
     sensors:
+      fve_celkova_spotreba_prumerna_vsedni_den:
+        friendly_name: "FVE Denní spotřeba ve všední dny"
+        unit_of_measurement: "kWh"
+        value_template: >
+          {% set days = states('counter.fve_celkova_spotreba_pocitadlo_dni_workday') | int %}
+          {% set total = states('sensor.fve_celkova_spotreba_tarify_workday') | float %}
+          {% if days > 0 %}
+            {{ (total / days) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+      fve_celkova_spotreba_prumerna_vikend:
+        friendly_name: "FVE Denní spotřeba o víkendech"
+        unit_of_measurement: "kWh"
+        value_template: >
+          {% set days = states('counter.fve_celkova_spotreba_pocitadlo_dni_holiday') | int %}
+          {% set total = states('sensor.fve_celkova_spotreba_tarify_holiday') | float %}
+          {% if days > 0 %}
+            {{ (total / days) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
       #   cena_elektriny_silova:
       #     friendly_name: "Cena silové elektřiny"
       #     value_template: >-
