@@ -119,6 +119,37 @@ sensor:
       days: 14
   - platform: template
     sensors:
+      spot_cena_elektriny_prumerna_24h_predikce:
+        friendly_name: "Spot Cena elektřiny průměrná 24h s predikcí"
+        value_template: >
+          {% set ns = namespace(total=0, count=0, additional_value=0, current_time=now(), timestamp=none) %}
+
+          {% for key, value in states.sensor.current_spot_electricity_price.attributes.items() %}
+            {% if key not in ['unit_of_measurement', 'icon', 'friendly_name'] %}
+              {% set ns.timestamp = as_datetime(key) %}
+              {% if ns.timestamp > ns.current_time %}
+                {% if value is number %}
+                  {% set ns.total = ns.total + value %}
+                  {% set ns.count = ns.count + 1 %}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+
+          {# Přidání hodnoty senzoru spot_cena_elektriny_prumerna_24h 24krát #}
+          {% set ns.additional_value = states('sensor.spot_cena_elektriny_prumerna_24h') | float(0) %}
+          {% if ns.additional_value != 0 %}
+            {% set ns.total = ns.total + (ns.additional_value * 24) %}
+            {% set ns.count = ns.count + 24 %}
+          {% endif %}
+
+          {% if ns.count > 0 %}
+            {{ (ns.total / ns.count) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+        unit_of_measurement: "Kč/kWh"
+
       fve_celkova_spotreba_prumerna_vsedni_den:
         friendly_name: "FVE Denní spotřeba ve všední dny"
         unit_of_measurement: "kWh"
