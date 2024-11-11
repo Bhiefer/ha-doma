@@ -289,8 +289,20 @@ binary_sensor:
           {% set state = now() %}
           {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
 automation:
-  - id: "1728745087845"
-    alias: FVE - Spotřeba Typ dne
+  - alias: "FVE - Workaround aktualizace koeficientů"
+    trigger:
+      - platform: state
+        entity_id: input_number.spot_koeficient_ceny_fve
+      - platform: state
+        entity_id: input_number.spot_koeficient_ceny_auto
+      - platform: state
+        entity_id: input_number.spot_koeficient_ceny_topeni
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: sensor.spot_cena_elektriny_prumerna_24h_predikce
+
+  - alias: FVE - Spotřeba Typ dne
     description: ""
     triggers:
       - entity_id:
@@ -314,8 +326,7 @@ automation:
                 - select.fve_celkova_spotreba_tarify
             data:
               option: holiday
-  - id: "1728882920097"
-    alias: FVE - Spotřeba Počítadla dní
+  - alias: FVE - Spotřeba Počítadla dní
     description: ""
     triggers:
       - trigger: time
