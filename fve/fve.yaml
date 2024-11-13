@@ -308,44 +308,41 @@ automation:
       - platform: state
         entity_id: binary_sensor.pracovni_den
     action:
-      - if:
-          - condition: state
-            entity_id: binary_sensor.pracovni_den
-            state: "on"
-        then:
-          - action: select.select_option
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.pracovni_den
+                state: "on"
+            sequence:
+              - service: select.select_option
+                data:
+                  option: "workday"
+                target:
+                  entity_id: select.fve_celkova_spotreba_tarify
+        default:
+          - service: select.select_option
             data:
-              option: workday
+              option: "holiday"
             target:
               entity_id: select.fve_celkova_spotreba_tarify
-        else:
-          - action: select.select_option
-            target:
-              entity_id:
-                - select.fve_celkova_spotreba_tarify
-            data:
-              option: holiday
   - alias: FVE - Spotřeba Počítadla dní
     description: ""
-    triggers:
-      - trigger: time
-        at: 00:00:01
-    conditions: []
-    actions:
-      - if:
-          - condition: state
-            entity_id: binary_sensor.pracovni_den
-            state: "on"
-        then:
-          - action: counter.increment
-            metadata: {}
-            data: {}
-            target:
-              entity_id: counter.fve_celkova_spotreba_pocitadlo_dni_workday
-        else:
-          - action: counter.increment
-            metadata: {}
-            data: {}
+    trigger:
+      - platform: time
+        at: "00:00:01"
+    condition: []
+    action:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.pracovni_den
+                state: "on"
+            sequence:
+              - service: counter.increment
+                target:
+                  entity_id: counter.fve_celkova_spotreba_pocitadlo_dni_workday
+        default:
+          - service: counter.increment
             target:
               entity_id: counter.fve_celkova_spotreba_pocitadlo_dni_holiday
     mode: single
