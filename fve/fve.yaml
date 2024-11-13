@@ -256,9 +256,9 @@ sensor:
       #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
       fve_baterie_nabito:
         friendly_name: "FVE Baterie Nabito"
-        # 14,2 kWh kapacita baterii
+        # kapacita baterii * 0.8 (Nevybíjí se pod 20%, k dispozici je jen 80% kapacity * 0.01 procenta na ration * 0.001 Wh na KWh)
         value_template: >-
-          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * 0.142 }}
+          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * states('sensor.fve_baterie_kapacita) | int(0) * 0.000008 }}
         unit_of_measurement: "kWh"
 binary_sensor:
   - platform: template
