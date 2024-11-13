@@ -240,7 +240,7 @@ sensor:
         friendly_name: "FVE Denní spotřeba průměrná"
         unit_of_measurement: "kWh"
         value_template: >-
-          {{ states('input_number.fve_denni_spotreba_prumerna_vsedni') if is_state('binary_sensor.pracovni_den', 'on') else states('input_number.fve_denni_spotreba_prumerna_vikend') }}
+          {{ states('sensor.fve_celkova_spotreba_prumerna_vsedni_den') if is_state('binary_sensor.pracovni_den', 'on') else states('sensor.fve_celkova_spotreba_prumerna_vikend') }}
       fve_dnes_k_nabiti:
         friendly_name: "FVE Dnes k nabití"
         unit_of_measurement: "kWh"
@@ -304,11 +304,10 @@ automation:
 
   - alias: FVE - Spotřeba Typ dne
     description: ""
-    triggers:
-      - entity_id:
-          - binary_sensor.pracovni_den
-        trigger: state
-    actions:
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.pracovni_den
+    action:
       - if:
           - condition: state
             entity_id: binary_sensor.pracovni_den
