@@ -258,7 +258,7 @@ sensor:
         friendly_name: "FVE Baterie Nabito"
         # kapacita baterii * 0.8 (Nevybíjí se pod 20%, k dispozici je jen 80% kapacity * 0.01 procenta na ration * 0.001 Wh na KWh)
         value_template: >-
-          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * states('input_number.fve_baterie_kapacita) | int(0) * 0.000008 }}
+          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * states('input_number.fve_baterie_kapacita') | int(0) * 0.000008 }}
         unit_of_measurement: "kWh"
 binary_sensor:
   - platform: template
