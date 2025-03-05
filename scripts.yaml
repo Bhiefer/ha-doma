@@ -197,33 +197,6 @@ uklid_prodejny:
 notifikace_urgentni:
   alias: Notifikace - urgentní
   sequence:
-  - action: notify.mobile_app_marek_mobil
-    data:
-      message: TTS
-      data:
-        ttl: 0
-        priority: high
-        media_stream: alarm_stream
-        tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava
-          }} Ťuk ťuk!" '
-      title: Chyba kotle
-  - action: notify.mobile_app_filip_mobil
-    data:
-      message: TTS
-      data:
-        ttl: 0
-        priority: high
-        media_stream: alarm_stream
-        tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava
-          }} Ťuk ťuk!" '
-      title: Chyba kotle
-  - action: tts.google_translate_say
-    target:
-      entity_id: media_player.nesthubd799
-    data:
-      message: Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk
-        ťuk!
-      cache: false
   - device_id: 2dfa5ffcae33a17cfd8a076db390f90e
     domain: mobile_app
     type: notify
@@ -232,6 +205,54 @@ notifikace_urgentni:
     domain: mobile_app
     type: notify
     message: '{{ zprava }}'
+  - device_id: cd5eb3dfbca93359d6824083b2297bdb
+    domain: mobile_app
+    type: notify
+    message: '{{ zprava }}'
+  - if:
+    - condition: time
+      after: 07:00:00
+      before: '22:00:00'
+    then:
+    - action: notify.mobile_app_marek_mobil
+      data:
+        message: TTS
+        data:
+          ttl: 0
+          priority: high
+          media_stream: alarm_stream
+          tts_text: '"Ťuk ťuk! {{ zprava }}" '
+        title: Chyba kotle
+    - action: notify.mobile_app_filip_mobil
+      data:
+        message: TTS
+        data:
+          ttl: 0
+          priority: high
+          media_stream: alarm_stream
+          tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }}" '
+        title: Chyba kotle
+    - action: tts.google_translate_say
+      target:
+        entity_id: media_player.nesthubd799
+      data:
+        message: Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }}
+          Ťuk ťuk!
+        cache: false
+  - if:
+    - condition: state
+      entity_id: binary_sensor.pracovni_doba
+      state: 'on'
+    then:
+    - action: notify.mobile_app_swacza
+      data:
+        data:
+          ttl: 0
+          priority: high
+          media_stream: alarm_stream
+          tts_text: '"Ťuk ťuk! {{ zprava }}" '
+        title: Chyba kotle
+        message: TTS
   mode: queued
   icon: mdi:bell-alert
   max: 10

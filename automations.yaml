@@ -225,15 +225,13 @@
 - id: '1647541438539'
   alias: M Obývák Hlavní světlo Přepni
   description: ''
-  trigger:
-  - platform: device
-    domain: mqtt
-    device_id: f6641a54ad49e778b05d2b3f1946e38d
-    type: action
-    subtype: double
-    discovery_id: 0x00124b00251eba31 action_double
-  condition: []
-  action:
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.m_obyvak_tlacitko_action
+    to: double
+  conditions: []
+  actions:
   - type: toggle
     device_id: 6f54df2552b74261f4d843a09a1b1679
     entity_id: switch.m_vypinac_obyvak_l1
@@ -242,15 +240,13 @@
 - id: '1647541630252'
   alias: M Všechna světla Vypni
   description: ''
-  trigger:
-  - platform: device
-    domain: mqtt
-    device_id: f6641a54ad49e778b05d2b3f1946e38d
-    type: action
-    subtype: long
-    discovery_id: 0x00124b00251eba31 action_long
-  condition: []
-  action:
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.m_obyvak_tlacitko_action
+    to: long
+  conditions: []
+  actions:
   - type: turn_off
     device_id: bded62f01a347854b01897a3af6a3fe6
     entity_id: switch.m_vypinac_chodba
@@ -523,15 +519,13 @@
 - id: '1674137430447'
   alias: M Obývák Lampa Přepni
   description: ''
-  trigger:
-  - platform: device
-    domain: mqtt
-    device_id: f6641a54ad49e778b05d2b3f1946e38d
-    type: action
-    subtype: single
-    discovery_id: 0x00124b00251eba31 action_single
-  condition: []
-  action:
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.m_obyvak_tlacitko_action
+    to: single
+  conditions: []
+  actions:
   - type: toggle
     device_id: 6f272126d336b2c099128c19be861e91
     entity_id: light.m_lampa_obyvak
@@ -540,24 +534,24 @@
 - id: '1674246358128'
   alias: Notifikace Peletkový kotel - Málo pelet
   description: ''
-  trigger:
-  - platform: numeric_state
-    entity_id:
-    - sensor.zasobnik_kolmy_filtr
-    above: 75
-  - platform: numeric_state
-    entity_id:
-    - sensor.zasobnik_kolmy_filtr
-    above: 80
-  - platform: numeric_state
-    entity_id:
-    - sensor.zasobnik_kolmy_filtr
-    above: 85
-  condition:
+  triggers:
+  - entity_id:
+    - sensor.peletkovy_kotel_zasobnik_zbyva
+    trigger: numeric_state
+    below: 25
+  - entity_id:
+    - sensor.peletkovy_kotel_zasobnik_zbyva
+    trigger: numeric_state
+    below: 15
+  - entity_id:
+    - sensor.peletkovy_kotel_zasobnik_zbyva
+    trigger: numeric_state
+    below: 5
+  conditions:
   - condition: time
     after: 07:00:00
     before: '21:00:00'
-  action:
+  actions:
   - action: script.notifikace_urgentni
     data:
       zprava: Dochází pelety!
@@ -614,13 +608,13 @@
 - id: '1678818955253'
   alias: Pracovní doba - Stop
   description: ''
-  trigger:
-  - platform: state
-    entity_id:
+  triggers:
+  - entity_id:
     - binary_sensor.pracovni_doba
     to: 'off'
-  condition: []
-  action:
+    trigger: state
+  conditions: []
+  actions:
   - type: turn_off
     device_id: bd2f5dd258eb0de0202da3afc85a70cb
     entity_id: light.sonoff_perfectdoor
@@ -636,6 +630,11 @@
   - action: script.1713169977678
     metadata: {}
     data: {}
+  - action: climate.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: climate.marek_termostat_primotop
   mode: single
 - id: '1678958657961'
   alias: Topení - Přehřátá voda
@@ -688,15 +687,20 @@
 - id: '1680526566395'
   alias: Marek Vypínač Světlo
   description: ''
-  trigger:
-  - platform: device
-    domain: mqtt
+  triggers:
+  - domain: mqtt
     device_id: e23b1f5e3e6cb9697c08219c76dc6d53
     type: action
     subtype: 1_single
     discovery_id: 0x70ac08fffe196cde action_1_single
-  condition: []
-  action:
+    trigger: device
+  - domain: mqtt
+    device_id: e8bbce2805ab08618682b5fbb50521d9
+    type: action
+    subtype: single
+    trigger: device
+  conditions: []
+  actions:
   - type: toggle
     device_id: 0d07bc71ff859527bc2ceedb7319129a
     entity_id: 01d4fa17f695216ec574e42676f7677a
@@ -835,19 +839,14 @@
 - id: '1694063272128'
   alias: Vstup - Někdo přišel
   description: ''
-  trigger:
-  - type: motion
-    platform: device
-    device_id: 79d2de0dad3a0afd348fde69ecd4e316
-    entity_id: 3e69712d387297607d9377073c64037d
-    domain: binary_sensor
-  - type: motion
-    platform: device
-    device_id: 6c6667e7afc6890b69f73fed5e4afb16
-    entity_id: 39cc4e5d4e2dd7bf492f523e514b2ee9
-    domain: binary_sensor
-  condition: []
-  action:
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.prodejna_cidlo_occupancy
+    to: 'on'
+    enabled: true
+  conditions: []
+  actions:
   - action: script.alarm_vstup
     data: {}
   mode: single
@@ -998,17 +997,17 @@
 - id: '1698006430183'
   alias: Topení - Kotel - Nastavení teploty vody
   description: ''
-  trigger:
-  - platform: state
-    entity_id:
+  triggers:
+  - entity_id:
     - sensor.topeni_kotel_teplota_vody
-  condition: []
-  action:
+    trigger: state
+  conditions: []
+  actions:
   - action: climate.set_temperature
     data:
       temperature: '{{ states(''sensor.topeni_kotel_teplota_vody'') }}'
     target:
-      entity_id: climate.kotel_peletkovy
+      entity_id: climate.kotel_peletkovy_voda
   mode: single
 - id: '1698311963410'
   alias: Topení - Nastav termostaty
@@ -1159,23 +1158,6 @@
         preset_mode: away
       target:
         entity_id: climate.pavla_termostat
-  mode: single
-- id: '1698318374059'
-  alias: Topení - Reset dočasných
-  description: ''
-  trigger:
-  - platform: time_pattern
-    hours: '1'
-  condition: []
-  action:
-  - action: input_boolean.turn_off
-    data: {}
-    target:
-      entity_id: input_boolean.topeni_ivan
-  - action: input_boolean.turn_off
-    data: {}
-    target:
-      entity_id: input_boolean.topeni_pavla
   mode: single
 - id: '1703501739554'
   alias: FVE - Opravit Eco mode SoC
@@ -1477,4 +1459,122 @@
       media_content_type: album
       media_content_id: A:ALBUM/Hrátky s Vojtkem
     action: media_player.play_media
+  mode: single
+- id: '1736502315698'
+  alias: Marek  Led
+  description: ''
+  triggers:
+  - domain: mqtt
+    device_id: e23b1f5e3e6cb9697c08219c76dc6d53
+    type: action
+    subtype: 3_single
+    trigger: device
+  - domain: mqtt
+    device_id: e8bbce2805ab08618682b5fbb50521d9
+    type: action
+    subtype: double
+    trigger: device
+  conditions: []
+  actions:
+  - action: light.toggle
+    metadata: {}
+    data:
+      transition: 10
+    target:
+      entity_id: light.marek_led
+  mode: single
+- id: '1737363294897'
+  alias: Topení - Kotel - Nastavení stupně vytápění
+  description: ''
+  triggers:
+  - entity_id:
+    - binary_sensor.topeni_mod_prace
+    trigger: state
+  - entity_id:
+    - binary_sensor.topeni_mod_marek
+    trigger: state
+  - entity_id:
+    - binary_sensor.topeni_mod_kino
+    trigger: state
+  - entity_id:
+    - binary_sensor.topeni_mod_zkusebna
+    trigger: state
+  - entity_id:
+    - binary_sensor.topeni_mod_ivan
+    trigger: state
+  - entity_id:
+    - binary_sensor.topeni_mod_pavla
+    trigger: state
+  - entity_id:
+    - binary_sensor.topeni_mod_zima
+    trigger: state
+  - trigger: time_pattern
+    hours: /1
+  conditions: []
+  actions:
+  - if:
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_zkusebna
+      state: 'on'
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_prace
+      state: 'off'
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_marek
+      state: 'off'
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_kino
+      state: 'off'
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_ivan
+      state: 'off'
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_pavla
+      state: 'off'
+    - condition: state
+      entity_id: binary_sensor.topeni_mod_zima
+      state: 'off'
+    then:
+    - action: number.set_value
+      target:
+        entity_id:
+        - number.kotel_peletkovy_vykon
+      data:
+        value: '2'
+    else:
+    - action: number.set_value
+      data:
+        value: '5'
+      target:
+        entity_id: number.kotel_peletkovy_vykon
+  mode: single
+- id: '1739485923084'
+  alias: Topení - Podavač pelet - Stop
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.peletkovy_kotel_zasobnik_zbyva
+    below: 0.3
+  conditions: []
+  actions:
+  - type: turn_off
+    device_id: 71a3902e7c6de019b7f62556bee8f51d
+    entity_id: 29eb034477ad1518f422658ddc354c45
+    domain: switch
+  mode: single
+- id: '1739486163555'
+  alias: Topení - Podavač pelet - Start
+  description: ''
+  triggers:
+  - trigger: numeric_state
+    entity_id:
+    - sensor.peletkovy_kotel_zasobnik_zbyva
+    above: 0.3
+  conditions: []
+  actions:
+  - type: turn_on
+    device_id: 71a3902e7c6de019b7f62556bee8f51d
+    entity_id: 29eb034477ad1518f422658ddc354c45
+    domain: switch
   mode: single

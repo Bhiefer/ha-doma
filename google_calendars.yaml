@@ -88,3 +88,33 @@
     - device_id: pavla_topeni
       ignore_availability: true
       name: "Pavla - topení"
+
+- cal_id: c_400004808dee8d51e4b39cc968fd6175ec4e1cf4e995be9e9e0ba16942c69f8e@group.calendar.google.com
+  entities:
+  - device_id: sabci
+    ignore_availability: true
+    name: "Sab\u010Di"
+
+- cal_id: c_8v01g4ki4622evi19v7vdea298@group.calendar.google.com
+  entities:
+  - device_id: rodicove_pasicnyci_kekoci
+    ignore_availability: true
+    name: "Rodi\u010Dov\xE9 Pasi\u010Dnyci, Keko\u010Di"
+
+- cal_id: c_815097ff4c0648e81c31692f2bf89b4e12c3d20f135a69b459e8a348a7429144@group.calendar.google.com
+  entities:
+  - device_id: sabci
+    ignore_availability: true
+    name: "Sab\u010Di"
+
+- cal_id: c_c6d7706db8be8a25fd189b600c86f9f26de3fcc51c7f13eb7a4bf82e8559c605@group.calendar.google.com
+  entities:
+  - device_id: sabci
+    ignore_availability: true
+    name: "Sab\u010Di"
+
+- cal_id: brina.cz_df8u4hc0adr1h5o5a90r5di5lo@group.calendar.google.com
+  entities:
+  - device_id: brusko_a_mrne
+    ignore_availability: true
+    name: "B\u0159u\u0161ko a mrn\u011B"

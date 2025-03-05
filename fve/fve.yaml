@@ -260,6 +260,41 @@ sensor:
         value_template: >-
           {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * states('input_number.fve_baterie_kapacita') | int(0) * 0.000008 }}
         unit_of_measurement: "kWh"
+      goodwe_baterie_stav:
+        value_template: >-
+          {% set stav = states('sensor.goodwe_battery_mode_code') | int(0) %}
+          {% if stav == 1 %}
+            Nenabíjí
+          {% elif stav == 2 %}
+            Vybíjení
+          {% elif stav == 3 %}
+            Nabíjení
+          {%- else -%}
+            Neznámý
+          {%- endif %}
+      goodwe_baterie_vykon:
+        value_template: >-
+          {% set stav = states('sensor.goodwe_battery_mode_code') | int(0) %}
+          {% if stav == 1 %}
+            {{ 0 | int() }}
+          {% elif stav == 2 %}
+            {{ states('sensor.goodwe_battery_power') | int(0) }}
+          {% elif stav == 3 %}
+            {{ states('sensor.goodwe_battery_power') | int(0) * (-1) }}
+          {%- else -%}
+            {{ 0 | int() }}
+          {%- endif %}
+        unit_of_measurement: "W"
+      goodwe_mod_nabijeni:
+        value_template: >-
+          {% set stav = states('select.goodwe_inverter_operation_mode') %}
+          {% if stav == "general" %}
+            Ze slunce
+          {% elif stav == "eco_mode" %}
+            Ze sítě
+          {%- else -%}
+            Neznámý
+          {%- endif %}
 binary_sensor:
   - platform: template
     sensors:

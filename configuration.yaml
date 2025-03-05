@@ -674,8 +674,8 @@ climate:
     max_temp: 26
     ac_mode: false
     target_temp: 21
-    cold_tolerance: 3.0
-    hot_tolerance: 0.0
+    cold_tolerance: 1.0
+    hot_tolerance: 2.0
     keep_alive:
       hours: 3
     away_temp: 18
