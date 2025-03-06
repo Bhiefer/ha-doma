@@ -131,17 +131,37 @@ sensor:
     sampling_size: 3600
     max_age:
       hours: 1
+  - platform: statistics
+    name: "GoodWe Grid Power Hourly Average"
+    entity_id: sensor.goodwe_pretok_do_site
+    state_characteristic: mean
+    sampling_size: 3600
+    max_age:
+      hours: 1
   - platform: template
     sensors:
+      goodwe_pretok_do_site:
+        friendly_name: "Goodwe Přetok do sítě"
+        unit_of_measurement: "W"
+        value_template: >
+          {% set sit = states('sensor.goodwe_active_power_total') | float(0) %}
+
+          {% if sit > 0 %}
+            {{ sit | float(0)}}
+          {% else %}
+            {{ 0 | float(0) }}
+          {% endif %}
       spot_cena_dynamicka_auto:
         friendly_name: "Spot Dynamická cena elektřiny pro nabíjení auta"
         unit_of_measurement: "CZK"
         value_template: >
-          {% set avg_power = states('sensor.goodwe_pv_power_hourly_average') | float(0) %}
-          {% set max_power = states('input_number.fve_auto_nabijeci_vykon') | float(1) %}
-          {% set spot_price = states('sensor.current_spot_electricity_buy_price') | float(0) %}
+          {% set car_charge_koeficient = (1 - (states('sensor.goodwe_grid_power_hourly_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230 | float))) %}
 
-          {{ (1 - (avg_power / max_power * 230)) * spot_price }}
+          {% if car_charge_koeficient > 0 %}
+            {{ car_charge_koeficient * states('sensor.current_spot_electricity_buy_price') | float(0)}}
+          {% else %}
+            {{ 0 | float(0) }}
+          {% endif %}
       spot_cena_elektriny_prumerna_24h_predikce:
         friendly_name: "Spot Cena elektřiny průměrná 24h s predikcí"
         value_template: >
@@ -413,6 +433,7 @@ recorder:
     entities:
       - sensor.goodwe_pv_power
       - sensor.goodwe_pv_power_hourly_average
+      - sensor.goodwe_grid_power_hourly_average
       - sensor.goodwe_house_consumption
       - sensor.goodwe_battery_state_of_charge
       - sensor.goodwe_battery_mode
