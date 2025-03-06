@@ -51,6 +51,13 @@ input_number:
     step: 5
     mode: slider
     unit_of_measurement: "%"
+  fve_auto_nabijeci_vykon:
+    name: "Nabíjecí výkon"
+    min: 10
+    max: 32
+    step: 1
+    mode: slider
+    unit_of_measurement: "A"
 counter:
   fve_celkova_spotreba_pocitadlo_dni_workday:
     initial: 0
@@ -117,8 +124,24 @@ sensor:
     end: "{{ today_at('00:00') }}"
     duration:
       days: 14
+  - platform: statistics
+    name: "GoodWe PV Power Hourly Average"
+    entity_id: sensor.goodwe_pv_power
+    state_characteristic: mean
+    sampling_size: 3600
+    max_age:
+      hours: 1
   - platform: template
     sensors:
+      spot_cena_dynamicka_auto:
+        friendly_name: "Spot Dynamická cena elektřiny pro nabíjení auta"
+        unit_of_measurement: "CZK"
+        value_template: >
+          {% set avg_power = states('sensor.goodwe_pv_power_hourly_average') | float(0) %}
+          {% set max_power = states('input_number.fve_auto_nabijeci_vykon') | float(1) %}
+          {% set spot_price = states('sensor.current_spot_electricity_buy_price') | float(0) %}
+
+          {{ (1 - (avg_power / max_power * 230)) * spot_price }}
       spot_cena_elektriny_prumerna_24h_predikce:
         friendly_name: "Spot Cena elektřiny průměrná 24h s predikcí"
         value_template: >
@@ -389,6 +412,7 @@ recorder:
   include:
     entities:
       - sensor.goodwe_pv_power
+      - sensor.goodwe_pv_power_hourly_average
       - sensor.goodwe_house_consumption
       - sensor.goodwe_battery_state_of_charge
       - sensor.goodwe_battery_mode
