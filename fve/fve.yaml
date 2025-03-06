@@ -162,6 +162,17 @@ sensor:
           {% else %}
             {{ 0 | float(0) }}
           {% endif %}
+      spot_koeficient_ze_site_auto:
+        friendly_name: "Spot Koeficient odběru ze sítě pro nabíjení auta"
+        unit_of_measurement: "%"
+        value_template: >
+          {% set car_charge_koeficient = (1 - (states('sensor.goodwe_grid_power_hourly_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230 | float))) %}
+
+          {% if car_charge_koeficient > 0 %}
+            {{ car_charge_koeficient * 100 | int(0) }}
+          {% else %}
+            {{ 0 | float(0) }}
+          {% endif %}
       spot_cena_elektriny_prumerna_24h_predikce:
         friendly_name: "Spot Cena elektřiny průměrná 24h s predikcí"
         value_template: >
