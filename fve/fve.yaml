@@ -125,26 +125,20 @@ sensor:
     duration:
       days: 14
   - platform: statistics
-    name: "GoodWe PV Power Hourly Average"
-    entity_id: sensor.goodwe_pv_power
+    name: "GoodWe Sell Power Hourly Average"
+    entity_id: sensor.goodwe_sell_power
     state_characteristic: mean
-    sampling_size: 3600
+    keep_last_sample: true
     max_age:
-      hours: 1
-  - platform: statistics
-    name: "GoodWe Grid Power Hourly Average"
-    entity_id: sensor.goodwe_pretok_do_site
-    state_characteristic: mean
-    sampling_size: 3600
-    max_age:
-      hours: 1
+      minutes: 20
   - platform: template
     sensors:
-      goodwe_pretok_do_site:
-        friendly_name: "Goodwe Přetok do sítě"
+      goodwe_sell_power:
+        friendly_name: "Goodwe Sell Power"
         unit_of_measurement: "W"
+        device_class: power
         value_template: >
-          {% set sit = states('sensor.goodwe_active_power_total') | float(0) %}
+          {% set sit = states('sensor.goodwe_active_power') | float(0) %}
 
           {% if sit > 0 %}
             {{ sit | float(0)}}
@@ -155,7 +149,7 @@ sensor:
         friendly_name: "Spot Dynamická cena elektřiny pro nabíjení auta"
         unit_of_measurement: "CZK"
         value_template: >
-          {% set car_charge_koeficient = (1 - (states('sensor.goodwe_grid_power_hourly_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230 | float))) %}
+          {% set car_charge_koeficient = (1 - (states('sensor.goodwe_sell_power_hourly_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230 | float))) %}
 
           {% if car_charge_koeficient > 0 %}
             {{ car_charge_koeficient * states('sensor.current_spot_electricity_buy_price') | float(0)}}
@@ -166,7 +160,7 @@ sensor:
         friendly_name: "Spot Koeficient odběru ze sítě pro nabíjení auta"
         unit_of_measurement: "%"
         value_template: >
-          {% set car_charge_koeficient = (1 - (states('sensor.goodwe_grid_power_hourly_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230 | float))) %}
+          {% set car_charge_koeficient = (1 - (states('sensor.goodwe_sell_power_hourly_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230 | float))) %}
 
           {% if car_charge_koeficient > 0 %}
             {{ car_charge_koeficient * 100 | int(0) }}
@@ -443,8 +437,8 @@ recorder:
   include:
     entities:
       - sensor.goodwe_pv_power
-      - sensor.goodwe_pv_power_hourly_average
-      - sensor.goodwe_grid_power_hourly_average
+      - sensor.goodwe_sell_power
+      - sensor.goodwe_sell_power_hourly_average
       - sensor.goodwe_house_consumption
       - sensor.goodwe_battery_state_of_charge
       - sensor.goodwe_battery_mode
