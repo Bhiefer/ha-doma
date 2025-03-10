@@ -443,6 +443,9 @@ template:
         state: "{{ is_state('input_select.topeni_boost', 'none') }}"
       - name: "Boost Vše"
         state: "{{ is_state('input_select.topeni_boost', 'vse') }}"
+      - name: "fve_auto_nabijeni"
+        state: >-
+          'off'
 
 switch:
   - platform: template
