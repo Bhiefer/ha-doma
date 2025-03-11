@@ -92,7 +92,7 @@ sensor:
     method: left
   - platform: filter
     name: "Spot Cena elektřiny průměrná 24h"
-    entity_id: sensor.current_spot_electricity_buy_price
+    entity_id: sensor.current_spot_electricity_price
     filters:
       - filter: outlier
         window_size: 3
@@ -158,7 +158,7 @@ sensor:
         friendly_name: "Spot Dynamická cena elektřiny pro nabíjení auta"
         unit_of_measurement: "CZK"
         value_template: >
-          {{ states('sensor.spot_koeficient_ze_site_auto') | float(0) / 100 * states('sensor.current_spot_electricity_buy_price') | float(0) }}
+          {{ states('sensor.spot_koeficient_ze_site_auto') | float(0) / 100 * states('sensor.current_spot_electricity_price') | float(0) }}
 
       spot_cena_elektriny_prumerna_24h_predikce:
         friendly_name: "Spot Cena elektřiny průměrná 24h s predikcí"
@@ -354,11 +354,11 @@ binary_sensor:
         value_template: >-
           {{ now().hour == state_attr('sensor.spot_most_expensive_electricity_today', 'hour') | int(0) }}
       spot_podprumerna_cena_fve:
-        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_fve') | float(0) }}"
+        value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_fve') | float(0) }}"
       spot_podprumerna_cena_topeni:
-        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
+        value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
       spot_podprumerna_cena_auto:
-        value_template: "{{ states('sensor.current_spot_electricity_buy_price') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
+        value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
       spot_nizky_tarif:
         friendly_name: "Spot Nízký tarif"
         value_template: >-
