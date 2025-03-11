@@ -358,7 +358,7 @@ binary_sensor:
       spot_podprumerna_cena_topeni:
         value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
       spot_podprumerna_cena_auto:
-        value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
+        value_template: "{{ states('sensor.spot_cena_dynamicka_auto') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
       spot_nizky_tarif:
         friendly_name: "Spot Nízký tarif"
         value_template: >-
