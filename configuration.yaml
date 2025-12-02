@@ -1,6 +1,9 @@
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
+stream:
+  ll_hls: true
+
 ffmpeg:
 
 # Enable the cloud component
@@ -76,6 +79,50 @@ input_select:
       - vse
     icon: mdi:fire-circle
 
+mqtt:
+  sensor:
+    # --- Fáze L1 ---
+    - name: "Moravka L1 Power"
+      state_topic: "shellies/moravka-mereni/emeter/0/power"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+
+    - name: "Moravka L1 Total Energy"
+      state_topic: "shellies/moravka-mereni/emeter/0/total"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      value_template: "{{ (value | float / 1000) | round(3) }}"
+
+    # --- Fáze L2 ---
+    - name: "Moravka L2 Power"
+      state_topic: "shellies/moravka-mereni/emeter/1/power"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+
+    - name: "Moravka L2 Total Energy"
+      state_topic: "shellies/moravka-mereni/emeter/1/total"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      value_template: "{{ (value | float / 1000) | round(3) }}"
+
+    # --- Fáze L3 ---
+    - name: "Moravka L3 Power"
+      state_topic: "shellies/moravka-mereni/emeter/2/power"
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+
+    - name: "Moravka L3 Total Energy"
+      state_topic: "shellies/moravka-mereni/emeter/2/total"
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      value_template: "{{ (value | float / 1000) | round(3) }}"
+
 counter:
   plynomer_pocitadlo:
     initial: 0
@@ -132,7 +179,7 @@ sensor:
       - sensor.sonoff_kotelna_temperature
       - sensor.kancelar_teplota
       - sensor.kino_teplomer_temperature
-      - sensor.marek_ovzdusi_temperature_filtr
+      - sensor.marek_teplomer_temperature
       - sensor.teplomer_kuchyn_temperature
       - sensor.zkusebna_teplomer_temperature
       - sensor.esp_tilo_temperature
@@ -146,15 +193,8 @@ sensor:
     name: "Sociálky teplota min"
     type: min
     entity_ids:
-      - sensor.marek_ovzdusi_temperature_filtr
+      - sensor.marek_teplomer_temperature
       - sensor.kuchyn_teplota
-
-  - platform: filter
-    name: "Marek Ovzduší Temperature Filtr"
-    entity_id: sensor.marek_ovzdusi_temperature
-    filters:
-      - filter: time_throttle
-        window_size: "0:03"
 
   - platform: filter
     name: "Marek Ovzduší VOC Filtr"
@@ -499,15 +539,17 @@ switch:
           data:
             trv: climate.m_obyvak_trv
       m_kuchyn_termostat_spinac:
-        value_template: "{% if is_state_attr('climate.m_kuchyn_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
+        value_template: "{% if is_state('switch.m_kuchyn_trv_eco_mode', 'off') %}on{% else %}off{% endif %}"
         turn_on:
-          action: script.zapnout_trv
+          action: switch.turn_off
           data:
-            trv: climate.m_kuchyn_trv
+            entity_id:
+              - switch.m_kuchyn_trv_eco_mode
         turn_off:
-          action: script.vypnout_trv
+          action: switch.turn_on
           data:
-            trv: climate.m_kuchyn_trv
+            entity_id:
+              - switch.m_kuchyn_trv_eco_mode
       m_loznice_termostat_spinac:
         value_template: "{% if is_state_attr('climate.m_loznice_trv', 'hvac_action','heating') %}on{% else %}off{% endif %}"
         turn_on:
@@ -544,7 +586,7 @@ climate:
   - platform: generic_thermostat
     name: "Marek Termostat Přímotop"
     heater: switch.marek_primotop_prepinac
-    target_sensor: sensor.marek_ovzdusi_temperature
+    target_sensor: sensor.marek_teplomer_temperature
     min_temp: 5
     max_temp: 26
     ac_mode: false
@@ -556,6 +598,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Prodejna Recepce Termostat"
@@ -570,6 +613,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Kancelar Termostat"
@@ -584,6 +628,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Pavla Termostat"
@@ -598,6 +643,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Ivan Termostat"
@@ -612,6 +658,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Prodejna Stul Termostat"
@@ -626,6 +673,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Prodejna Parador Termostat"
@@ -640,11 +688,12 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Marek Termostat"
     heater: switch.marek_rele_trv
-    target_sensor: sensor.marek_ovzdusi_temperature
+    target_sensor: sensor.marek_teplomer_temperature
     min_temp: 5
     max_temp: 26
     ac_mode: false
@@ -654,6 +703,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Kino Termostat"
@@ -668,6 +718,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Zkušebna Termostat"
@@ -681,7 +732,8 @@ climate:
     hot_tolerance: 2.0
     keep_alive:
       hours: 3
-    away_temp: 18
+    away_temp: 11
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "Kuchyň Termostat"
@@ -696,6 +748,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "M Obývák Termostat"
@@ -710,6 +763,8 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
+
   - platform: generic_thermostat
     name: "M Kuchyň Termostat"
     heater: switch.m_kuchyn_termostat_spinac
@@ -723,6 +778,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "M Ložnice Termostat"
@@ -737,6 +793,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
   - platform: generic_thermostat
     name: "M Dětský Termostat"
@@ -751,6 +808,7 @@ climate:
     keep_alive:
       hours: 3
     away_temp: 13
+    target_temp_step: 0.5
 
 recorder:
   purge_keep_days: 3
@@ -805,5 +863,5 @@ recorder:
       - sensor.m_koupelna_ovzdusi_voc_filtr
       - sensor.marek_ovzdusi_co2_filtr
       - sensor.marek_ovzdusi_formaldehyd_filtr
-      - sensor.marek_ovzdusi_temperature_filtr
+      - sensor.marek_teplomer_temperature
       - sensor.marek_ovzdusi_voc_filtr

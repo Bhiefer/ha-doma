@@ -118,3 +118,9 @@
   - device_id: brusko_a_mrne
     ignore_availability: true
     name: "B\u0159u\u0161ko a mrn\u011B"
+
+- cal_id: bf6f75263faca2ef2b34798ad861409ea23f11f23706688458ee3fe250d47292@group.calendar.google.com
+  entities:
+  - device_id: dm_zbujnik
+    ignore_availability: true
+    name: DM Zbujnik
