@@ -299,16 +299,17 @@
     to: 'on'
   - trigger: time
     at: '18:03:00'
-  condition:
+    enabled: false
+  conditions:
   - condition: state
     entity_id: binary_sensor.workday_sensor
     state: 'on'
-    enabled: false
+    enabled: true
   - condition: state
     entity_id: calendar.evans_volno
     state: 'off'
-    enabled: false
-  action:
+    enabled: true
+  actions:
   - type: turn_on
     device_id: 612e3e9c1efb9b57bc1e7c53192bfbfa
     entity_id: e690ef1dac40152fa4b8d31ac0108bbf
@@ -324,8 +325,9 @@
     to: 'off'
   - trigger: time
     at: '18:57:00'
-  condition: []
-  action:
+    enabled: false
+  conditions: []
+  actions:
   - type: turn_off
     device_id: 612e3e9c1efb9b57bc1e7c53192bfbfa
     entity_id: e690ef1dac40152fa4b8d31ac0108bbf
@@ -774,23 +776,16 @@
   alias: M Koupelna - Vlhkost
   description: ''
   triggers:
-  - trigger: state
-    entity_id:
-    - sensor.m_loznice_ovzdusi_humidity
-    enabled: false
   - trigger: numeric_state
-    entity_id: sensor.m_koupelna_ovzdusi_humidity_filtr
+    entity_id:
+    - sensor.kino_teplomer_humidity
     for:
       hours: 0
       minutes: 1
       seconds: 0
     above: 62
-  condition:
-  - condition: numeric_state
-    entity_id: sensor.m_loznice_ovzdusi_humidity
-    above: 65
-    enabled: false
-  action:
+  conditions: []
+  actions:
   - action: button.press
     data: {}
     target:
@@ -1604,4 +1599,63 @@
     device_id: 8312af7c398720c10123a3304cde62ce
     entity_id: 2ad1704df83d0af62aec80fad886ae1b
     domain: switch
+  mode: single
+- id: '1767652230337'
+  alias: Zigbee Evans - restart
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.marek_teplomer_temperature
+    to:
+    - unavailable
+    trigger: state
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+  conditions:
+  - condition: state
+    entity_id: sensor.prodejna_recepce_teplomer_temperature
+    state:
+    - unavailable
+  actions:
+  - type: turn_off
+    device_id: addfbbfaa93a433ef45e9f8251456b2e
+    entity_id: 0c9225d80940b26a7c42506b6a8a61b1
+    domain: switch
+  mode: single
+- id: '1768301069234'
+  alias: M Květiny - denní report
+  description: ''
+  triggers:
+  - at: 07:30:00
+    trigger: time
+  actions:
+  - variables:
+      d: '{{ states(''sensor.m_obyvak_vlhkomer_dracena_soil_moisture'')|float(none)
+        }}'
+      f: '{{ states(''sensor.m_kuchyn_vlhkomer_fialka_soil_moisture'')|float(none)
+        }}'
+      s: '{{ states(''sensor.m_kuchyn_vlhkomer_stavel_soil_moisture'')|float(none)
+        }}'
+      payload: 'Udělej krátký denní hlasový report o květinách. U každé řekni aktuální
+        vlhkost v procentech a zda je to OK/suché/přemokřené. Ber v potaz, kolik daná
+        květina reálně potřebuje. Nakonec řekni, které květiny dnes zalít. Data: -
+        Dracéna: {{ d if d is not none else ''nedostupné'' }} % - Fialka: {{ f if
+        f is not none else ''nedostupné'' }} % - Šťavel: {{ s if s is not none else
+        ''nedostupné'' }} %'
+  - action: conversation.process
+    data:
+      agent_id: conversation.chatgpt
+      text: '{{ payload }}'
+    response_variable: ai
+  - variables:
+      speech: '{% set t = ai.response.speech.plain.speech if ai is defined else ''''
+        %} {{ t if t|length > 0 else ''Denní report květin není dostupný.'' }}'
+  - action: tts.speak
+    data:
+      media_player_entity_id: media_player.nesthubd799
+      message: '{{ speech }}'
+    target:
+      entity_id: tts.home_assistant_cloud
   mode: single

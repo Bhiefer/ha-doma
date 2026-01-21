@@ -196,68 +196,60 @@ sensor:
       - sensor.marek_teplomer_temperature
       - sensor.kuchyn_teplota
 
-  - platform: filter
-    name: "Marek Ovzduší VOC Filtr"
-    entity_id: sensor.marek_ovzdusi_voc
-    filters:
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "Marek Ovzduší Formaldehyd Filtr"
-    entity_id: sensor.marek_ovzdusi_formaldehyd
-    filters:
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "Marek Ovzduší CO2 Filtr"
-    entity_id: sensor.marek_ovzdusi_co2
-    filters:
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "M Koupelna Ovzduší Temperature Filtr"
-    entity_id: sensor.m_koupelna_ovzdusi_temperature
-    filters:
-      - filter: lowpass
-        time_constant: 5
-        precision: 2
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "M Koupelna Ovzduší Humidity Filtr"
-    entity_id: sensor.m_koupelna_ovzdusi_humidity
-    filters:
-      - filter: lowpass
-        time_constant: 5
-        precision: 2
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "M Koupelna Ovzduší Humidity Filtr"
-    entity_id: sensor.m_koupelna_ovzdusi_co2
-    filters:
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "M Koupelna Ovzduší Formaldehyd Filtr"
-    entity_id: sensor.m_koupelna_ovzdusi_formaldehyd
-    filters:
-      - filter: time_throttle
-        window_size: "0:15"
-
-  - platform: filter
-    name: "M Koupelna Ovzduší VOC Filtr"
-    entity_id: sensor.m_koupelna_ovzdusi_voc
-    filters:
-      - filter: time_throttle
-        window_size: "0:15"
-
+  # - platform: filter
+  #   name: "Marek Ovzduší VOC Filtr"
+  #   entity_id: sensor.marek_ovzdusi_voc
+  #   filters:
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "Marek Ovzduší Formaldehyd Filtr"
+  #   entity_id: sensor.marek_ovzdusi_formaldehyd
+  #   filters:
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "Marek Ovzduší CO2 Filtr"
+  #   entity_id: sensor.marek_ovzdusi_co2
+  #   filters:
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "M Koupelna Ovzduší Temperature Filtr"
+  #   entity_id: sensor.m_koupelna_ovzdusi_temperature
+  #   filters:
+  #     - filter: lowpass
+  #       time_constant: 5
+  #       precision: 2
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "M Koupelna Ovzduší Humidity Filtr"
+  #   entity_id: sensor.m_koupelna_ovzdusi_humidity
+  #   filters:
+  #     - filter: lowpass
+  #       time_constant: 5
+  #       precision: 2
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "M Koupelna Ovzduší Humidity Filtr"
+  #   entity_id: sensor.m_koupelna_ovzdusi_co2
+  #   filters:
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "M Koupelna Ovzduší Formaldehyd Filtr"
+  #   entity_id: sensor.m_koupelna_ovzdusi_formaldehyd
+  #   filters:
+  #     - filter: time_throttle
+  #       window_size: "0:15"
+  # - platform: filter
+  #   name: "M Koupelna Ovzduší VOC Filtr"
+  #   entity_id: sensor.m_koupelna_ovzdusi_voc
+  #   filters:
+  #     - filter: time_throttle
+  #       window_size: "0:15"
   # Sensor for Riemann sum of energy bought (W -> Wh)
   - platform: integration
     source: sensor.marek_primotop_prikon
@@ -783,7 +775,7 @@ climate:
   - platform: generic_thermostat
     name: "M Ložnice Termostat"
     heater: switch.m_loznice_termostat_spinac
-    target_sensor: sensor.m_loznice_trv_teplota
+    target_sensor: sensor.m_loznice_teplomer_temperature
     min_temp: 5
     max_temp: 25
     ac_mode: false
@@ -825,19 +817,19 @@ recorder:
       - button
     entities:
       - automation.m_obyvak_lampa_prepni
-      - alarm_control_panel.dvere_alarm
+      # - alarm_control_panel.dvere_alarm
       - automation.aktualizace_planovace
       - binary_sensor.octoprint_printing_error
       - binary_sensor.plynomer_impuls
       - binary_sensor.workday_sensor
       - binary_sensor.updater
-      - sensor.marek_ovzdusi_humidity
+      # - sensor.marek_ovzdusi_humidity
       - climate.marek_termostat_primotop
-      - sensor.marek_ovzdusi_temperature
+      # - sensor.marek_ovzdusi_temperature
       - sensor.tasmota_wifi_connect_count_2
       - sensor.tasmota_mqtt_connect_count_2
       - sensor.tasmota_ssid_2
-      - sensor.timestamp
+      # - sensor.timestamp
       - counter.plynomer_pocitadlo
 
     entity_globs:
@@ -847,21 +839,21 @@ recorder:
       - binary_sensor.*_window_open
       - binary_sensor.*_is_charging
       - binary_sensor.*_is_charging
-      - sensor.marek_ovzdusi_*
+      # - sensor.marek_ovzdusi_*
       - sensor.vstup_zasuvka_*
       - sensor.naradi_zasuvka_*
-      - sensor.m_koupelna_ovzdusi_*
+      # - sensor.m_koupelna_ovzdusi_*
   include:
     entities:
       - automation.nabijeni_baterie
       - automation.nabijeni_baterie_stop
       - automation.kotelna_prehrata_voda
-      - sensor.m_koupelna_ovzdusi_humidity_filtr
-      - sensor.m_koupelna_ovzdusi_temperature_filtr
-      - sensor.m_koupelna_ovzdusi_co2_filtr
-      - sensor.m_koupelna_ovzdusi_formaldehyd_filtr
-      - sensor.m_koupelna_ovzdusi_voc_filtr
-      - sensor.marek_ovzdusi_co2_filtr
-      - sensor.marek_ovzdusi_formaldehyd_filtr
+      # - sensor.m_koupelna_ovzdusi_humidity_filtr
+      # - sensor.m_koupelna_ovzdusi_temperature_filtr
+      # - sensor.m_koupelna_ovzdusi_co2_filtr
+      # - sensor.m_koupelna_ovzdusi_formaldehyd_filtr
+      # - sensor.m_koupelna_ovzdusi_voc_filtr
+      # - sensor.marek_ovzdusi_co2_filtr
+      # - sensor.marek_ovzdusi_formaldehyd_filtr
       - sensor.marek_teplomer_temperature
-      - sensor.marek_ovzdusi_voc_filtr
+      # - sensor.marek_ovzdusi_voc_filtr
