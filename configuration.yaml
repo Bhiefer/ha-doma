@@ -252,8 +252,8 @@ sensor:
   #       window_size: "0:15"
   # Sensor for Riemann sum of energy bought (W -> Wh)
   - platform: integration
-    source: sensor.marek_primotop_prikon
-    name: "Marek Přímotop Spotřeba"
+    source: sensor.zkusebna_primotop_prikon
+    name: "Zkušebna Přímotop Spotřeba"
     unit_prefix: k
     round: 1
     method: left
@@ -354,7 +354,7 @@ template:
           - ( states('sensor.bojler_zasuvka_energy_power') | float(0)) 
           - ( states('sensor.server_zasuvka_power') | float(0)) 
           - ( states('sensor.marek_zasuvka_hlavni_power') | float(0)) 
-          - ( states('sensor.marek_primotop_prikon') | float(0)) 
+          - ( states('sensor.zkusebna_primotop_prikon') | float(0)) 
           - ( states('sensor.goodwe_spotreba_stridac') | float(0)) 
           - ( states('sensor.marek_zasuvka_lednice_power') | float(0))}}
         unit_of_measurement: "W"
@@ -427,7 +427,7 @@ template:
           {{ is_state('input_select.topeni_boost', 'marek') }}
       - name: "Topení Mód Zkušebna"
         state: >-
-          {{ (is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on') and is_state('binary_sensor.zkusebna_okno_contact', 'off') }}
+          {{ (is_state('input_select.topeni_boost', 'zkouska') or states('calendar.zkusebna') == 'on') }}
       - name: "Topení Mód Práce"
         state: >-
           {{ is_state('input_select.topeni_boost', 'prace') or ( is_state('binary_sensor.workday_sensor', 'on') and states('calendar.evans_volno') != 'on' and states('schedule.doba_vytapeni_0_schedule') == 'on') }}
@@ -576,9 +576,9 @@ switch:
 
 climate:
   - platform: generic_thermostat
-    name: "Marek Termostat Přímotop"
-    heater: switch.marek_primotop_prepinac
-    target_sensor: sensor.marek_teplomer_temperature
+    name: "Zkušebna Termostat Přímotop"
+    heater: switch.zkusebna_primotop_prepinac
+    target_sensor: sensor.zkusebna_teplomer_temperature
     min_temp: 5
     max_temp: 26
     ac_mode: false
