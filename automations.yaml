@@ -1,1661 +1,1693 @@
 - id: 1ad3c56b6737402c97434e24c4c049bb
   alias: HA Start
-  description: ''
+  description: ""
   triggers:
-  - trigger: homeassistant
-    event: start
+    - trigger: homeassistant
+      event: start
   action:
-  - action: script.turn_on
-    data:
-      entity_id: script.restart_modu_topeni
+    - action: script.turn_on
+      data:
+        entity_id: script.restart_modu_topeni
 - id: f318308dee5141c6b1b43229c3403f0c
   alias: Notifikace Vytápění - Zima
-  description: ''
+  description: ""
   triggers:
-  - trigger: numeric_state
-    entity_id: sensor.teplota_nejnizsi
-    above: 1
-    below: 6
-  - trigger: numeric_state
-    entity_id: sensor.teplota_nejnizsi
-    above: 1
-    below: 5
-  - trigger: numeric_state
-    entity_id: sensor.teplota_nejnizsi
-    above: 1
-    below: 4
-  - trigger: numeric_state
-    entity_id: sensor.teplota_nejnizsi
-    above: 1
-    below: '3'
+    - trigger: numeric_state
+      entity_id: sensor.teplota_nejnizsi
+      above: 1
+      below: 6
+    - trigger: numeric_state
+      entity_id: sensor.teplota_nejnizsi
+      above: 1
+      below: 5
+    - trigger: numeric_state
+      entity_id: sensor.teplota_nejnizsi
+      above: 1
+      below: 4
+    - trigger: numeric_state
+      entity_id: sensor.teplota_nejnizsi
+      above: 1
+      below: "3"
   actions:
-  - action: script.notifikace_urgentni
-    data:
-      zprava: Pozor! Vstavej! Teplota v Evansu je jen {{ states('sensor.teplota_nejnizsi')|float
-        }} °C. Myslim to važně. Oblekej se! Rychle! Slyšels? {{ states('sensor.teplota_nejnizsi')|float
-        }} °C. Mrznu!
+    - action: script.notifikace_urgentni
+      data:
+        zprava:
+          Pozor! Vstavej! Teplota v Evansu je jen {{ states('sensor.teplota_nejnizsi')|float
+          }} °C. Myslim to važně. Oblekej se! Rychle! Slyšels? {{ states('sensor.teplota_nejnizsi')|float
+          }} °C. Mrznu!
 - alias: pravidelna_aktualizace_entit
   triggers:
-  - trigger: homeassistant
-    event: start
-  - trigger: time_pattern
-    minutes: /1
+    - trigger: homeassistant
+      event: start
+    - trigger: time_pattern
+      minutes: /1
   action:
-  - action: script.turn_on
-    target:
-      entity_id: script.obnov_mod_topeni
+    - action: script.turn_on
+      target:
+        entity_id: script.obnov_mod_topeni
   id: 78248a2f3a854d61982ce4bd34653ae3
-- id: '1634138967105'
+- id: "1634138967105"
   alias: Reklamy - rozsviť
-  description: ''
+  description: ""
   triggers:
-  - trigger: sun
-    event: sunset
-  - trigger: time
-    at: 04:30
+    - trigger: sun
+      event: sunset
+    - trigger: time
+      at: "04:30"
   condition: []
   action:
-  - type: turn_on
-    device_id: f9a5b2a766d88ecfbe691f2c91267995
-    entity_id: switch.sonoff_billboardy
-    domain: switch
-  - type: turn_on
-    device_id: e4343ba21f0a044aa5244068c54179e5
-    entity_id: 52c71bdbd0d198707251b479d79ab01e
-    domain: switch
+    - type: turn_on
+      device_id: f9a5b2a766d88ecfbe691f2c91267995
+      entity_id: switch.sonoff_billboardy
+      domain: switch
+    - type: turn_on
+      device_id: e4343ba21f0a044aa5244068c54179e5
+      entity_id: 52c71bdbd0d198707251b479d79ab01e
+      domain: switch
   mode: single
-- id: '1634139005202'
+- id: "1634139005202"
   alias: Reklamy - zhasni
-  description: ''
+  description: ""
   triggers:
-  - trigger: sun
-    event: sunrise
-  - trigger: time
-    at: 00:30
+    - trigger: sun
+      event: sunrise
+    - trigger: time
+      at: "00:30"
   condition: []
   action:
-  - type: turn_off
-    device_id: f9a5b2a766d88ecfbe691f2c91267995
-    entity_id: switch.sonoff_billboardy
-    domain: switch
-  - type: turn_off
-    device_id: e4343ba21f0a044aa5244068c54179e5
-    entity_id: 52c71bdbd0d198707251b479d79ab01e
-    domain: switch
+    - type: turn_off
+      device_id: f9a5b2a766d88ecfbe691f2c91267995
+      entity_id: switch.sonoff_billboardy
+      domain: switch
+    - type: turn_off
+      device_id: e4343ba21f0a044aa5244068c54179e5
+      entity_id: 52c71bdbd0d198707251b479d79ab01e
+      domain: switch
   mode: single
-- id: '1638303867848'
-  alias: Topení - Boost - Start
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id: input_select.topeni_boost
-    to: marek
-  - trigger: state
-    entity_id: input_select.topeni_boost
-    to: zkouska
-  - trigger: state
-    entity_id: input_select.topeni_boost
-    to: prace
-  - trigger: state
-    entity_id: input_select.topeni_boost
-    to: kino
-  condition: []
-  action:
-  - action: timer.start
-    data:
-      duration: '0'
-    target:
-      entity_id: timer.timer_topeni_boost
-  mode: single
-- id: '1638304030716'
-  alias: Topení - Boost - Stop
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id: input_select.topeni_boost
-    to: none
-  condition: []
-  action:
-  - action: timer.cancel
-    target:
-      entity_id: timer.timer_topeni_boost
-    data: {}
-  mode: single
-- id: '1638305604504'
-  alias: Topení - Boost - Timer Stop
-  description: ''
-  triggers:
-  - trigger: event
-    event_type: timer.finished
-    event_data:
-      entity_id: timer.timer_topeni_boost
-  condition: []
-  action:
-  - action: input_select.select_option
-    data:
-      entity_id: input_select.topeni_boost
-      option: none
-  mode: single
-- alias: Timers Save
+
+- id: topeni_boost_start_stop
+  alias: Topení - Boost - Start - Stop
   mode: queued
   triggers:
-    trigger: state
-    entity_id:
-    - timer.timer_topeni_boost
+    - trigger: state
+      entity_id:
+        - input_boolean.topeni_boost_marek
+        - input_boolean.topeni_boost_prace
+        - input_boolean.topeni_boost_kino
+        - input_boolean.topeni_boost_zkouska
+
   action:
-  - variables:
-      timers:
-      - timer.timer_topeni_boost
-      modes:
-      - active
-      - paused
-  - repeat:
-      count: 2
-      sequence:
-      - variables:
-          mode: '{{ modes[repeat.index-1] }}'
-      - action: input_text.set_value
-        data:
-          entity_id: input_text.timers_{{ mode }}
-          value: "{% set ns = namespace(timers = []) %} {% for t in expand(timers)
-            | selectattr('state', 'eq', mode) | list  %}\n  {% set d = t.attributes.remaining.split(':')
-            | map('int') | list %}\n  {% set s = d[0]*3600 + d[1]*60 + d[2] + (t.last_changed.timestamp()|int
-            if mode == 'active' else 0) %}\n  {% set ns.timers = ns.timers + ['{}
-            {}'.format(t.object_id, s)] %}\n{% endfor %} {{ ns.timers | join(',')}}\n"
-  id: a3b996f2c9f54edca70563a918e7dd97
-- alias: Timers Restore
-  mode: single
-  triggers:
-    trigger: homeassistant
-    event: start
-  action:
-  - variables:
-      modes:
-      - active
-      - paused
-  - repeat:
-      count: 2
-      sequence:
-      - variables:
-          mode: '{{ modes[repeat.index-1] }}'
-          timers_text: '{{ states(''input_text.timers_'' ~ mode) }}'
-      - choose:
-        - conditions: '{{ timers_text | length > 0 }}'
+    - variables:
+        timer_entity: "{{ trigger.entity_id | replace('input_boolean.', 'timer.') }}"
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state == 'on' }}"
           sequence:
-          - variables:
-              timers: '{{ timers_text.split('','') }}'
-          - repeat:
-              count: '{{ timers | count }}'
-              sequence:
-              - variables:
-                  t: '{{ timers[repeat.index-1].split() }}'
-                  id: timer.{{t[0]}}
-                  d: '{{ t[1]|int - (now().timestamp()|int if mode == ''active'' else
-                    0) }}'
-              - condition: template
-                value_template: '{{ d > 0 }}'
-              - action: timer.start
-                data:
-                  entity_id: '{{ id }}'
-                  duration: '{{ d }}'
-              - condition: template
-                value_template: '{{ mode == ''paused'' }}'
-              - action: timer.pause
-                data:
-                  entity_id: '{{ id }}'
-  id: d4abfe18f8ae4e6bb8071628e19eaa74
-- id: '1641110525106'
+            - action: timer.start
+              target:
+                entity_id: "{{ timer_entity }}"
+            # aby se změna propsala hned (ne až za minutu):
+            - action: automation.trigger
+              data:
+                skip_condition: true
+              target:
+                entity_id: automation.topeni_termostaty_nastav
+        - conditions:
+            - condition: template
+              value_template: "{{ trigger.to_state.state == 'off' }}"
+          sequence:
+            - action: timer.cancel
+              target:
+                entity_id: "{{ timer_entity }}"
+            - action: automation.trigger
+              data:
+                skip_condition: true
+              target:
+                entity_id: automation.topeni_termostaty_nastav
+- id: topeni_boost_finished
+  alias: Topení - Boost - Finished
+  mode: queued
+  triggers:
+    - trigger: event
+      event_type: timer.finished
+
+  condition:
+    - condition: template
+      value_template: >
+        {{ trigger.event.data.entity_id in [
+          'timer.topeni_boost_marek',
+          'timer.topeni_boost_prace',
+          'timer.topeni_boost_kino',
+          'timer.topeni_boost_zkouska'
+        ] }}
+
+  action:
+    - variables:
+        bool_entity: "{{ trigger.event.data.entity_id | replace('timer.', 'input_boolean.') }}"
+    - action: input_boolean.turn_off
+      target:
+        entity_id: "{{ bool_entity }}"
+# - id: "1638303867848"
+#   alias: Topení - Boost - Start
+#   description: ""
+#   triggers:
+#     - trigger: state
+#       entity_id: input_select.topeni_boost
+#       to: marek
+#     - trigger: state
+#       entity_id: input_select.topeni_boost
+#       to: zkouska
+#     - trigger: state
+#       entity_id: input_select.topeni_boost
+#       to: prace
+#     - trigger: state
+#       entity_id: input_select.topeni_boost
+#       to: kino
+#   condition: []
+#   action:
+#     - action: timer.start
+#       data:
+#         duration: "0"
+#       target:
+#         entity_id: timer.timer_topeni_boost
+#   mode: single
+# - id: "1638304030716"
+#   alias: Topení - Boost - Stop
+#   description: ""
+#   triggers:
+#     - trigger: state
+#       entity_id: input_select.topeni_boost
+#       to: none
+#   condition: []
+#   action:
+#     - action: timer.cancel
+#       target:
+#         entity_id: timer.timer_topeni_boost
+#       data: {}
+#   mode: single
+# - id: "1638305604504"
+#   alias: Topení - Boost - Timer Stop
+#   description: ""
+#   triggers:
+#     - trigger: event
+#       event_type: timer.finished
+#       event_data:
+#         entity_id: timer.timer_topeni_boost
+#   condition: []
+#   action:
+#     - action: input_select.select_option
+#       data:
+#         entity_id: input_select.topeni_boost
+#         option: none
+#   mode: single
+# - alias: Timers Save
+#   mode: queued
+#   triggers:
+#     trigger: state
+#     entity_id:
+#       - timer.timer_topeni_boost
+#   action:
+#     - variables:
+#         timers:
+#           - timer.timer_topeni_boost
+#         modes:
+#           - active
+#           - paused
+#     - repeat:
+#         count: 2
+#         sequence:
+#           - variables:
+#               mode: "{{ modes[repeat.index-1] }}"
+#           - action: input_text.set_value
+#             data:
+#               entity_id: input_text.timers_{{ mode }}
+#               value:
+#                 "{% set ns = namespace(timers = []) %} {% for t in expand(timers)
+#                 | selectattr('state', 'eq', mode) | list  %}\n  {% set d = t.attributes.remaining.split(':')
+#                 | map('int') | list %}\n  {% set s = d[0]*3600 + d[1]*60 + d[2] + (t.last_changed.timestamp()|int
+#                 if mode == 'active' else 0) %}\n  {% set ns.timers = ns.timers + ['{}
+#                 {}'.format(t.object_id, s)] %}\n{% endfor %} {{ ns.timers | join(',')}}\n"
+#   id: a3b996f2c9f54edca70563a918e7dd97
+# - alias: Timers Restore
+#   mode: single
+#   triggers:
+#     trigger: homeassistant
+#     event: start
+#   action:
+#     - variables:
+#         modes:
+#           - active
+#           - paused
+#     - repeat:
+#         count: 2
+#         sequence:
+#           - variables:
+#               mode: "{{ modes[repeat.index-1] }}"
+#               timers_text: "{{ states('input_text.timers_' ~ mode) }}"
+#           - choose:
+#               - conditions: "{{ timers_text | length > 0 }}"
+#                 sequence:
+#                   - variables:
+#                       timers: "{{ timers_text.split(',') }}"
+#                   - repeat:
+#                       count: "{{ timers | count }}"
+#                       sequence:
+#                         - variables:
+#                             t: "{{ timers[repeat.index-1].split() }}"
+#                             id: timer.{{t[0]}}
+#                             d:
+#                               "{{ t[1]|int - (now().timestamp()|int if mode == 'active' else
+#                               0) }}"
+#                         - condition: template
+#                           value_template: "{{ d > 0 }}"
+#                         - action: timer.start
+#                           data:
+#                             entity_id: "{{ id }}"
+#                             duration: "{{ d }}"
+#                         - condition: template
+#                           value_template: "{{ mode == 'paused' }}"
+#                         - action: timer.pause
+#                           data:
+#                             entity_id: "{{ id }}"
+#   id: d4abfe18f8ae4e6bb8071628e19eaa74
+- id: "1641110525106"
   alias: Notifikace Vytápění - Výpadek
-  description: ''
+  description: ""
   triggers:
-  - trigger: state
-    entity_id:
-    - switch.sonoff_kotelna1
-    to: unavailable
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
+    - trigger: state
+      entity_id:
+        - switch.sonoff_kotelna1
+      to: unavailable
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
   condition: []
   action:
-  - action: script.notifikace_urgentni
-    data:
-      zprava: Vypadek ovladani kotlu!
+    - action: script.notifikace_urgentni
+      data:
+        zprava: Vypadek ovladani kotlu!
   mode: single
-- id: '1647541438539'
+- id: "1647541438539"
   alias: M Obývák Hlavní světlo Přepni
-  description: ''
+  description: ""
   triggers:
-  - domain: mqtt
-    device_id: f6641a54ad49e778b05d2b3f1946e38d
-    type: action
-    subtype: double
-    trigger: device
+    - domain: mqtt
+      device_id: f6641a54ad49e778b05d2b3f1946e38d
+      type: action
+      subtype: double
+      trigger: device
   conditions: []
   actions:
-  - type: toggle
-    device_id: 6f54df2552b74261f4d843a09a1b1679
-    entity_id: switch.m_vypinac_obyvak_l1
-    domain: switch
+    - type: toggle
+      device_id: 6f54df2552b74261f4d843a09a1b1679
+      entity_id: switch.m_vypinac_obyvak_l1
+      domain: switch
   mode: single
-- id: '1647541630252'
+- id: "1647541630252"
   alias: M Všechna světla Vypni
-  description: ''
+  description: ""
   triggers:
-  - trigger: state
-    entity_id:
-    - sensor.m_obyvak_tlacitko_action
-    to: long
+    - trigger: state
+      entity_id:
+        - sensor.m_obyvak_tlacitko_action
+      to: long
   conditions: []
   actions:
-  - type: turn_off
-    device_id: bded62f01a347854b01897a3af6a3fe6
-    entity_id: switch.m_vypinac_chodba
-    domain: switch
-  - type: turn_off
-    device_id: 6f54df2552b74261f4d843a09a1b1679
-    entity_id: switch.m_vypinac_obyvak_l1
-    domain: switch
-  - type: turn_off
-    device_id: 6f272126d336b2c099128c19be861e91
-    entity_id: 49b5e111b671a189e74b1deb5f30db4c
-    domain: light
-  - type: turn_off
-    device_id: a558818d6e5d2a9c806d4a1946faba6c
-    entity_id: 5c65927bb39fd2497b7efa58a12b3a0f
-    domain: switch
-  - type: turn_off
-    device_id: 37ac45c40e4d34ad8e871f98c952ff8c
-    entity_id: a23970f94cbeb75e7e5be2385685c0e1
-    domain: switch
-  - type: turn_off
-    device_id: 8ef52bc50359d755ac61b2177b3d0ebe
-    entity_id: 7ce5ed1035c2e9514805b6ff893a852a
-    domain: switch
-  - type: turn_off
-    device_id: 8ef52bc50359d755ac61b2177b3d0ebe
-    entity_id: d8d954b8bfc28585b062524973190e0b
-    domain: switch
-  - type: turn_off
-    device_id: c677fa36c732a39816d02b22554f0276
-    entity_id: 538ddfb78c952c289767fccb804a171a
-    domain: switch
-  - type: turn_off
-    device_id: c677fa36c732a39816d02b22554f0276
-    entity_id: cb0247c4e2dee5a40745ce8ca226a3c5
-    domain: switch
-  - type: turn_off
-    device_id: e6516dd2ef93b75f9f268114004c1bb7
-    entity_id: 0f9aeb6328e62f1b0c3af8679e6aaf12
-    domain: switch
+    - type: turn_off
+      device_id: bded62f01a347854b01897a3af6a3fe6
+      entity_id: switch.m_vypinac_chodba
+      domain: switch
+    - type: turn_off
+      device_id: 6f54df2552b74261f4d843a09a1b1679
+      entity_id: switch.m_vypinac_obyvak_l1
+      domain: switch
+    - type: turn_off
+      device_id: 6f272126d336b2c099128c19be861e91
+      entity_id: 49b5e111b671a189e74b1deb5f30db4c
+      domain: light
+    - type: turn_off
+      device_id: a558818d6e5d2a9c806d4a1946faba6c
+      entity_id: 5c65927bb39fd2497b7efa58a12b3a0f
+      domain: switch
+    - type: turn_off
+      device_id: 37ac45c40e4d34ad8e871f98c952ff8c
+      entity_id: a23970f94cbeb75e7e5be2385685c0e1
+      domain: switch
+    - type: turn_off
+      device_id: 8ef52bc50359d755ac61b2177b3d0ebe
+      entity_id: 7ce5ed1035c2e9514805b6ff893a852a
+      domain: switch
+    - type: turn_off
+      device_id: 8ef52bc50359d755ac61b2177b3d0ebe
+      entity_id: d8d954b8bfc28585b062524973190e0b
+      domain: switch
+    - type: turn_off
+      device_id: c677fa36c732a39816d02b22554f0276
+      entity_id: 538ddfb78c952c289767fccb804a171a
+      domain: switch
+    - type: turn_off
+      device_id: c677fa36c732a39816d02b22554f0276
+      entity_id: cb0247c4e2dee5a40745ce8ca226a3c5
+      domain: switch
+    - type: turn_off
+      device_id: e6516dd2ef93b75f9f268114004c1bb7
+      entity_id: 0f9aeb6328e62f1b0c3af8679e6aaf12
+      domain: switch
   mode: single
-- id: '1671031072397'
+- id: "1671031072397"
   alias: Bojler - Zapnout
-  description: ''
+  description: ""
   triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.spot_nejlevnejsi_hodina
-    to: 'on'
-  - trigger: time
-    at: '18:03:00'
-    enabled: false
+    - trigger: state
+      entity_id:
+        - binary_sensor.spot_nejlevnejsi_hodina
+      to: "on"
+    - trigger: time
+      at: "18:03:00"
+      enabled: false
   conditions:
-  - condition: state
-    entity_id: binary_sensor.workday_sensor
-    state: 'on'
-    enabled: true
-  - condition: state
-    entity_id: calendar.evans_volno
-    state: 'off'
-    enabled: true
+    - condition: state
+      entity_id: binary_sensor.workday_sensor
+      state: "on"
+      enabled: true
+    - condition: state
+      entity_id: calendar.evans_volno
+      state: "off"
+      enabled: true
   actions:
-  - type: turn_on
-    device_id: 612e3e9c1efb9b57bc1e7c53192bfbfa
-    entity_id: e690ef1dac40152fa4b8d31ac0108bbf
-    domain: switch
+    - type: turn_on
+      device_id: 612e3e9c1efb9b57bc1e7c53192bfbfa
+      entity_id: e690ef1dac40152fa4b8d31ac0108bbf
+      domain: switch
   mode: single
-- id: '1671031128852'
+- id: "1671031128852"
   alias: Bojler - Vypnout
-  description: ''
+  description: ""
   triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.spot_nejlevnejsi_hodina
-    to: 'off'
-  - trigger: time
-    at: '18:57:00'
-    enabled: false
+    - trigger: state
+      entity_id:
+        - binary_sensor.spot_nejlevnejsi_hodina
+      to: "off"
+    - trigger: time
+      at: "18:57:00"
+      enabled: false
   conditions: []
   actions:
-  - type: turn_off
-    device_id: 612e3e9c1efb9b57bc1e7c53192bfbfa
-    entity_id: e690ef1dac40152fa4b8d31ac0108bbf
-    domain: switch
+    - type: turn_off
+      device_id: 612e3e9c1efb9b57bc1e7c53192bfbfa
+      entity_id: e690ef1dac40152fa4b8d31ac0108bbf
+      domain: switch
   mode: single
-- id: '1671532983173'
+- id: "1671532983173"
   alias: Zapni Prusu
-  description: ''
+  description: ""
   triggers:
-  - domain: mqtt
-    device_id: 2b016888b74cc0d59c71528350c66c90
-    type: action
-    subtype: single
-    trigger: device
+    - domain: mqtt
+      device_id: 2b016888b74cc0d59c71528350c66c90
+      type: action
+      subtype: single
+      trigger: device
   conditions: []
   actions:
-  - action: switch.turn_on
-    data: {}
-    target:
-      entity_id: switch.marek_3dtisk_rele5
+    - action: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.marek_3dtisk_rele5
   mode: single
-- id: '1673434275783'
+- id: "1673434275783"
   alias: Plynoměr inkrement
-  description: ''
+  description: ""
   triggers:
-  - type: turned_on
-    trigger: device
-    device_id: 24134d7538e70dba23c49a25095465fe
-    entity_id: binary_sensor.plynomer_impuls
-    domain: binary_sensor
+    - type: turned_on
+      trigger: device
+      device_id: 24134d7538e70dba23c49a25095465fe
+      entity_id: binary_sensor.plynomer_impuls
+      domain: binary_sensor
   condition: []
   action:
-  - action: counter.increment
-    data: {}
-    target:
-      entity_id: counter.plynomer_pocitadlo
+    - action: counter.increment
+      data: {}
+      target:
+        entity_id: counter.plynomer_pocitadlo
   mode: single
-- id: '1674908498137'
+- id: "1674908498137"
   alias: FVE - Opravit Eco mode power
-  description: ''
+  description: ""
   triggers:
-  - trigger: state
-    entity_id:
-    - number.goodwe_eco_mode_power
-  - trigger: time_pattern
-    minutes: /10
+    - trigger: state
+      entity_id:
+        - number.goodwe_eco_mode_power
+    - trigger: time_pattern
+      minutes: /10
   condition:
-  - condition: template
-    value_template: '{{(states(''number.goodwe_eco_mode_power'')|round(0)) != 25}}'
+    - condition: template
+      value_template: "{{(states('number.goodwe_eco_mode_power')|round(0)) != 25}}"
   action:
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 10
-      milliseconds: 0
-  - action: number.set_value
-    data:
-      value: '25'
-    target:
-      entity_id: number.goodwe_eco_mode_power
-  mode: single
-- id: '1675373385605'
-  alias: FVE - opravit Depth of discharge
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - number.goodwe_depth_of_discharge_on_grid
-  - trigger: time_pattern
-    minutes: /10
-  - trigger: state
-    entity_id:
-    - binary_sensor.fve_vybijeni_baterie
-  condition:
-  - condition: template
-    value_template: '{{(is_state(''binary_sensor.fve_vybijeni_baterie'', ''on'') and
-      states(''number.goodwe_depth_of_discharge_on_grid'') | round(0) != 80) or (is_state(''binary_sensor.fve_vybijeni_baterie'',
-      ''off'') and states(''number.goodwe_depth_of_discharge_on_grid'') | round(0)
-      != 0)}}'
-  action:
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 10
-      milliseconds: 0
-  - if:
-    - condition: state
-      entity_id: binary_sensor.fve_vybijeni_baterie
-      state: 'on'
-    then:
-    - action: number.set_value
-      data:
-        value: '80'
-      target:
-        entity_id: number.goodwe_depth_of_discharge_on_grid
-    else:
-    - action: number.set_value
-      data:
-        value: '0'
-      target:
-        entity_id: number.goodwe_depth_of_discharge_on_grid
-  mode: single
-- id: 182fd36f2ce34615a47dbc4bbf686f75
-  alias: FVE - Nabíjení baterie - Start
-  description: ''
-  triggers:
-  - entity_id:
-    - binary_sensor.fve_nabijeni_ze_site
-    to: 'on'
-    trigger: state
-  - minutes: /20
-    trigger: time_pattern
-  conditions:
-  - condition: state
-    entity_id: binary_sensor.fve_nabijeni_ze_site
-    state: 'on'
-  actions:
-  - if:
-    - condition: state
-      entity_id: select.goodwe_inverter_operation_mode
-      state: Eco charge mode
-    - condition: numeric_state
-      entity_id: sensor.goodwe_battery_power
-      above: -2000
-    then:
     - delay:
         hours: 0
         minutes: 0
         seconds: 10
         milliseconds: 0
+    - action: number.set_value
+      data:
+        value: "25"
+      target:
+        entity_id: number.goodwe_eco_mode_power
+  mode: single
+- id: "1675373385605"
+  alias: FVE - opravit Depth of discharge
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - number.goodwe_depth_of_discharge_on_grid
+    - trigger: time_pattern
+      minutes: /10
+    - trigger: state
+      entity_id:
+        - binary_sensor.fve_vybijeni_baterie
+  condition:
+    - condition: template
+      value_template:
+        "{{(is_state('binary_sensor.fve_vybijeni_baterie', 'on') and
+        states('number.goodwe_depth_of_discharge_on_grid') | round(0) != 80) or (is_state('binary_sensor.fve_vybijeni_baterie',
+        'off') and states('number.goodwe_depth_of_discharge_on_grid') | round(0)
+        != 0)}}"
+  action:
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 10
+        milliseconds: 0
+    - if:
+        - condition: state
+          entity_id: binary_sensor.fve_vybijeni_baterie
+          state: "on"
+      then:
+        - action: number.set_value
+          data:
+            value: "80"
+          target:
+            entity_id: number.goodwe_depth_of_discharge_on_grid
+      else:
+        - action: number.set_value
+          data:
+            value: "0"
+          target:
+            entity_id: number.goodwe_depth_of_discharge_on_grid
+  mode: single
+- id: 182fd36f2ce34615a47dbc4bbf686f75
+  alias: FVE - Nabíjení baterie - Start
+  description: ""
+  triggers:
+    - entity_id:
+        - binary_sensor.fve_nabijeni_ze_site
+      to: "on"
+      trigger: state
+    - minutes: /20
+      trigger: time_pattern
+  conditions:
+    - condition: state
+      entity_id: binary_sensor.fve_nabijeni_ze_site
+      state: "on"
+  actions:
+    - if:
+        - condition: state
+          entity_id: select.goodwe_inverter_operation_mode
+          state: Eco charge mode
+        - condition: numeric_state
+          entity_id: sensor.goodwe_battery_power
+          above: -2000
+      then:
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 10
+            milliseconds: 0
+        - action: select.select_option
+          data:
+            option: general
+          target:
+            entity_id: select.goodwe_inverter_operation_mode
+    - if:
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: select.goodwe_inverter_operation_mode
+              state: eco_charge
+      then:
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 10
+            milliseconds: 0
+        - action: select.select_option
+          data:
+            option: eco_charge
+          target:
+            entity_id: select.goodwe_inverter_operation_mode
+  mode: single
+- alias: FVE - Nabíjení baterie - Stop
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.fve_nabijeni_ze_site
+      from: "on"
+    - trigger: time_pattern
+      minutes: /20
+  condition:
+    - condition: not
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.fve_nabijeni_ze_site
+          state: "on"
+  action:
     - action: select.select_option
       data:
         option: general
       target:
         entity_id: select.goodwe_inverter_operation_mode
-  - if:
-    - condition: not
-      conditions:
-      - condition: state
-        entity_id: select.goodwe_inverter_operation_mode
-        state: eco_charge
-    then:
+  mode: single
+  id: 9f891a12aea043bc83c5bda186b58ee1
+- id: "1673738943531"
+  alias: Notifikace Peletkový kotel - došly pelety
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - sensor.kotel_peletkovy_alarm
+      to: NO PELLET
+  condition:
+    - condition: time
+      after: 07:00:00
+      before: "21:00:00"
+  action:
+    - action: script.notifikace_urgentni
+      data:
+        zprava: Došly pelety!
+  mode: single
+- id: "1674137430447"
+  alias: M Obývák Lampa Přepni
+  description: ""
+  triggers:
+    - domain: mqtt
+      device_id: f6641a54ad49e778b05d2b3f1946e38d
+      type: action
+      subtype: single
+      trigger: device
+  conditions: []
+  actions:
+    - type: toggle
+      device_id: 6f272126d336b2c099128c19be861e91
+      entity_id: 49b5e111b671a189e74b1deb5f30db4c
+      domain: light
+  mode: single
+- id: "1674246358128"
+  alias: Notifikace Peletkový kotel - Málo pelet
+  description: ""
+  triggers:
+    - entity_id:
+        - sensor.peletkovy_kotel_zasobnik_zbyva
+      trigger: numeric_state
+      below: 25
+    - entity_id:
+        - sensor.peletkovy_kotel_zasobnik_zbyva
+      trigger: numeric_state
+      below: 15
+    - entity_id:
+        - sensor.peletkovy_kotel_zasobnik_zbyva
+      trigger: numeric_state
+      below: 5
+  conditions:
+    - condition: time
+      after: 07:00:00
+      before: "21:00:00"
+  actions:
+    - action: script.notifikace_urgentni
+      data:
+        zprava: Dochází pelety!
+  mode: single
+- id: "1674312129871"
+  alias: Peletkový kotel - chyba integrace
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - sensor.kotel_peletkovy_status
+      to: unavailable
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
+  condition: []
+  action:
+    - action: hassio.host_reboot
+      data: {}
+  mode: single
+- id: "1675890675785"
+  alias: Notifikace Peletkový kotel - Chyba
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.topeni_peletkovy_kotel_chyba
+      to: "on"
+  conditions: []
+  actions:
+    - action: script.notifikace_urgentni
+      data:
+        zprava: Kotel ma problém!
+  mode: single
+- id: "1678818905241"
+  alias: Pracovní doba - Start
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.pracovni_doba
+      to: "on"
+  condition: []
+  action:
+    - type: turn_on
+      device_id: bd2f5dd258eb0de0202da3afc85a70cb
+      entity_id: light.sonoff_perfectdoor
+      domain: light
+    - action: script.kancelar_pi_zapnout
+      metadata: {}
+      data: {}
+  mode: single
+- id: "1678818955253"
+  alias: Pracovní doba - Stop
+  description: ""
+  triggers:
+    - entity_id:
+        - binary_sensor.pracovni_doba
+      to: "off"
+      trigger: state
+  conditions: []
+  actions:
+    - type: turn_off
+      device_id: bd2f5dd258eb0de0202da3afc85a70cb
+      entity_id: light.sonoff_perfectdoor
+      domain: light
+    - action: input_boolean.turn_off
+      data: {}
+      target:
+        entity_id: input_boolean.topeni_ivan
+    - action: input_boolean.turn_off
+      data: {}
+      target:
+        entity_id: input_boolean.topeni_pavla
+    - action: script.1713169977678
+      metadata: {}
+      data: {}
+    - action: climate.turn_off
+      metadata: {}
+      data: {}
+      target:
+        entity_id: climate.marek_termostat_primotop
+  mode: single
+- id: "1678958657961"
+  alias: Topení - Přehřátá voda
+  description: ""
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.topeni_6
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 30
+      above: 70
+    - trigger: numeric_state
+      entity_id: sensor.topeni_4
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 30
+      above: 70
+    - trigger: numeric_state
+      entity_id: sensor.topeni_1
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 30
+      above: 70
+  condition:
+    - condition: state
+      for:
+        hours: 0
+        minutes: 0
+        seconds: 0
+      entity_id: switch.sonoff_kotelna1
+      state: "off"
+  action:
+    - action: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.sonoff_kotelna1
+    - delay:
+        hours: 0
+        minutes: 10
+        seconds: 0
+        milliseconds: 0
+    - action: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.sonoff_kotelna1
+  mode: single
+- id: "1680526566395"
+  alias: Marek Vypínač Světlo
+  description: ""
+  triggers:
+    - domain: mqtt
+      device_id: e23b1f5e3e6cb9697c08219c76dc6d53
+      type: action
+      subtype: 1_single
+      discovery_id: 0x70ac08fffe196cde action_1_single
+      trigger: device
+    - domain: mqtt
+      device_id: e8bbce2805ab08618682b5fbb50521d9
+      type: action
+      subtype: single
+      trigger: device
+  conditions: []
+  actions:
+    - type: toggle
+      device_id: 0d07bc71ff859527bc2ceedb7319129a
+      entity_id: 01d4fa17f695216ec574e42676f7677a
+      domain: switch
+  mode: single
+
+- id: "1680623233264"
+  alias: Marek Vypínač Topení Boost
+  description: ""
+  triggers:
+    - trigger: device
+      domain: mqtt
+      device_id: e23b1f5e3e6cb9697c08219c76dc6d53
+      type: action
+      subtype: 2_double
+      discovery_id: 0x70ac08fffe196cde action_2_double
+  condition: []
+  action:
+    - action: input_select.select_option
+      data:
+        option: marek
+      target:
+        entity_id: input_select.topeni_boost
+  mode: single
+- id: "1691962989823"
+  alias: M Koupelna - Vlhkost
+  description: ""
+  triggers:
+    - trigger: numeric_state
+      entity_id:
+        - sensor.kino_teplomer_humidity
+      for:
+        hours: 0
+        minutes: 1
+        seconds: 0
+      above: 62
+  conditions: []
+  actions:
+    - action: button.press
+      data: {}
+      target:
+        entity_id: button.m_koupelna_ventilator_ventilator
+  mode: single
+- id: "1693766616858"
+  alias: M Ložnice Světlo
+  description: ""
+  triggers:
+    - trigger: device
+      domain: mqtt
+      device_id: 230e1418bf58ac53464b79e24d42f580
+      type: action
+      subtype: single
+      discovery_id: 0x00124b00251eb5fe action_single
+  condition: []
+  action:
+    - action: light.toggle
+      data: {}
+      target:
+        device_id: 39f077da7e52e5e9beaf37e79ee558bc
+  mode: single
+- id: "1693766873327"
+  alias: M Světla Zhasnout
+  description: ""
+  triggers:
+    - trigger: device
+      domain: mqtt
+      device_id: 230e1418bf58ac53464b79e24d42f580
+      type: action
+      subtype: long
+      discovery_id: 0x00124b00251eb5fe action_long
+  condition: []
+  action:
+    - action: light.turn_off
+      data: {}
+      target:
+        device_id:
+          - 39f077da7e52e5e9beaf37e79ee558bc
+          - 6f272126d336b2c099128c19be861e91
+    - action: switch.turn_off
+      data: {}
+      target:
+        device_id:
+          - c677fa36c732a39816d02b22554f0276
+          - 37ac45c40e4d34ad8e871f98c952ff8c
+          - 8ef52bc50359d755ac61b2177b3d0ebe
+          - bded62f01a347854b01897a3af6a3fe6
+  mode: single
+- id: "1694063272128"
+  alias: Vstup - Někdo přišel
+  description: ""
+  triggers:
+    - type: vibration
+      device_id: f61e78d0d15f87d95d3c5be3344f18fc
+      entity_id: 1ddbf36082423fc27212bbaa15083f57
+      domain: binary_sensor
+      trigger: device
+  conditions: []
+  actions:
+    - action: script.alarm_vstup
+      data: {}
+  mode: single
+- id: "1696765207177"
+  alias: M Loznice Svetlo Dimmer
+  description: ""
+  triggers:
+    - trigger: device
+      domain: mqtt
+      device_id: 230e1418bf58ac53464b79e24d42f580
+      type: action
+      subtype: double
+      discovery_id: 0x00124b00251eb5fe action_double
+  condition:
+    - condition: state
+      entity_id: light.m_loznice_vypinac
+      state: ""
+  action: []
+  mode: single
+- id: "1696856197747"
+  alias: M Loznice Svetlo Dimmer
+  description: ""
+  triggers:
+    - trigger: device
+      domain: mqtt
+      device_id: 230e1418bf58ac53464b79e24d42f580
+      type: action
+      subtype: double
+      discovery_id: 0x00124b00251eb5fe action_double
+  condition: []
+  action:
+    - if:
+        - condition: numeric_state
+          entity_id: light.m_loznice_vypinac
+          attribute: brightness
+          below: 100
+      then:
+        - type: turn_on
+          device_id: 39f077da7e52e5e9beaf37e79ee558bc
+          entity_id: 1c507ce3fae3619a9d76aad68a6715aa
+          domain: light
+          brightness_pct: 100
+      else:
+        - type: turn_on
+          device_id: 39f077da7e52e5e9beaf37e79ee558bc
+          entity_id: 1c507ce3fae3619a9d76aad68a6715aa
+          domain: light
+          brightness_pct: 30
+  mode: single
+- id: "1697801575296"
+  alias: Topení - ventil - prodejna
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.topeni_prodejna
+  condition: []
+  action:
+    - if:
+        - condition: state
+          entity_id: binary_sensor.topeni_prodejna
+          state: "on"
+      then:
+        - type: turn_on
+          device_id: 510eb7e429584a311435891b3123cca7
+          entity_id: e266ea58448a51f647f90f9f441c63cc
+          domain: switch
+      else:
+        - type: turn_off
+          device_id: 510eb7e429584a311435891b3123cca7
+          entity_id: e266ea58448a51f647f90f9f441c63cc
+          domain: switch
+  mode: single
+- id: "1697825813623"
+  alias: "Topení - ventil - sociálky "
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.topeni_socialky
+  condition: []
+  action:
+    - if:
+        - condition: state
+          entity_id: binary_sensor.topeni_socialky
+          state: "on"
+      then:
+        - type: turn_on
+          device_id: d523990b0cdbf2e68d71c89333ec9c8a
+          entity_id: 630e866709b38c1b8d23b7e5078acc54
+          domain: switch
+      else:
+        - type: turn_off
+          device_id: d523990b0cdbf2e68d71c89333ec9c8a
+          entity_id: 630e866709b38c1b8d23b7e5078acc54
+          domain: switch
+  mode: single
+- id: "1697826066519"
+  alias: Topení - ventil - vlevo
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.topeni_vlevo
+  condition: []
+  action:
+    - if:
+        - condition: state
+          entity_id: binary_sensor.topeni_vlevo
+          state: "on"
+      then:
+        - type: turn_on
+          device_id: 3a54f78f0b1d25a04e0d19ef481febff
+          entity_id: e0033121094f9797e3bd37c3546f4844
+          domain: switch
+      else:
+        - type: turn_off
+          device_id: 3a54f78f0b1d25a04e0d19ef481febff
+          entity_id: e0033121094f9797e3bd37c3546f4844
+          domain: switch
+  mode: single
+- id: "1697989554183"
+  alias: Topení - kotel - ovládání
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - binary_sensor.topeni_kotel_stav
+    - trigger: state
+      entity_id:
+        - binary_sensor.topeni_peletkovy_kotel_chyba
+    - trigger: state
+      entity_id:
+        - input_boolean.kotel_turbo
+  condition: []
+  action:
+    - if:
+        - condition: state
+          entity_id: binary_sensor.topeni_kotel_stav
+          state: "on"
+      then:
+        - action: script.topeni_kotel_zapnout
+          data: {}
+      else:
+        - action: script.topeni_kotel_vypnout
+          data: {}
+  mode: single
+- id: "1698006430183"
+  alias: Topení - Kotel - Nastavení teploty vody
+  description: ""
+  triggers:
+    - entity_id:
+        - sensor.topeni_kotel_teplota_vody
+      trigger: state
+  conditions: []
+  actions:
+    - action: climate.set_temperature
+      data:
+        temperature: "{{ states('sensor.topeni_kotel_teplota_vody') }}"
+      target:
+        entity_id: climate.kotel_peletkovy_voda
+  mode: single
+- id: "1698311963410"
+  alias: Topení - Nastav termostaty
+  description: ""
+  triggers:
+    - trigger: time_pattern
+      minutes: /1
+  condition: []
+  action:
+    - if:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_prace
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zima
+              state: "on"
+      then:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: none
+          target:
+            entity_id: group.prodejna_termostaty
+      else:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: away
+          target:
+            entity_id: group.prodejna_termostaty
+    - if:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zkusebna
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zima
+              state: "on"
+      then:
+        - type: turn_off
+          device_id: 40f2e21601a296718d4800a80d6fc92d
+          entity_id: 71fd409dd67b7aad8975f6d6f5145fce
+          domain: switch
+          enabled: false
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: none
+          target:
+            entity_id:
+              - climate.zkusebna_termostat
+      else:
+        - type: turn_on
+          device_id: 40f2e21601a296718d4800a80d6fc92d
+          entity_id: 71fd409dd67b7aad8975f6d6f5145fce
+          domain: switch
+          enabled: false
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: away
+          target:
+            entity_id:
+              - climate.zkusebna_termostat
+    - if:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_kino
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zima
+              state: "on"
+      then:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: none
+          target:
+            entity_id: climate.kino_termostat
+      else:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: away
+          target:
+            entity_id: climate.kino_termostat
+    - if:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_marek
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zima
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_prace
+              state: "on"
+      then:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: none
+          target:
+            entity_id: climate.marek_termostat
+      else:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: away
+          target:
+            entity_id: climate.marek_termostat
+    - if:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_ivan
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zima
+              state: "on"
+      then:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: none
+          target:
+            entity_id: climate.ivan_termostat
+      else:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: away
+          target:
+            entity_id: climate.ivan_termostat
+    - if:
+        - condition: or
+          conditions:
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_pavla
+              state: "on"
+            - condition: state
+              entity_id: binary_sensor.topeni_mod_zima
+              state: "on"
+      then:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: none
+          target:
+            entity_id: climate.pavla_termostat
+      else:
+        - action: climate.set_preset_mode
+          data:
+            preset_mode: away
+          target:
+            entity_id: climate.pavla_termostat
+  mode: single
+- id: "1703501739554"
+  alias: FVE - Opravit Eco mode SoC
+  description: ""
+  triggers:
+    - trigger: state
+      entity_id:
+        - number.goodwe_eco_mode_soc
+    - trigger: time_pattern
+      minutes: /10
+  condition:
+    - condition: template
+      value_template: "{{(states('number.goodwe_eco_mode_soc')|round(0)) != 100}}"
+  action:
     - delay:
         hours: 0
         minutes: 0
         seconds: 10
         milliseconds: 0
-    - action: select.select_option
+    - action: number.set_value
       data:
-        option: eco_charge
-      target:
-        entity_id: select.goodwe_inverter_operation_mode
-  mode: single
-- alias: FVE - Nabíjení baterie - Stop
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.fve_nabijeni_ze_site
-    from: 'on'
-  - trigger: time_pattern
-    minutes: /20
-  condition:
-  - condition: not
-    conditions:
-    - condition: state
-      entity_id: binary_sensor.fve_nabijeni_ze_site
-      state: 'on'
-  action:
-  - action: select.select_option
-    data:
-      option: general
-    target:
-      entity_id: select.goodwe_inverter_operation_mode
-  mode: single
-  id: 9f891a12aea043bc83c5bda186b58ee1
-- id: '1673738943531'
-  alias: Notifikace Peletkový kotel - došly pelety
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - sensor.kotel_peletkovy_alarm
-    to: NO PELLET
-  condition:
-  - condition: time
-    after: 07:00:00
-    before: '21:00:00'
-  action:
-  - action: script.notifikace_urgentni
-    data:
-      zprava: Došly pelety!
-  mode: single
-- id: '1674137430447'
-  alias: M Obývák Lampa Přepni
-  description: ''
-  triggers:
-  - domain: mqtt
-    device_id: f6641a54ad49e778b05d2b3f1946e38d
-    type: action
-    subtype: single
-    trigger: device
-  conditions: []
-  actions:
-  - type: toggle
-    device_id: 6f272126d336b2c099128c19be861e91
-    entity_id: 49b5e111b671a189e74b1deb5f30db4c
-    domain: light
-  mode: single
-- id: '1674246358128'
-  alias: Notifikace Peletkový kotel - Málo pelet
-  description: ''
-  triggers:
-  - entity_id:
-    - sensor.peletkovy_kotel_zasobnik_zbyva
-    trigger: numeric_state
-    below: 25
-  - entity_id:
-    - sensor.peletkovy_kotel_zasobnik_zbyva
-    trigger: numeric_state
-    below: 15
-  - entity_id:
-    - sensor.peletkovy_kotel_zasobnik_zbyva
-    trigger: numeric_state
-    below: 5
-  conditions:
-  - condition: time
-    after: 07:00:00
-    before: '21:00:00'
-  actions:
-  - action: script.notifikace_urgentni
-    data:
-      zprava: Dochází pelety!
-  mode: single
-- id: '1674312129871'
-  alias: Peletkový kotel - chyba integrace
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - sensor.kotel_peletkovy_status
-    to: unavailable
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
-  condition: []
-  action:
-  - action: hassio.host_reboot
-    data: {}
-  mode: single
-- id: '1675890675785'
-  alias: Notifikace Peletkový kotel - Chyba
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.topeni_peletkovy_kotel_chyba
-    to: 'on'
-  conditions: []
-  actions:
-  - action: script.notifikace_urgentni
-    data:
-      zprava: Kotel ma problém!
-  mode: single
-- id: '1678818905241'
-  alias: Pracovní doba - Start
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.pracovni_doba
-    to: 'on'
-  condition: []
-  action:
-  - type: turn_on
-    device_id: bd2f5dd258eb0de0202da3afc85a70cb
-    entity_id: light.sonoff_perfectdoor
-    domain: light
-  - action: script.kancelar_pi_zapnout
-    metadata: {}
-    data: {}
-  mode: single
-- id: '1678818955253'
-  alias: Pracovní doba - Stop
-  description: ''
-  triggers:
-  - entity_id:
-    - binary_sensor.pracovni_doba
-    to: 'off'
-    trigger: state
-  conditions: []
-  actions:
-  - type: turn_off
-    device_id: bd2f5dd258eb0de0202da3afc85a70cb
-    entity_id: light.sonoff_perfectdoor
-    domain: light
-  - action: input_boolean.turn_off
-    data: {}
-    target:
-      entity_id: input_boolean.topeni_ivan
-  - action: input_boolean.turn_off
-    data: {}
-    target:
-      entity_id: input_boolean.topeni_pavla
-  - action: script.1713169977678
-    metadata: {}
-    data: {}
-  - action: climate.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: climate.marek_termostat_primotop
-  mode: single
-- id: '1678958657961'
-  alias: Topení - Přehřátá voda
-  description: ''
-  triggers:
-  - trigger: numeric_state
-    entity_id: sensor.topeni_6
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-    above: 70
-  - trigger: numeric_state
-    entity_id: sensor.topeni_4
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-    above: 70
-  - trigger: numeric_state
-    entity_id: sensor.topeni_1
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-    above: 70
-  condition:
-  - condition: state
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-    entity_id: switch.sonoff_kotelna1
-    state: 'off'
-  action:
-  - action: switch.turn_on
-    data: {}
-    target:
-      entity_id: switch.sonoff_kotelna1
-  - delay:
-      hours: 0
-      minutes: 10
-      seconds: 0
-      milliseconds: 0
-  - action: switch.turn_off
-    data: {}
-    target:
-      entity_id: switch.sonoff_kotelna1
-  mode: single
-- id: '1680526566395'
-  alias: Marek Vypínač Světlo
-  description: ''
-  triggers:
-  - domain: mqtt
-    device_id: e23b1f5e3e6cb9697c08219c76dc6d53
-    type: action
-    subtype: 1_single
-    discovery_id: 0x70ac08fffe196cde action_1_single
-    trigger: device
-  - domain: mqtt
-    device_id: e8bbce2805ab08618682b5fbb50521d9
-    type: action
-    subtype: single
-    trigger: device
-  conditions: []
-  actions:
-  - type: toggle
-    device_id: 0d07bc71ff859527bc2ceedb7319129a
-    entity_id: 01d4fa17f695216ec574e42676f7677a
-    domain: switch
-  mode: single
-- id: '1680526874311'
-  alias: Marek Vypínač Přímotop Off
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: e23b1f5e3e6cb9697c08219c76dc6d53
-    type: action
-    subtype: 2_single
-    discovery_id: 0x70ac08fffe196cde action_2_single
-  condition:
-  - condition: state
-    entity_id: climate.marek_termostat_primotop
-    state: heat
-  action:
-  - action: climate.set_hvac_mode
-    data:
-      hvac_mode: 'off'
-    target:
-      entity_id: climate.marek_termostat_primotop
-  mode: single
-- id: '1680527271944'
-  alias: Marek Vypínač Přímotop On
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: e23b1f5e3e6cb9697c08219c76dc6d53
-    type: action
-    subtype: 2_single
-    discovery_id: 0x70ac08fffe196cde action_2_single
-  condition:
-  - condition: state
-    entity_id: climate.marek_termostat_primotop
-    state: 'off'
-  action:
-  - action: climate.set_hvac_mode
-    data:
-      hvac_mode: heat
-    target:
-      entity_id: climate.marek_termostat_primotop
-  mode: single
-- id: '1680623233264'
-  alias: Marek Vypínač Topení Boost
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: e23b1f5e3e6cb9697c08219c76dc6d53
-    type: action
-    subtype: 2_double
-    discovery_id: 0x70ac08fffe196cde action_2_double
-  condition: []
-  action:
-  - action: input_select.select_option
-    data:
-      option: marek
-    target:
-      entity_id: input_select.topeni_boost
-  mode: single
-- id: '1691962989823'
-  alias: M Koupelna - Vlhkost
-  description: ''
-  triggers:
-  - trigger: numeric_state
-    entity_id:
-    - sensor.kino_teplomer_humidity
-    for:
-      hours: 0
-      minutes: 1
-      seconds: 0
-    above: 62
-  conditions: []
-  actions:
-  - action: button.press
-    data: {}
-    target:
-      entity_id: button.m_koupelna_ventilator_ventilator
-  mode: single
-- id: '1693766616858'
-  alias: M Ložnice Světlo
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: 230e1418bf58ac53464b79e24d42f580
-    type: action
-    subtype: single
-    discovery_id: 0x00124b00251eb5fe action_single
-  condition: []
-  action:
-  - action: light.toggle
-    data: {}
-    target:
-      device_id: 39f077da7e52e5e9beaf37e79ee558bc
-  mode: single
-- id: '1693766873327'
-  alias: M Světla Zhasnout
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: 230e1418bf58ac53464b79e24d42f580
-    type: action
-    subtype: long
-    discovery_id: 0x00124b00251eb5fe action_long
-  condition: []
-  action:
-  - action: light.turn_off
-    data: {}
-    target:
-      device_id:
-      - 39f077da7e52e5e9beaf37e79ee558bc
-      - 6f272126d336b2c099128c19be861e91
-  - action: switch.turn_off
-    data: {}
-    target:
-      device_id:
-      - c677fa36c732a39816d02b22554f0276
-      - 37ac45c40e4d34ad8e871f98c952ff8c
-      - 8ef52bc50359d755ac61b2177b3d0ebe
-      - bded62f01a347854b01897a3af6a3fe6
-  mode: single
-- id: '1694063272128'
-  alias: Vstup - Někdo přišel
-  description: ''
-  triggers:
-  - type: vibration
-    device_id: f61e78d0d15f87d95d3c5be3344f18fc
-    entity_id: 1ddbf36082423fc27212bbaa15083f57
-    domain: binary_sensor
-    trigger: device
-  conditions: []
-  actions:
-  - action: script.alarm_vstup
-    data: {}
-  mode: single
-- id: '1696765207177'
-  alias: M Loznice Svetlo Dimmer
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: 230e1418bf58ac53464b79e24d42f580
-    type: action
-    subtype: double
-    discovery_id: 0x00124b00251eb5fe action_double
-  condition:
-  - condition: state
-    entity_id: light.m_loznice_vypinac
-    state: ''
-  action: []
-  mode: single
-- id: '1696856197747'
-  alias: M Loznice Svetlo Dimmer
-  description: ''
-  triggers:
-  - trigger: device
-    domain: mqtt
-    device_id: 230e1418bf58ac53464b79e24d42f580
-    type: action
-    subtype: double
-    discovery_id: 0x00124b00251eb5fe action_double
-  condition: []
-  action:
-  - if:
-    - condition: numeric_state
-      entity_id: light.m_loznice_vypinac
-      attribute: brightness
-      below: 100
-    then:
-    - type: turn_on
-      device_id: 39f077da7e52e5e9beaf37e79ee558bc
-      entity_id: 1c507ce3fae3619a9d76aad68a6715aa
-      domain: light
-      brightness_pct: 100
-    else:
-    - type: turn_on
-      device_id: 39f077da7e52e5e9beaf37e79ee558bc
-      entity_id: 1c507ce3fae3619a9d76aad68a6715aa
-      domain: light
-      brightness_pct: 30
-  mode: single
-- id: '1697801575296'
-  alias: Topení - ventil - prodejna
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.topeni_prodejna
-  condition: []
-  action:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.topeni_prodejna
-      state: 'on'
-    then:
-    - type: turn_on
-      device_id: 510eb7e429584a311435891b3123cca7
-      entity_id: e266ea58448a51f647f90f9f441c63cc
-      domain: switch
-    else:
-    - type: turn_off
-      device_id: 510eb7e429584a311435891b3123cca7
-      entity_id: e266ea58448a51f647f90f9f441c63cc
-      domain: switch
-  mode: single
-- id: '1697825813623'
-  alias: 'Topení - ventil - sociálky '
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.topeni_socialky
-  condition: []
-  action:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.topeni_socialky
-      state: 'on'
-    then:
-    - type: turn_on
-      device_id: d523990b0cdbf2e68d71c89333ec9c8a
-      entity_id: 630e866709b38c1b8d23b7e5078acc54
-      domain: switch
-    else:
-    - type: turn_off
-      device_id: d523990b0cdbf2e68d71c89333ec9c8a
-      entity_id: 630e866709b38c1b8d23b7e5078acc54
-      domain: switch
-  mode: single
-- id: '1697826066519'
-  alias: Topení - ventil - vlevo
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.topeni_vlevo
-  condition: []
-  action:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.topeni_vlevo
-      state: 'on'
-    then:
-    - type: turn_on
-      device_id: 3a54f78f0b1d25a04e0d19ef481febff
-      entity_id: e0033121094f9797e3bd37c3546f4844
-      domain: switch
-    else:
-    - type: turn_off
-      device_id: 3a54f78f0b1d25a04e0d19ef481febff
-      entity_id: e0033121094f9797e3bd37c3546f4844
-      domain: switch
-  mode: single
-- id: '1697989554183'
-  alias: Topení - kotel - ovládání
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - binary_sensor.topeni_kotel_stav
-  - trigger: state
-    entity_id:
-    - binary_sensor.topeni_peletkovy_kotel_chyba
-  - trigger: state
-    entity_id:
-    - input_boolean.kotel_turbo
-  condition: []
-  action:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.topeni_kotel_stav
-      state: 'on'
-    then:
-    - action: script.topeni_kotel_zapnout
-      data: {}
-    else:
-    - action: script.topeni_kotel_vypnout
-      data: {}
-  mode: single
-- id: '1698006430183'
-  alias: Topení - Kotel - Nastavení teploty vody
-  description: ''
-  triggers:
-  - entity_id:
-    - sensor.topeni_kotel_teplota_vody
-    trigger: state
-  conditions: []
-  actions:
-  - action: climate.set_temperature
-    data:
-      temperature: '{{ states(''sensor.topeni_kotel_teplota_vody'') }}'
-    target:
-      entity_id: climate.kotel_peletkovy_voda
-  mode: single
-- id: '1698311963410'
-  alias: Topení - Nastav termostaty
-  description: ''
-  triggers:
-  - trigger: time_pattern
-    minutes: /1
-  condition: []
-  action:
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_prace
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zima
-        state: 'on'
-    then:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: none
-      target:
-        entity_id: group.prodejna_termostaty
-    else:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id: group.prodejna_termostaty
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zkusebna
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zima
-        state: 'on'
-    then:
-    - type: turn_off
-      device_id: 40f2e21601a296718d4800a80d6fc92d
-      entity_id: 71fd409dd67b7aad8975f6d6f5145fce
-      domain: switch
-      enabled: false
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: none
+        value: "100"
       target:
         entity_id:
-        - climate.zkusebna_termostat
-    else:
-    - type: turn_on
-      device_id: 40f2e21601a296718d4800a80d6fc92d
-      entity_id: 71fd409dd67b7aad8975f6d6f5145fce
-      domain: switch
-      enabled: false
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id:
-        - climate.zkusebna_termostat
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_kino
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zima
-        state: 'on'
-    then:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: none
-      target:
-        entity_id: climate.kino_termostat
-    else:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id: climate.kino_termostat
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_marek
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zima
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_prace
-        state: 'on'
-    then:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: none
-      target:
-        entity_id: climate.marek_termostat
-    else:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id: climate.marek_termostat
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_ivan
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zima
-        state: 'on'
-    then:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: none
-      target:
-        entity_id: climate.ivan_termostat
-    else:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id: climate.ivan_termostat
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_pavla
-        state: 'on'
-      - condition: state
-        entity_id: binary_sensor.topeni_mod_zima
-        state: 'on'
-    then:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: none
-      target:
-        entity_id: climate.pavla_termostat
-    else:
-    - action: climate.set_preset_mode
-      data:
-        preset_mode: away
-      target:
-        entity_id: climate.pavla_termostat
+          - number.goodwe_eco_mode_soc
   mode: single
-- id: '1703501739554'
-  alias: FVE - Opravit Eco mode SoC
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - number.goodwe_eco_mode_soc
-  - trigger: time_pattern
-    minutes: /10
-  condition:
-  - condition: template
-    value_template: '{{(states(''number.goodwe_eco_mode_soc'')|round(0)) != 100}}'
-  action:
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 10
-      milliseconds: 0
-  - action: number.set_value
-    data:
-      value: '100'
-    target:
-      entity_id:
-      - number.goodwe_eco_mode_soc
-  mode: single
-- id: '1726164902385'
+- id: "1726164902385"
   alias: M Obývák Tag Kolo
-  description: ''
+  description: ""
   triggers:
-  - trigger: tag
-    tag_id: 04-77-8C-5A-14-6F-81
+    - trigger: tag
+      tag_id: 04-77-8C-5A-14-6F-81
   condition: []
   action:
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: x-file-cifs://10.0.0.138/music/Detske/Eben - Elce Pelce Kotrmelce/kolo.mp3
-      media_content_type: music
-  mode: single
-- id: '1726169011703'
-  alias: M Obývák Tag Tři Čuníci
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-72-8B-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.shuffle_set
-    data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:album:2GtiydsW1Cxa1LHM6us1GL?si=cVK5YXSSTiaG0e_Rw7eOcw
-      media_content_type: album
-  mode: single
-- id: '1726170472632'
-  alias: M Obývák Tag Železiar
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-76-8B-5A-14-6F-81
-  conditions: []
-  actions:
-  - action: media_player.shuffle_set
-    data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-    enabled: true
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:album:5L3HcXJAqE4eVfGz0OInrg?si=4quRUNqaSdmIar1XL-P6sg
-      media_content_type: album
-    enabled: true
-  mode: single
-- id: '1726170758302'
-  alias: M Obývák Tag U2
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-8A-8C-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.shuffle_set
-    data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:37i9dQZF1DZ06evO2X1bTq?si=788b250ed5a74b33
-      media_content_type: playlist
-  mode: single
-- id: '1726170930621'
-  alias: M Obývák Tag Ska
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-80-8C-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.shuffle_set
-    data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:0rPs2MGwz1xT5MtNiLBP69?si=f312fd22c07a4297
-      media_content_type: playlist
-  mode: single
-- id: '1726171441283'
-  alias: M Obývák Tag Chopin
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-8E-8C-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.shuffle_set
-    data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:37i9dQZF1DWV7cvDzE3MOI?si=d069b3fd95b7454b
-      media_content_type: playlist
-  mode: single
-- id: '1726171580608'
-  alias: M Obývák Tag Letadlo
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-7B-8B-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: x-file-cifs://10.0.0.138/music/Detske/Eben - Elce Pelce Kotrmelce/letadlo.mp3
-      media_content_type: music
-  mode: single
-- id: '1726172166236'
-  alias: M Obývák Tag Rádio FM
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-7F-8B-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: http://live.slovakradio.sk:8000/FM_256.mp3
-      media_content_type: music
-  mode: single
-- id: '1726342750603'
-  alias: M Obývák Tag Monti
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-83-8D-5A-14-6F-81
-  condition: []
-  action:
-  - action: media_player.play_media
-    target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:track:1k8q0uKc3m9uX35XgHhLGI?si=c7b157f4b6ba44b6
-      media_content_type: music
-  mode: single
-- id: '1727018838990'
-  alias: M Obývák Tag Nu Jazz
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-2E-8B-5A-14-6F-81
-  condition: []
-  action:
-  - data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-    action: media_player.shuffle_set
-  - target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:3NJOYAX8v8wsKzBvq21voI?si=7417f8d0f00b4f24
-      media_content_type: playlist
-    action: media_player.play_media
-  mode: single
-- id: '1727019060562'
-  alias: M Obývák Tag Buty
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-37-8C-5A-14-6F-81
-  condition: []
-  action:
-  - data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-    action: media_player.shuffle_set
-  - target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:6UzMl5vxBfYeXcuGAKa0ew?si=9d1c59655daf4bcc
-      media_content_type: playlist
-    action: media_player.play_media
-  mode: single
-- id: '1727019183984'
-  alias: M Obývák Tag Mňága a Žďorp
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-2A-8B-5A-14-6F-81
-  condition: []
-  action:
-  - data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-    action: media_player.shuffle_set
-  - target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:37i9dQZF1DZ06evO0pMy1V?si=31a4959f4b984060
-      media_content_type: playlist
-    action: media_player.play_media
-  mode: single
-- id: '1727019298291'
-  alias: M Obývák Tag Tatabojs
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-26-8B-5A-14-6F-81
-  condition: []
-  action:
-  - data:
-      entity_id: media_player.obyvaci_pokoj
-      shuffle: true
-    action: media_player.shuffle_set
-  - target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:playlist:37i9dQZF1DZ06evNZXyyn3?si=2c764f1b101f4282
-      media_content_type: playlist
-    action: media_player.play_media
-  mode: single
-- id: '1727019577247'
-  alias: M Obývák Tag Shrek
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-34-8B-5A-14-6F-81
-  condition: []
-  action:
-  - target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_id: spotify:track:0mBL2JwjNYKtdFacHxvtJt?si=58bce62e4dc04d85
-      media_content_type: music
-    action: media_player.play_media
-  mode: single
-- id: '1727020039514'
-  alias: M Obývák Tag Vojtek
-  description: ''
-  triggers:
-  - trigger: tag
-    tag_id: 04-34-8D-5A-14-6F-81
-  condition: []
-  action:
-  - target:
-      entity_id:
-      - media_player.obyvaci_pokoj
-    data:
-      media_content_type: album
-      media_content_id: A:ALBUM/Hrátky s Vojtkem
-    action: media_player.play_media
-  mode: single
-- id: '1736502315698'
-  alias: Marek  Led
-  description: ''
-  triggers:
-  - domain: mqtt
-    device_id: e23b1f5e3e6cb9697c08219c76dc6d53
-    type: action
-    subtype: 3_single
-    trigger: device
-  - domain: mqtt
-    device_id: e8bbce2805ab08618682b5fbb50521d9
-    type: action
-    subtype: double
-    trigger: device
-  conditions: []
-  actions:
-  - action: light.toggle
-    metadata: {}
-    data:
-      transition: 10
-    target:
-      entity_id: light.marek_led
-  mode: single
-- id: '1737363294897'
-  alias: Topení - Kotel - Nastavení stupně vytápění
-  description: ''
-  triggers:
-  - entity_id:
-    - binary_sensor.topeni_mod_prace
-    trigger: state
-  - entity_id:
-    - binary_sensor.topeni_mod_marek
-    trigger: state
-  - entity_id:
-    - binary_sensor.topeni_mod_kino
-    trigger: state
-  - entity_id:
-    - binary_sensor.topeni_mod_zkusebna
-    trigger: state
-  - entity_id:
-    - binary_sensor.topeni_mod_ivan
-    trigger: state
-  - entity_id:
-    - binary_sensor.topeni_mod_pavla
-    trigger: state
-  - entity_id:
-    - binary_sensor.topeni_mod_zima
-    trigger: state
-  - trigger: time_pattern
-    hours: /1
-  conditions: []
-  actions:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_zkusebna
-      state: 'on'
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_prace
-      state: 'off'
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_marek
-      state: 'off'
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_kino
-      state: 'off'
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_ivan
-      state: 'off'
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_pavla
-      state: 'off'
-    - condition: state
-      entity_id: binary_sensor.topeni_mod_zima
-      state: 'off'
-    then:
-    - action: number.set_value
+    - action: media_player.play_media
       target:
         entity_id:
-        - number.kotel_peletkovy_vykon
+          - media_player.obyvaci_pokoj
       data:
-        value: '2'
-    else:
-    - action: number.set_value
+        media_content_id: x-file-cifs://10.0.0.138/music/Detske/Eben - Elce Pelce Kotrmelce/kolo.mp3
+        media_content_type: music
+  mode: single
+- id: "1726169011703"
+  alias: M Obývák Tag Tři Čuníci
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-72-8B-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.shuffle_set
       data:
-        value: '5'
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+    - action: media_player.play_media
       target:
-        entity_id: number.kotel_peletkovy_vykon
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:album:2GtiydsW1Cxa1LHM6us1GL?si=cVK5YXSSTiaG0e_Rw7eOcw
+        media_content_type: album
   mode: single
-- id: '1739485923084'
+- id: "1726170472632"
+  alias: M Obývák Tag Železiar
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-76-8B-5A-14-6F-81
+  conditions: []
+  actions:
+    - action: media_player.shuffle_set
+      data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+      enabled: true
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:album:5L3HcXJAqE4eVfGz0OInrg?si=4quRUNqaSdmIar1XL-P6sg
+        media_content_type: album
+      enabled: true
+  mode: single
+- id: "1726170758302"
+  alias: M Obývák Tag U2
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-8A-8C-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.shuffle_set
+      data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:37i9dQZF1DZ06evO2X1bTq?si=788b250ed5a74b33
+        media_content_type: playlist
+  mode: single
+- id: "1726170930621"
+  alias: M Obývák Tag Ska
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-80-8C-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.shuffle_set
+      data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:0rPs2MGwz1xT5MtNiLBP69?si=f312fd22c07a4297
+        media_content_type: playlist
+  mode: single
+- id: "1726171441283"
+  alias: M Obývák Tag Chopin
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-8E-8C-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.shuffle_set
+      data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:37i9dQZF1DWV7cvDzE3MOI?si=d069b3fd95b7454b
+        media_content_type: playlist
+  mode: single
+- id: "1726171580608"
+  alias: M Obývák Tag Letadlo
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-7B-8B-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: x-file-cifs://10.0.0.138/music/Detske/Eben - Elce Pelce Kotrmelce/letadlo.mp3
+        media_content_type: music
+  mode: single
+- id: "1726172166236"
+  alias: M Obývák Tag Rádio FM
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-7F-8B-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: http://live.slovakradio.sk:8000/FM_256.mp3
+        media_content_type: music
+  mode: single
+- id: "1726342750603"
+  alias: M Obývák Tag Monti
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-83-8D-5A-14-6F-81
+  condition: []
+  action:
+    - action: media_player.play_media
+      target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:track:1k8q0uKc3m9uX35XgHhLGI?si=c7b157f4b6ba44b6
+        media_content_type: music
+  mode: single
+- id: "1727018838990"
+  alias: M Obývák Tag Nu Jazz
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-2E-8B-5A-14-6F-81
+  condition: []
+  action:
+    - data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+      action: media_player.shuffle_set
+    - target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:3NJOYAX8v8wsKzBvq21voI?si=7417f8d0f00b4f24
+        media_content_type: playlist
+      action: media_player.play_media
+  mode: single
+- id: "1727019060562"
+  alias: M Obývák Tag Buty
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-37-8C-5A-14-6F-81
+  condition: []
+  action:
+    - data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+      action: media_player.shuffle_set
+    - target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:6UzMl5vxBfYeXcuGAKa0ew?si=9d1c59655daf4bcc
+        media_content_type: playlist
+      action: media_player.play_media
+  mode: single
+- id: "1727019183984"
+  alias: M Obývák Tag Mňága a Žďorp
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-2A-8B-5A-14-6F-81
+  condition: []
+  action:
+    - data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+      action: media_player.shuffle_set
+    - target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:37i9dQZF1DZ06evO0pMy1V?si=31a4959f4b984060
+        media_content_type: playlist
+      action: media_player.play_media
+  mode: single
+- id: "1727019298291"
+  alias: M Obývák Tag Tatabojs
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-26-8B-5A-14-6F-81
+  condition: []
+  action:
+    - data:
+        entity_id: media_player.obyvaci_pokoj
+        shuffle: true
+      action: media_player.shuffle_set
+    - target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:playlist:37i9dQZF1DZ06evNZXyyn3?si=2c764f1b101f4282
+        media_content_type: playlist
+      action: media_player.play_media
+  mode: single
+- id: "1727019577247"
+  alias: M Obývák Tag Shrek
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-34-8B-5A-14-6F-81
+  condition: []
+  action:
+    - target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_id: spotify:track:0mBL2JwjNYKtdFacHxvtJt?si=58bce62e4dc04d85
+        media_content_type: music
+      action: media_player.play_media
+  mode: single
+- id: "1727020039514"
+  alias: M Obývák Tag Vojtek
+  description: ""
+  triggers:
+    - trigger: tag
+      tag_id: 04-34-8D-5A-14-6F-81
+  condition: []
+  action:
+    - target:
+        entity_id:
+          - media_player.obyvaci_pokoj
+      data:
+        media_content_type: album
+        media_content_id: A:ALBUM/Hrátky s Vojtkem
+      action: media_player.play_media
+  mode: single
+- id: "1736502315698"
+  alias: Marek  Led
+  description: ""
+  triggers:
+    - domain: mqtt
+      device_id: e23b1f5e3e6cb9697c08219c76dc6d53
+      type: action
+      subtype: 3_single
+      trigger: device
+    - domain: mqtt
+      device_id: e8bbce2805ab08618682b5fbb50521d9
+      type: action
+      subtype: double
+      trigger: device
+  conditions: []
+  actions:
+    - action: light.toggle
+      metadata: {}
+      data:
+        transition: 10
+      target:
+        entity_id: light.marek_led
+  mode: single
+- id: "1737363294897"
+  alias: Topení - Kotel - Nastavení stupně vytápění
+  description: ""
+  triggers:
+    - entity_id:
+        - binary_sensor.topeni_mod_prace
+      trigger: state
+    - entity_id:
+        - binary_sensor.topeni_mod_marek
+      trigger: state
+    - entity_id:
+        - binary_sensor.topeni_mod_kino
+      trigger: state
+    - entity_id:
+        - binary_sensor.topeni_mod_zkusebna
+      trigger: state
+    - entity_id:
+        - binary_sensor.topeni_mod_ivan
+      trigger: state
+    - entity_id:
+        - binary_sensor.topeni_mod_pavla
+      trigger: state
+    - entity_id:
+        - binary_sensor.topeni_mod_zima
+      trigger: state
+    - trigger: time_pattern
+      hours: /1
+  conditions: []
+  actions:
+    - if:
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_zkusebna
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_prace
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_marek
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_kino
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_ivan
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_pavla
+          state: "off"
+        - condition: state
+          entity_id: binary_sensor.topeni_mod_zima
+          state: "off"
+      then:
+        - action: number.set_value
+          target:
+            entity_id:
+              - number.kotel_peletkovy_vykon
+          data:
+            value: "2"
+      else:
+        - action: number.set_value
+          data:
+            value: "5"
+          target:
+            entity_id: number.kotel_peletkovy_vykon
+  mode: single
+- id: "1739485923084"
   alias: Topení - Podavač pelet - Stop
-  description: ''
+  description: ""
   triggers:
-  - trigger: numeric_state
-    entity_id:
-    - sensor.peletkovy_kotel_zasobnik_zbyva
-    below: 0.3
+    - trigger: numeric_state
+      entity_id:
+        - sensor.peletkovy_kotel_zasobnik_zbyva
+      below: 0.3
   conditions: []
   actions:
-  - type: turn_off
-    device_id: 71a3902e7c6de019b7f62556bee8f51d
-    entity_id: 29eb034477ad1518f422658ddc354c45
-    domain: switch
+    - type: turn_off
+      device_id: 71a3902e7c6de019b7f62556bee8f51d
+      entity_id: 29eb034477ad1518f422658ddc354c45
+      domain: switch
   mode: single
-- id: '1739486163555'
+- id: "1739486163555"
   alias: Topení - Podavač pelet - Start
-  description: ''
+  description: ""
   triggers:
-  - trigger: numeric_state
-    entity_id:
-    - sensor.peletkovy_kotel_zasobnik_zbyva
-    above: 0.3
+    - trigger: numeric_state
+      entity_id:
+        - sensor.peletkovy_kotel_zasobnik_zbyva
+      above: 0.3
   conditions: []
   actions:
-  - type: turn_on
-    device_id: 71a3902e7c6de019b7f62556bee8f51d
-    entity_id: 29eb034477ad1518f422658ddc354c45
-    domain: switch
+    - type: turn_on
+      device_id: 71a3902e7c6de019b7f62556bee8f51d
+      entity_id: 29eb034477ad1518f422658ddc354c45
+      domain: switch
   mode: single
-- id: '1764164815566'
+- id: "1764164815566"
   alias: Nářadí - Vypnout nabíjení
-  description: ''
+  description: ""
   triggers:
-  - type: power
-    device_id: 8312af7c398720c10123a3304cde62ce
-    entity_id: 3bb3931945a697e8fcc5ebe0e2d0e9ee
-    domain: sensor
-    trigger: device
-    below: 20
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
+    - type: power
+      device_id: 8312af7c398720c10123a3304cde62ce
+      entity_id: 3bb3931945a697e8fcc5ebe0e2d0e9ee
+      domain: sensor
+      trigger: device
+      below: 20
+      for:
+        hours: 0
+        minutes: 5
+        seconds: 0
   conditions: []
   actions:
-  - type: turn_off
-    device_id: 8312af7c398720c10123a3304cde62ce
-    entity_id: 2ad1704df83d0af62aec80fad886ae1b
-    domain: switch
+    - type: turn_off
+      device_id: 8312af7c398720c10123a3304cde62ce
+      entity_id: 2ad1704df83d0af62aec80fad886ae1b
+      domain: switch
   mode: single
-- id: '1767652230337'
+- id: "1767652230337"
   alias: Zigbee Evans - restart
-  description: ''
+  description: ""
   triggers:
-  - entity_id:
-    - sensor.marek_teplomer_temperature
-    to:
-    - unavailable
-    trigger: state
-    for:
-      hours: 0
-      minutes: 30
-      seconds: 0
+    - entity_id:
+        - sensor.marek_teplomer_temperature
+      to:
+        - unavailable
+      trigger: state
+      for:
+        hours: 0
+        minutes: 30
+        seconds: 0
   conditions:
-  - condition: state
-    entity_id: sensor.prodejna_recepce_teplomer_temperature
-    state:
-    - unavailable
+    - condition: state
+      entity_id: sensor.prodejna_recepce_teplomer_temperature
+      state:
+        - unavailable
   actions:
-  - type: turn_off
-    device_id: addfbbfaa93a433ef45e9f8251456b2e
-    entity_id: 0c9225d80940b26a7c42506b6a8a61b1
-    domain: switch
+    - type: turn_off
+      device_id: addfbbfaa93a433ef45e9f8251456b2e
+      entity_id: 0c9225d80940b26a7c42506b6a8a61b1
+      domain: switch
   mode: single
-- id: '1768301069234'
+- id: "1768301069234"
   alias: M Květiny - denní report
-  description: ''
+  description: ""
   triggers:
-  - at: 07:30:00
-    trigger: time
+    - at: 07:30:00
+      trigger: time
   actions:
-  - variables:
-      d: '{{ states(''sensor.m_obyvak_vlhkomer_dracena_soil_moisture'')|float(none)
-        }}'
-      f: '{{ states(''sensor.m_kuchyn_vlhkomer_fialka_soil_moisture'')|float(none)
-        }}'
-      s: '{{ states(''sensor.m_kuchyn_vlhkomer_stavel_soil_moisture'')|float(none)
-        }}'
-      payload: 'Udělej krátký denní hlasový report o květinách. U každé řekni aktuální
-        vlhkost v procentech a zda je to OK/suché/přemokřené. Ber v potaz, kolik daná
-        květina reálně potřebuje. Nakonec řekni, které květiny dnes zalít. Data: -
-        Dracéna: {{ d if d is not none else ''nedostupné'' }} % - Fialka: {{ f if
-        f is not none else ''nedostupné'' }} % - Šťavel: {{ s if s is not none else
-        ''nedostupné'' }} %'
-  - action: conversation.process
-    data:
-      agent_id: conversation.chatgpt
-      text: '{{ payload }}'
-    response_variable: ai
-  - variables:
-      speech: '{% set t = ai.response.speech.plain.speech if ai is defined else ''''
-        %} {{ t if t|length > 0 else ''Denní report květin není dostupný.'' }}'
-  - action: tts.speak
-    data:
-      media_player_entity_id: media_player.nesthubd799
-      message: '{{ speech }}'
-    target:
-      entity_id: tts.home_assistant_cloud
+    - variables:
+        d:
+          "{{ states('sensor.m_obyvak_vlhkomer_dracena_soil_moisture')|float(none)
+          }}"
+        f:
+          "{{ states('sensor.m_kuchyn_vlhkomer_fialka_soil_moisture')|float(none)
+          }}"
+        s:
+          "{{ states('sensor.m_kuchyn_vlhkomer_stavel_soil_moisture')|float(none)
+          }}"
+        payload:
+          "Udělej krátký denní hlasový report o květinách. U každé řekni aktuální
+          vlhkost v procentech a zda je to OK/suché/přemokřené. Ber v potaz, kolik daná
+          květina reálně potřebuje. Nakonec řekni, které květiny dnes zalít. Data: -
+          Dracéna: {{ d if d is not none else 'nedostupné' }} % - Fialka: {{ f if
+          f is not none else 'nedostupné' }} % - Šťavel: {{ s if s is not none else
+          'nedostupné' }} %"
+    - action: conversation.process
+      data:
+        agent_id: conversation.chatgpt
+        text: "{{ payload }}"
+      response_variable: ai
+    - variables:
+        speech:
+          "{% set t = ai.response.speech.plain.speech if ai is defined else ''
+          %} {{ t if t|length > 0 else 'Denní report květin není dostupný.' }}"
+    - action: tts.speak
+      data:
+        media_player_entity_id: media_player.nesthubd799
+        message: "{{ speech }}"
+      target:
+        entity_id: tts.home_assistant_cloud
   mode: single
