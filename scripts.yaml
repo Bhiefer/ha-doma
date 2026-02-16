@@ -2,28 +2,39 @@ zapnout_trv:
   alias: Zapnuti TRV termostatu
   mode: queued
   sequence:
-  - action: climate.turn_on
-    target:
-      entity_id: '{{trv}}'
-  - delay: 3
-  - action: climate.set_preset_mode
-    target:
-      entity_id: '{{trv}}'
-    data:
-      preset_mode: manual
+    - action: climate.turn_on
+      target:
+        entity_id: "{{trv}}"
+    - delay: 3
+    - action: climate.set_preset_mode
+      target:
+        entity_id: "{{trv}}"
+      data:
+        preset_mode: manual
 vypnout_trv:
   alias: Vypnuti TRV termostatu
   mode: queued
   sequence:
-  - action: climate.set_preset_mode
-    target:
-      entity_id: '{{trv}}'
-    data:
-      preset_mode: manual
-  - delay: 3
-  - action: climate.turn_off
-    target:
-      entity_id: '{{trv}}'
+    - action: climate.set_preset_mode
+      target:
+        entity_id: "{{trv}}"
+      data:
+        preset_mode: manual
+    - delay: 3
+    - action: climate.turn_off
+      target:
+        entity_id: "{{trv}}"
+zigbee2mqtt_reboot:
+  alias: "Restart Zigbee2MQTT Evans hostu přes SSH"
+  sequence:
+    - service: shell_command.zigbee2mqtt_reboot_over_ssh
+      data:
+        host: !secret zigbee2mqtt_ssh_host
+        port: !secret zigbee2mqtt_ssh_port
+        user: !secret zigbee2mqtt_ssh_user
+        password: !secret zigbee2mqtt_ssh_pass
+  mode: single
+
 google_home_tts_screen:
   alias: Google Home - Send TTS with picture and information
   description: Script to send a TTS with picture and text to a player with screen
@@ -31,417 +42,420 @@ google_home_tts_screen:
   mode: parallel
   max: 20
   sequence:
-  - alias: Version number
-    variables:
-      version: 2.0.1
-  - wait_for_trigger:
-    - platform: event
-      event_type: call_service
-      event_data:
-        domain: media_player
-        service: play_media
-        service_data:
-          media_content_type: music
-          entity_id: '{{ [ dummy_player ] }}'
-  - alias: Send TTS message with picture
-    action: media_player.play_media
-    target:
-      entity_id: '{{ target }}'
-    data:
-      media_content_id: '{{ wait.trigger.event.data.service_data.media_content_id
-        }}'
-      media_content_type: music
-      extra:
-        metadata:
-          metadataType: 3
-          title: '{{ large_text }}'
-          artist: '{{ small_text }}'
-          images:
-          - url: '{{ picture_url }}'
+    - alias: Version number
+      variables:
+        version: 2.0.1
+    - wait_for_trigger:
+        - platform: event
+          event_type: call_service
+          event_data:
+            domain: media_player
+            service: play_media
+            service_data:
+              media_content_type: music
+              entity_id: "{{ [ dummy_player ] }}"
+    - alias: Send TTS message with picture
+      action: media_player.play_media
+      target:
+        entity_id: "{{ target }}"
+      data:
+        media_content_id:
+          "{{ wait.trigger.event.data.service_data.media_content_id
+          }}"
+        media_content_type: music
+        extra:
+          metadata:
+            metadataType: 3
+            title: "{{ large_text }}"
+            artist: "{{ small_text }}"
+            images:
+              - url: "{{ picture_url }}"
 dinner_ready:
   alias: TTS with picture when dinner is ready
   icon: mdi:food
   sequence:
-  - alias: Call the script with the additional data as script variables
-    action: script.turn_on
-    target:
-      entity_id: script.google_home_tts_screen
-    data:
-      variables:
-        dummy_player: media_player.vlc_telnet
-        target: media_player.nesthubd799
-        large_text: DINNER!
-        small_text: Pelety dochazi
-        picture_url: http://10.0.0.42:8123/local/pelety.jpg
-  - alias: Send the TTS service call to the dummy player
-    action: tts.google_translate_say
-    target:
-      entity_id: media_player.vlc_telnet
-    data:
-      message: Problém s kotlem. Problém s kotlem. Problém s kotlem
-      cache: false
+    - alias: Call the script with the additional data as script variables
+      action: script.turn_on
+      target:
+        entity_id: script.google_home_tts_screen
+      data:
+        variables:
+          dummy_player: media_player.vlc_telnet
+          target: media_player.nesthubd799
+          large_text: DINNER!
+          small_text: Pelety dochazi
+          picture_url: http://10.0.0.42:8123/local/pelety.jpg
+    - alias: Send the TTS service call to the dummy player
+      action: tts.google_translate_say
+      target:
+        entity_id: media_player.vlc_telnet
+      data:
+        message: Problém s kotlem. Problém s kotlem. Problém s kotlem
+        cache: false
   mode: single
 restart_modu_topeni:
   alias: Topení - Inicializace
-  description: Nastav mod topeni na výchozí hodnotu. Při restartu HA se tak hodnoty
+  description:
+    Nastav mod topeni na výchozí hodnotu. Při restartu HA se tak hodnoty
     správně aktualizují.
   sequence:
-  - delay: 90
-  - action: input_select.select_option
-    data:
-      option: vse
-    target:
-      entity_id: input_select.topeni_boost
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: automation.trigger
-    data:
-      skip_condition: true
-    target:
-      entity_id: automation.topeni_termostaty_nastav
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: input_select.select_option
-    data:
-      option: none
-    target:
-      entity_id: input_select.topeni_boost
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: automation.trigger
-    data:
-      skip_condition: true
-    target:
-      entity_id: automation.topeni_termostaty_nastav
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: automation.trigger
-    data:
-      skip_condition: true
-    target:
-      entity_id: automation.topeni_ventil_socialky
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: automation.trigger
-    data:
-      skip_condition: true
-    target:
-      entity_id: automation.topeni_prodejna_ventil
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: automation.trigger
-    data:
-      skip_condition: true
-    target:
-      entity_id: automation.topeni_ventil_vlevo
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 5
-      milliseconds: 0
-  - action: automation.trigger
-    data:
-      skip_condition: true
-    target:
-      entity_id: automation.topeni_kotel_ovladani
+    - delay: 90
+    - action: input_select.select_option
+      data:
+        option: vse
+      target:
+        entity_id: input_select.topeni_boost
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: automation.trigger
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.topeni_termostaty_nastav
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: input_select.select_option
+      data:
+        option: none
+      target:
+        entity_id: input_select.topeni_boost
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: automation.trigger
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.topeni_termostaty_nastav
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: automation.trigger
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.topeni_ventil_socialky
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: automation.trigger
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.topeni_prodejna_ventil
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: automation.trigger
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.topeni_ventil_vlevo
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - action: automation.trigger
+      data:
+        skip_condition: true
+      target:
+        entity_id: automation.topeni_kotel_ovladani
   mode: single
   icon: mdi:restart
 zmena_kotle:
   alias: Nastavení módu topení po změně kotle
   sequence:
-  - action: input_select.select_option
-    target:
-      entity_id: input_select.topeni_boost
-    data:
-      option: none
-  - delay: 3
-  - action: script.obnov_mod_topeni
+    - action: input_select.select_option
+      target:
+        entity_id: input_select.topeni_boost
+      data:
+        option: none
+    - delay: 3
+    - action: script.obnov_mod_topeni
 uklid_chodby:
   alias: Úklid chodby
   sequence:
-  - action: vacuum.send_command
-    data:
-      entity_id: vacuum.rockrobo
-      command: app_zoned_clean
-      params:
-        zone_ids:
-        - Chodba
+    - action: vacuum.send_command
+      data:
+        entity_id: vacuum.rockrobo
+        command: app_zoned_clean
+        params:
+          zone_ids:
+            - Chodba
 uklid_prodejny:
   alias: Úklid prodejny
   sequence:
-  - action: vacuum.send_command
-    data:
-      entity_id: vacuum.rockrobo
-      command: app_zoned_clean
-      params:
-        zone_ids:
-        - Prodejna
+    - action: vacuum.send_command
+      data:
+        entity_id: vacuum.rockrobo
+        command: app_zoned_clean
+        params:
+          zone_ids:
+            - Prodejna
 notifikace_urgentni:
   alias: Notifikace - urgentní
   sequence:
-  - device_id: 2dfa5ffcae33a17cfd8a076db390f90e
-    domain: mobile_app
-    type: notify
-    message: '{{ zprava }}'
-  - device_id: a8fb4761989faaf6c0af70569f1fed10
-    domain: mobile_app
-    type: notify
-    message: '{{ zprava }}'
-  - device_id: cd5eb3dfbca93359d6824083b2297bdb
-    domain: mobile_app
-    type: notify
-    message: '{{ zprava }}'
-  - if:
-    - condition: time
-      after: 07:00:00
-      before: '22:00:00'
-    then:
-    - action: notify.mobile_app_marek_mobil
-      data:
-        message: TTS
-        data:
-          ttl: 0
-          priority: high
-          media_stream: alarm_stream
-          tts_text: '"Ťuk ťuk! {{ zprava }}" '
-        title: Chyba kotle
-    - action: notify.mobile_app_filip_mobil
-      data:
-        message: TTS
-        data:
-          ttl: 0
-          priority: high
-          media_stream: alarm_stream
-          tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }}" '
-        title: Chyba kotle
-    - action: tts.google_translate_say
-      target:
-        entity_id: media_player.nesthubd799
-      data:
-        message: Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }}
-          Ťuk ťuk!
-        cache: false
-  - if:
-    - condition: state
-      entity_id: binary_sensor.pracovni_doba
-      state: 'on'
-    then:
-    - action: notify.mobile_app_swacza
-      data:
-        data:
-          ttl: 0
-          priority: high
-          media_stream: alarm_stream
-          tts_text: '"Ťuk ťuk! {{ zprava }}" '
-        title: Chyba kotle
-        message: TTS
+    - device_id: 2dfa5ffcae33a17cfd8a076db390f90e
+      domain: mobile_app
+      type: notify
+      message: "{{ zprava }}"
+    - device_id: a8fb4761989faaf6c0af70569f1fed10
+      domain: mobile_app
+      type: notify
+      message: "{{ zprava }}"
+    - device_id: cd5eb3dfbca93359d6824083b2297bdb
+      domain: mobile_app
+      type: notify
+      message: "{{ zprava }}"
+    - if:
+        - condition: time
+          after: 07:00:00
+          before: "22:00:00"
+      then:
+        - action: notify.mobile_app_marek_mobil
+          data:
+            message: TTS
+            data:
+              ttl: 0
+              priority: high
+              media_stream: alarm_stream
+              tts_text: '"Ťuk ťuk! {{ zprava }}" '
+            title: Chyba kotle
+        - action: notify.mobile_app_filip_mobil
+          data:
+            message: TTS
+            data:
+              ttl: 0
+              priority: high
+              media_stream: alarm_stream
+              tts_text: '"Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }}" '
+            title: Chyba kotle
+        - action: tts.google_translate_say
+          target:
+            entity_id: media_player.nesthubd799
+          data:
+            message:
+              Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }} Ťuk ťuk! {{ zprava }}
+              Ťuk ťuk!
+            cache: false
+    - if:
+        - condition: state
+          entity_id: binary_sensor.pracovni_doba
+          state: "on"
+      then:
+        - action: notify.mobile_app_swacza
+          data:
+            data:
+              ttl: 0
+              priority: high
+              media_stream: alarm_stream
+              tts_text: '"Ťuk ťuk! {{ zprava }}" '
+            title: Chyba kotle
+            message: TTS
   mode: queued
   icon: mdi:bell-alert
   max: 10
 alarm_vstup:
   alias: Alarm - Vstup
   sequence:
-  - device_id: 1460a61b527fc67df2ae70213f560539
-    domain: select
-    entity_id: 94116a90e1ff6afd5124f9ffad2b6a1c
-    type: select_option
-    option: low
-  - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
-    domain: select
-    entity_id: cb7a49370b3e1fcc9fd56722ce9176b5
-    type: select_option
-    option: low
-  - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
-    domain: select
-    entity_id: e8de016425940dd53e58a33162e03a3d
-    type: select_option
-    option: medium
-  - device_id: 9703f8d0e4d197d3a920ac7da7161382
-    domain: select
-    entity_id: 4406031d50fa737f15a13b0527209da5
-    type: select_option
-    option: medium
-  - device_id: 34f70095d6f62daf9eab7d1074e62e5a
-    domain: select
-    entity_id: 77160b58ffe8318d5d049f82b24e4879
-    type: select_option
-    option: medium
-  - device_id: 1460a61b527fc67df2ae70213f560539
-    domain: number
-    entity_id: baf6aba8678528e558c1cbec267dc6f5
-    type: set_value
-    value: 4
-  - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
-    domain: number
-    entity_id: 082e6947d3baac557c15244a7929957c
-    type: set_value
-    value: 4
-  - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
-    domain: number
-    entity_id: acdca289f4139cf13b1395625fb41f22
-    type: set_value
-    value: 4
-  - device_id: 9703f8d0e4d197d3a920ac7da7161382
-    domain: number
-    entity_id: 701216167974a2f42cc3759e9842bd8e
-    type: set_value
-    value: 4
-  - device_id: 34f70095d6f62daf9eab7d1074e62e5a
-    domain: number
-    entity_id: 6d13be96332eb2bfd90dab9493c348d6
-    type: set_value
-    value: 4
-  - device_id: 1460a61b527fc67df2ae70213f560539
-    domain: select
-    entity_id: de27d9c9716aff79bde437c7931af5a4
-    type: select_option
-    option: '18'
-  - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
-    domain: select
-    entity_id: 23fe7777abb063b4c5b73f1a8c290a27
-    type: select_option
-    option: '18'
-  - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
-    domain: select
-    entity_id: cb1b4ce6ff0001168fbe8e0f3ee787ad
-    type: select_option
-    option: '18'
-  - device_id: 9703f8d0e4d197d3a920ac7da7161382
-    domain: select
-    entity_id: e508ebeae8666d8c7b401720d9b646cc
-    type: select_option
-    option: '18'
-  - device_id: 34f70095d6f62daf9eab7d1074e62e5a
-    domain: select
-    entity_id: 7b3067063e72a151136ab566631ae9fe
-    type: select_option
-    option: '18'
-  - type: turn_on
-    device_id: 1460a61b527fc67df2ae70213f560539
-    entity_id: 85293a758b717b69874741ad9f843a46
-    domain: switch
-  - type: turn_on
-    device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
-    entity_id: 1ceb8cb7c0206de48a7202ee66fbcabf
-    domain: switch
-  - type: turn_on
-    device_id: 74f8d6d2f54edfa74abb0ec7d253755b
-    entity_id: 83d6c481aa3a20ae78ff40520965d9a5
-    domain: switch
-  - type: turn_on
-    device_id: 9703f8d0e4d197d3a920ac7da7161382
-    entity_id: 049695d77ed30cb1063c48c5db6fb0c2
-    domain: switch
-  - type: turn_on
-    device_id: 34f70095d6f62daf9eab7d1074e62e5a
-    entity_id: 4e8ae4a44532404d438de6ed32b4a64e
-    domain: switch
+    - device_id: 1460a61b527fc67df2ae70213f560539
+      domain: select
+      entity_id: 94116a90e1ff6afd5124f9ffad2b6a1c
+      type: select_option
+      option: low
+    - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+      domain: select
+      entity_id: cb7a49370b3e1fcc9fd56722ce9176b5
+      type: select_option
+      option: low
+    - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+      domain: select
+      entity_id: e8de016425940dd53e58a33162e03a3d
+      type: select_option
+      option: medium
+    - device_id: 9703f8d0e4d197d3a920ac7da7161382
+      domain: select
+      entity_id: 4406031d50fa737f15a13b0527209da5
+      type: select_option
+      option: medium
+    - device_id: 34f70095d6f62daf9eab7d1074e62e5a
+      domain: select
+      entity_id: 77160b58ffe8318d5d049f82b24e4879
+      type: select_option
+      option: medium
+    - device_id: 1460a61b527fc67df2ae70213f560539
+      domain: number
+      entity_id: baf6aba8678528e558c1cbec267dc6f5
+      type: set_value
+      value: 4
+    - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+      domain: number
+      entity_id: 082e6947d3baac557c15244a7929957c
+      type: set_value
+      value: 4
+    - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+      domain: number
+      entity_id: acdca289f4139cf13b1395625fb41f22
+      type: set_value
+      value: 4
+    - device_id: 9703f8d0e4d197d3a920ac7da7161382
+      domain: number
+      entity_id: 701216167974a2f42cc3759e9842bd8e
+      type: set_value
+      value: 4
+    - device_id: 34f70095d6f62daf9eab7d1074e62e5a
+      domain: number
+      entity_id: 6d13be96332eb2bfd90dab9493c348d6
+      type: set_value
+      value: 4
+    - device_id: 1460a61b527fc67df2ae70213f560539
+      domain: select
+      entity_id: de27d9c9716aff79bde437c7931af5a4
+      type: select_option
+      option: "18"
+    - device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+      domain: select
+      entity_id: 23fe7777abb063b4c5b73f1a8c290a27
+      type: select_option
+      option: "18"
+    - device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+      domain: select
+      entity_id: cb1b4ce6ff0001168fbe8e0f3ee787ad
+      type: select_option
+      option: "18"
+    - device_id: 9703f8d0e4d197d3a920ac7da7161382
+      domain: select
+      entity_id: e508ebeae8666d8c7b401720d9b646cc
+      type: select_option
+      option: "18"
+    - device_id: 34f70095d6f62daf9eab7d1074e62e5a
+      domain: select
+      entity_id: 7b3067063e72a151136ab566631ae9fe
+      type: select_option
+      option: "18"
+    - type: turn_on
+      device_id: 1460a61b527fc67df2ae70213f560539
+      entity_id: 85293a758b717b69874741ad9f843a46
+      domain: switch
+    - type: turn_on
+      device_id: 649ba12a995dcb224a2d7bcbf6cfcaf0
+      entity_id: 1ceb8cb7c0206de48a7202ee66fbcabf
+      domain: switch
+    - type: turn_on
+      device_id: 74f8d6d2f54edfa74abb0ec7d253755b
+      entity_id: 83d6c481aa3a20ae78ff40520965d9a5
+      domain: switch
+    - type: turn_on
+      device_id: 9703f8d0e4d197d3a920ac7da7161382
+      entity_id: 049695d77ed30cb1063c48c5db6fb0c2
+      domain: switch
+    - type: turn_on
+      device_id: 34f70095d6f62daf9eab7d1074e62e5a
+      entity_id: 4e8ae4a44532404d438de6ed32b4a64e
+      domain: switch
   mode: single
   icon: mdi:alarm-light
 hloupy:
   alias: Hloupý
   sequence:
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 0
-      milliseconds: 1
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 0
+        milliseconds: 1
   mode: single
 topeni_kotel_zapnout:
   alias: Topení - Kotel zapnout
   sequence:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.topeni_peletkovy_kotel_chyba
-      state: 'on'
-    then:
-    - type: turn_on
-      device_id: 3a54f78f0b1d25a04e0d19ef481febff
-      entity_id: 9382a6292aca11bf4626f99fb1d29fbb
-      domain: switch
-    - type: turn_off
-      device_id: 3a54f78f0b1d25a04e0d19ef481febff
-      entity_id: 55b3b2a4c43968757835dad1da5e8c33
-      domain: switch
-    else:
     - if:
-      - condition: state
-        entity_id: input_boolean.kotel_turbo
-        state: 'on'
+        - condition: state
+          entity_id: binary_sensor.topeni_peletkovy_kotel_chyba
+          state: "on"
       then:
-      - type: turn_on
-        device_id: 3a54f78f0b1d25a04e0d19ef481febff
-        entity_id: 55b3b2a4c43968757835dad1da5e8c33
-        domain: switch
-      - type: turn_on
-        device_id: 3a54f78f0b1d25a04e0d19ef481febff
-        entity_id: 9382a6292aca11bf4626f99fb1d29fbb
-        domain: switch
+        - type: turn_on
+          device_id: 3a54f78f0b1d25a04e0d19ef481febff
+          entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+          domain: switch
+        - type: turn_off
+          device_id: 3a54f78f0b1d25a04e0d19ef481febff
+          entity_id: 55b3b2a4c43968757835dad1da5e8c33
+          domain: switch
       else:
-      - type: turn_on
-        device_id: 3a54f78f0b1d25a04e0d19ef481febff
-        entity_id: 55b3b2a4c43968757835dad1da5e8c33
-        domain: switch
-      - type: turn_off
-        device_id: 3a54f78f0b1d25a04e0d19ef481febff
-        entity_id: 9382a6292aca11bf4626f99fb1d29fbb
-        domain: switch
+        - if:
+            - condition: state
+              entity_id: input_boolean.kotel_turbo
+              state: "on"
+          then:
+            - type: turn_on
+              device_id: 3a54f78f0b1d25a04e0d19ef481febff
+              entity_id: 55b3b2a4c43968757835dad1da5e8c33
+              domain: switch
+            - type: turn_on
+              device_id: 3a54f78f0b1d25a04e0d19ef481febff
+              entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+              domain: switch
+          else:
+            - type: turn_on
+              device_id: 3a54f78f0b1d25a04e0d19ef481febff
+              entity_id: 55b3b2a4c43968757835dad1da5e8c33
+              domain: switch
+            - type: turn_off
+              device_id: 3a54f78f0b1d25a04e0d19ef481febff
+              entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+              domain: switch
   mode: single
 topeni_kotel_vypnout:
   alias: Topení - Kotel vypnout
   sequence:
-  - type: turn_off
-    device_id: 3a54f78f0b1d25a04e0d19ef481febff
-    entity_id: 55b3b2a4c43968757835dad1da5e8c33
-    domain: switch
-  - type: turn_off
-    device_id: 3a54f78f0b1d25a04e0d19ef481febff
-    entity_id: 9382a6292aca11bf4626f99fb1d29fbb
-    domain: switch
+    - type: turn_off
+      device_id: 3a54f78f0b1d25a04e0d19ef481febff
+      entity_id: 55b3b2a4c43968757835dad1da5e8c33
+      domain: switch
+    - type: turn_off
+      device_id: 3a54f78f0b1d25a04e0d19ef481febff
+      entity_id: 9382a6292aca11bf4626f99fb1d29fbb
+      domain: switch
   mode: single
   icon: mdi:heating-coil
-'1713169977678':
+"1713169977678":
   alias: Kancelar Pi - Vypnout
   sequence:
-  - action: ssh_command.exec_command
-    data:
-      host: 10.0.0.65
-      user: bhiefer
-      pass: brambousek
-      command: sudo shutdown
-  - delay:
-      hours: 0
-      minutes: 5
-      seconds: 0
-      milliseconds: 0
-  - type: turn_off
-    device_id: 9da80bcf36648e4f73eab7a48bc34e5d
-    entity_id: b08804348bd53d964e54017cf45d0b08
-    domain: switch
-    enabled: true
+    - action: ssh_command.exec_command
+      data:
+        host: 10.0.0.65
+        user: bhiefer
+        pass: brambousek
+        command: sudo shutdown
+    - delay:
+        hours: 0
+        minutes: 5
+        seconds: 0
+        milliseconds: 0
+    - type: turn_off
+      device_id: 9da80bcf36648e4f73eab7a48bc34e5d
+      entity_id: b08804348bd53d964e54017cf45d0b08
+      domain: switch
+      enabled: true
 kancelar_pi_zapnout:
   alias: Kancelar Pi - Zapnout
   sequence:
-  - type: turn_on
-    device_id: 9da80bcf36648e4f73eab7a48bc34e5d
-    entity_id: b08804348bd53d964e54017cf45d0b08
-    domain: switch
+    - type: turn_on
+      device_id: 9da80bcf36648e4f73eab7a48bc34e5d
+      entity_id: b08804348bd53d964e54017cf45d0b08
+      domain: switch
   mode: single

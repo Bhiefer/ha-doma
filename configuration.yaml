@@ -100,6 +100,14 @@ input_boolean:
   #     - vse
   #   icon: mdi:fire-circle
 
+shell_command:
+  zigbee2mqtt_reboot_over_ssh: >-
+    sshpass -p "{{ password }}"
+    ssh -o StrictHostKeyChecking=no
+        -p {{ (port | default(22)) | int }}
+        {{ user }}@{{ host }}
+        "sudo /sbin/reboot"
+
 mqtt:
   sensor:
     # --- Fáze L1 ---
