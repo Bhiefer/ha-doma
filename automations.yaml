@@ -163,57 +163,6 @@
     entity_id: switch.m_vypinac_obyvak_l1
     domain: switch
   mode: single
-- id: '1647541630252'
-  alias: M Všechna světla Vypni
-  description: ''
-  triggers:
-  - trigger: state
-    entity_id:
-    - sensor.m_obyvak_tlacitko_action
-    to: long
-  conditions: []
-  actions:
-  - type: turn_off
-    device_id: bded62f01a347854b01897a3af6a3fe6
-    entity_id: switch.m_vypinac_chodba
-    domain: switch
-  - type: turn_off
-    device_id: 6f54df2552b74261f4d843a09a1b1679
-    entity_id: switch.m_vypinac_obyvak_l1
-    domain: switch
-  - type: turn_off
-    device_id: 6f272126d336b2c099128c19be861e91
-    entity_id: 49b5e111b671a189e74b1deb5f30db4c
-    domain: light
-  - type: turn_off
-    device_id: a558818d6e5d2a9c806d4a1946faba6c
-    entity_id: 5c65927bb39fd2497b7efa58a12b3a0f
-    domain: switch
-  - type: turn_off
-    device_id: 37ac45c40e4d34ad8e871f98c952ff8c
-    entity_id: a23970f94cbeb75e7e5be2385685c0e1
-    domain: switch
-  - type: turn_off
-    device_id: 8ef52bc50359d755ac61b2177b3d0ebe
-    entity_id: 7ce5ed1035c2e9514805b6ff893a852a
-    domain: switch
-  - type: turn_off
-    device_id: 8ef52bc50359d755ac61b2177b3d0ebe
-    entity_id: d8d954b8bfc28585b062524973190e0b
-    domain: switch
-  - type: turn_off
-    device_id: c677fa36c732a39816d02b22554f0276
-    entity_id: 538ddfb78c952c289767fccb804a171a
-    domain: switch
-  - type: turn_off
-    device_id: c677fa36c732a39816d02b22554f0276
-    entity_id: cb0247c4e2dee5a40745ce8ca226a3c5
-    domain: switch
-  - type: turn_off
-    device_id: e6516dd2ef93b75f9f268114004c1bb7
-    entity_id: 0f9aeb6328e62f1b0c3af8679e6aaf12
-    domain: switch
-  mode: single
 - id: '1671031072397'
   alias: Bojler - Zapnout
   description: ''
@@ -530,7 +479,7 @@
   action:
   - type: turn_on
     device_id: bd2f5dd258eb0de0202da3afc85a70cb
-    entity_id: light.sonoff_perfectdoor
+    entity_id: light.koberce_svetlo_dvere
     domain: light
   - action: script.kancelar_pi_zapnout
     metadata: {}
@@ -548,7 +497,7 @@
   actions:
   - type: turn_off
     device_id: bd2f5dd258eb0de0202da3afc85a70cb
-    entity_id: light.sonoff_perfectdoor
+    entity_id: light.koberce_svetlo_dvere
     domain: light
   - action: input_boolean.turn_off
     data: {}
@@ -565,7 +514,7 @@
     metadata: {}
     data: {}
     target:
-      entity_id: climate.marek_termostat_primotop
+      entity_id: climate.zkusebna_termostat_primotop
   mode: single
 - id: '1678958657961'
   alias: Topení - Přehřátá voda
@@ -701,22 +650,17 @@
     type: action
     subtype: long
     discovery_id: 0x00124b00251eb5fe action_long
-  condition: []
-  action:
+  - domain: mqtt
+    device_id: f6641a54ad49e778b05d2b3f1946e38d
+    type: action
+    subtype: long
+    trigger: device
+  conditions: []
+  actions:
   - action: light.turn_off
     data: {}
     target:
-      device_id:
-      - 39f077da7e52e5e9beaf37e79ee558bc
-      - 6f272126d336b2c099128c19be861e91
-  - action: switch.turn_off
-    data: {}
-    target:
-      device_id:
-      - c677fa36c732a39816d02b22554f0276
-      - 37ac45c40e4d34ad8e871f98c952ff8c
-      - 8ef52bc50359d755ac61b2177b3d0ebe
-      - bded62f01a347854b01897a3af6a3fe6
+      floor_id: doma
   mode: single
 - id: '1694063272128'
   alias: Vstup - Někdo přišel
