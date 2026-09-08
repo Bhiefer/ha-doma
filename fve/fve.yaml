@@ -297,10 +297,22 @@ sensor:
       #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
       fve_baterie_nabito:
         friendly_name: "FVE Baterie Nabito"
-        # kapacita baterii * 0.8 (Nevybíjí se pod 20%, k dispozici je jen 80% kapacity * 0.01 procenta na ration * 0.001 Wh na KWh)
-        value_template: >-
-          {{ states('sensor.goodwe_battery_state_of_charge') | int(0) * states('input_number.fve_baterie_kapacita') | int(0) * 0.000008 }}
         unit_of_measurement: "kWh"
+        availability_template: >-
+          {% set soc = states('sensor.goodwe_battery_state_of_charge') | float(none) %}
+          {% set kapacita = states('input_number.fve_baterie_kapacita') | float(none) %}
+          {{ is_number(soc) and is_number(kapacita)
+             and 0 <= soc <= 100 and kapacita > 0 }}
+        value_template: >-
+          {% set soc = states('sensor.goodwe_battery_state_of_charge') | float(none) %}
+          {% set kapacita = states('input_number.fve_baterie_kapacita') | float(none) %}
+          {% if is_number(soc) and is_number(kapacita)
+                and 0 <= soc <= 100 and kapacita > 0 %}
+            {# Energie dostupná nad rezervou 20 % celkové kapacity. #}
+            {{ (kapacita * ([soc - 20, 0] | max) / 100000) | round(3) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
       goodwe_baterie_stav:
         value_template: >-
           {% set stav = states('sensor.goodwe_battery_mode_code') | int(0) %}
