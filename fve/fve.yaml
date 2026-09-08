@@ -354,7 +354,13 @@ binary_sensor:
         value_template: >-
           {{ now().hour == state_attr('sensor.spot_most_expensive_electricity_today', 'hour') | int(0) }}
       spot_podprumerna_cena_fve:
-        value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_fve') | float(0) }}"
+        availability_template: >-
+          {{ is_number(states('sensor.current_spot_electricity_price'))
+             and is_number(states('sensor.spot_cena_limit_fve')) }}
+        value_template: >-
+          {% set cena = states('sensor.current_spot_electricity_price') | float(none) %}
+          {% set limit = states('sensor.spot_cena_limit_fve') | float(none) %}
+          {{ cena is not none and limit is not none and cena < limit }}
       spot_podprumerna_cena_topeni:
         value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
       spot_podprumerna_cena_auto:
