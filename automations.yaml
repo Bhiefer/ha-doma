@@ -518,52 +518,64 @@
   mode: single
 - id: '1678958657961'
   alias: Topení - Přehřátá voda
-  description: ''
+  description: Otevře velký okruh při přehřátí a zavře jej až po ochlazení všech čidel.
   triggers:
+  # Běžné spuštění: libovolné čidlo je nad 70 °C alespoň 30 sekund.
   - trigger: numeric_state
-    entity_id: sensor.topeni_6
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
+    entity_id:
+    - sensor.topeni_6
+    - sensor.topeni_4
+    - sensor.topeni_1
     above: 70
-  - trigger: numeric_state
-    entity_id: sensor.topeni_4
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-    above: 70
-  - trigger: numeric_state
-    entity_id: sensor.topeni_1
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 30
-    above: 70
-  condition:
-  - condition: state
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
+    for: '00:00:30'
+  # Rozběhnuté čekání nepřežije restart ani reload automatizací.
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+  # Ventil může být při startu nedostupný; po připojení kontrolu zopakujeme.
+  - trigger: state
     entity_id: switch.sonoff_kotelna1
-    state: 'off'
-  action:
+    from:
+    - unavailable
+    - unknown
+    to:
+    - 'on'
+    - 'off'
+  conditions:
+  - condition: template
+    value_template: >-
+      {% set t1 = states('sensor.topeni_1') %}
+      {% set t4 = states('sensor.topeni_4') %}
+      {% set t6 = states('sensor.topeni_6') %}
+      {{ is_state('switch.sonoff_kotelna1', 'on')
+         or (is_number(t1) and (t1 | float) > 70)
+         or (is_number(t4) and (t4 | float) > 70)
+         or (is_number(t6) and (t6 | float) > 70) }}
+  actions:
+  # ON otevře ventil do velkého okruhu. Čerpadlo řídí vlastní čidlo.
   - action: switch.turn_on
-    data: {}
     target:
       entity_id: switch.sonoff_kotelna1
-  - delay:
-      hours: 0
-      minutes: 10
-      seconds: 0
-      milliseconds: 0
+  - wait_template: "{{ is_state('switch.sonoff_kotelna1', 'on') }}"
+  # Minimální doba otevření; po obnovení kontroly se počítá znovu.
+  - delay: '00:10:00'
+  # Bez časového limitu: chybějící měření nesmí povolit zavření ventilu.
+  # Hystereze 70/65 °C brání opakovanému přepínání kolem jedné hranice.
+  - wait_template: >-
+      {% set t1 = states('sensor.topeni_1') %}
+      {% set t4 = states('sensor.topeni_4') %}
+      {% set t6 = states('sensor.topeni_6') %}
+      {{ is_number(t1) and is_number(t4) and is_number(t6)
+         and (t1 | float) < 65
+         and (t4 | float) < 65
+         and (t6 | float) < 65 }}
   - action: switch.turn_off
-    data: {}
     target:
       entity_id: switch.sonoff_kotelna1
+  # Nové triggery během čekání nesmí rušit ani prodlužovat rozběhnutou kontrolu.
   mode: single
+  max_exceeded: silent
 - id: '1680526566395'
   alias: Marek Vypínač Světlo
   description: ''
