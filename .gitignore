@@ -11,4 +11,12 @@
 !/.gitignore
 !/AGENTS.md
 !/fve/fve.yaml
+!/requirements-test.txt
+!/TESTOVANI.md
+!/tools/check.py
+!/tests/test_checks.py
+# Lokální prostředí a ostatní pracovní kopie nejsou konfigurace projektu.
+/.venv/
+/.worktrees/
+__pycache__/
 secrets.yaml

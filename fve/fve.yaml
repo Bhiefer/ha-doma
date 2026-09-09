@@ -131,13 +131,15 @@ sensor:
     keep_last_sample: true
     max_age:
       minutes: 20
-  - platform: template
-    sensors:
-      fve_car_power_available:
-        friendly_name: "FVE Car Power Available"
+template:
+  - sensor:
+      # Migrace starších šablon zachovává ID, názvy, jednotky a výpočty;
+      # podmínky dostupnosti a ochranné limity zůstávají beze změny.
+      - default_entity_id: sensor.fve_car_power_available
+        name: "FVE Car Power Available"
         unit_of_measurement: "W"
         device_class: power
-        value_template: >
+        state: >
           {% if is_state('binary_sensor.fve_auto_nabijeni', 'off') %} 
             {% set sit = states('sensor.goodwe_active_power') | float(0) %}
           {% else %}
@@ -146,23 +148,23 @@ sensor:
 
           {{ sit if sit > 0 else 0 }}
 
-      spot_koeficient_ze_site_auto:
-        friendly_name: "Spot Koeficient odběru ze sítě pro nabíjení auta"
+      - default_entity_id: sensor.spot_koeficient_ze_site_auto
+        name: "Spot Koeficient odběru ze sítě pro nabíjení auta"
         unit_of_measurement: "%"
-        value_template: >
+        state: >
           {% set car_charge_koeficient = 1 - (states('sensor.fve_car_power_available_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230)) %}
 
           {{  (car_charge_koeficient * 100 )| int if car_charge_koeficient > 0 else 0 | int }}
 
-      spot_cena_dynamicka_auto:
-        friendly_name: "Spot Dynamická cena elektřiny pro nabíjení auta"
+      - default_entity_id: sensor.spot_cena_dynamicka_auto
+        name: "Spot Dynamická cena elektřiny pro nabíjení auta"
         unit_of_measurement: "CZK"
-        value_template: >
+        state: >
           {{ states('sensor.spot_koeficient_ze_site_auto') | float(0) / 100 * states('sensor.current_spot_electricity_price') | float(0) }}
 
-      spot_cena_elektriny_prumerna_24h_predikce:
-        friendly_name: "Spot Cena elektřiny průměrná 24h s predikcí"
-        value_template: >
+      - default_entity_id: sensor.spot_cena_elektriny_prumerna_24h_predikce
+        name: "Spot Cena elektřiny průměrná 24h s predikcí"
+        state: >
           {% set ns = namespace(total=0, count=0, additional_value=0, current_time=now(), timestamp=none) %}
 
           {% for key, value in states.sensor.current_spot_electricity_price.attributes.items() %}
@@ -191,10 +193,10 @@ sensor:
           {% endif %}
         unit_of_measurement: "Kč/kWh"
 
-      fve_celkova_spotreba_prumerna_vsedni_den:
-        friendly_name: "FVE Denní spotřeba ve všední dny"
+      - default_entity_id: sensor.fve_celkova_spotreba_prumerna_vsedni_den
+        name: "FVE Denní spotřeba ve všední dny"
         unit_of_measurement: "kWh"
-        value_template: >
+        state: >
           {% set days = states('counter.fve_celkova_spotreba_pocitadlo_dni_workday') | int %}
           {% set total = states('sensor.fve_celkova_spotreba_tarify_workday') | float %}
           {% if days > 0 %}
@@ -202,10 +204,10 @@ sensor:
           {% else %}
             0
           {% endif %}
-      fve_celkova_spotreba_prumerna_vikend:
-        friendly_name: "FVE Denní spotřeba o víkendech"
+      - default_entity_id: sensor.fve_celkova_spotreba_prumerna_vikend
+        name: "FVE Denní spotřeba o víkendech"
         unit_of_measurement: "kWh"
-        value_template: >
+        state: >
           {% set days = states('counter.fve_celkova_spotreba_pocitadlo_dni_holiday') | int %}
           {% set total = states('sensor.fve_celkova_spotreba_tarify_holiday') | float %}
           {% if days > 0 %}
@@ -225,18 +227,18 @@ sensor:
       #         {%- endif %}
       #     # {% set STROP = 6.05 | float %}
       #     unit_of_measurement: "Kč/kWh"
-      spot_cena_elektriny_distribuce:
-        friendly_name: "Cena distribuce elektřiny"
-        value_template: >-
+      - default_entity_id: sensor.spot_cena_elektriny_distribuce
+        name: "Cena distribuce elektřiny"
+        state: >-
           {% if is_state('binary_sensor.spot_nizky_tarif', 'on') %}
             {{0.174 | float}}
           {% else %}
             {{0.2 | float}}
           {% endif %}
         unit_of_measurement: "Kč/kWh"
-      spot_cena_limit_fve:
-        friendly_name: "Limit ceny elektřiny FVE"
-        value_template: >-
+      - default_entity_id: sensor.spot_cena_limit_fve
+        name: "Limit ceny elektřiny FVE"
+        state: >-
           {% set cena = states('input_number.spot_koeficient_ceny_fve') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h_predikce') | float(0) * 0.01 %}
           {% if cena < 0.5 | float  %}
             {{0.5 | float }}
@@ -244,9 +246,9 @@ sensor:
             {{cena | float }}
           {% endif %}
         unit_of_measurement: "Kč/kWh"
-      spot_cena_limit_topeni:
-        friendly_name: "Limit ceny elektřiny topení"
-        value_template: >-
+      - default_entity_id: sensor.spot_cena_limit_topeni
+        name: "Limit ceny elektřiny topení"
+        state: >-
           {% set cena = states('input_number.spot_koeficient_ceny_topeni') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h_predikce') | float(0) * 0.01 %}
           {% if cena < 0.5 | float  %}
             {{0.5 | float }}
@@ -254,9 +256,9 @@ sensor:
             {{cena | float }}
           {% endif %}
         unit_of_measurement: "Kč/kWh"
-      spot_cena_limit_auto:
-        friendly_name: "Limit ceny elektřiny auto"
-        value_template: >-
+      - default_entity_id: sensor.spot_cena_limit_auto
+        name: "Limit ceny elektřiny auto"
+        state: >-
           {% set cena = states('input_number.spot_koeficient_ceny_auto') | float(0) * states('sensor.spot_cena_elektriny_prumerna_24h_predikce') | float(0) * 0.01 %}
           {% if cena < 0.5 | float  %}
             {{0.5 | float }}
@@ -264,9 +266,9 @@ sensor:
             {{cena | float }}
           {% endif %}
         unit_of_measurement: "Kč/kWh"
-      fve_baterie_stav:
-        friendly_name: "FVE Baterie Stav"
-        value_template: >-
+      - default_entity_id: sensor.fve_baterie_stav
+        name: "FVE Baterie Stav"
+        state: >-
           {% set MODE = states("sensor.goodwe_battery_mode_code") | int(1) %}
           {% if MODE == 3 | int  %}
             Nabíjení
@@ -277,15 +279,15 @@ sensor:
           {%- else -%}
             Neznámý
           {%- endif %}
-      fve_denni_spotreba_prumerna:
-        friendly_name: "FVE Denní spotřeba průměrná"
+      - default_entity_id: sensor.fve_denni_spotreba_prumerna
+        name: "FVE Denní spotřeba průměrná"
         unit_of_measurement: "kWh"
-        value_template: >-
+        state: >-
           {{ states('sensor.fve_celkova_spotreba_prumerna_vsedni_den') if is_state('binary_sensor.pracovni_den', 'on') else states('sensor.fve_celkova_spotreba_prumerna_vikend') }}
-      fve_dnes_k_nabiti:
-        friendly_name: "FVE Dnes k nabití"
+      - default_entity_id: sensor.fve_dnes_k_nabiti
+        name: "FVE Dnes k nabití"
         unit_of_measurement: "kWh"
-        value_template: >-
+        state: >-
           {% set denni = states('sensor.fve_denni_spotreba_prumerna') | float(0) %}
           {{ denni - states('sensor.fve_celkova_spotreba_denni') | float(0) 
            - states('sensor.energy_production_today_remaining') | float(0) 
@@ -295,15 +297,15 @@ sensor:
       #     unit_of_measurement: "kWh"
       #     value_template: >-
       #       {{ [states('sensor.energy_production_today') | float(0)*0.8 - states('sensor.fve_denni') | float(0) , 0] | max }}
-      fve_baterie_nabito:
-        friendly_name: "FVE Baterie Nabito"
+      - default_entity_id: sensor.fve_baterie_nabito
+        name: "FVE Baterie Nabito"
         unit_of_measurement: "kWh"
-        availability_template: >-
+        availability: >-
           {% set soc = states('sensor.goodwe_battery_state_of_charge') | float(none) %}
           {% set kapacita = states('input_number.fve_baterie_kapacita') | float(none) %}
           {{ is_number(soc) and is_number(kapacita)
              and 0 <= soc <= 100 and kapacita > 0 }}
-        value_template: >-
+        state: >-
           {% set soc = states('sensor.goodwe_battery_state_of_charge') | float(none) %}
           {% set kapacita = states('input_number.fve_baterie_kapacita') | float(none) %}
           {% if is_number(soc) and is_number(kapacita)
@@ -313,8 +315,9 @@ sensor:
           {% else %}
             {{ none }}
           {% endif %}
-      goodwe_baterie_stav:
-        value_template: >-
+      - default_entity_id: sensor.goodwe_baterie_stav
+        name: goodwe_baterie_stav
+        state: >-
           {% set stav = states('sensor.goodwe_battery_mode_code') | int(0) %}
           {% if stav == 1 %}
             Nenabíjí
@@ -325,8 +328,9 @@ sensor:
           {%- else -%}
             Neznámý
           {%- endif %}
-      goodwe_baterie_vykon:
-        value_template: >-
+      - default_entity_id: sensor.goodwe_baterie_vykon
+        name: goodwe_baterie_vykon
+        state: >-
           {% set stav = states('sensor.goodwe_battery_mode_code') | int(0) %}
           {% if stav == 1 %}
             {{ 0 | int() }}
@@ -338,8 +342,9 @@ sensor:
             {{ 0 | int() }}
           {%- endif %}
         unit_of_measurement: "W"
-      goodwe_mod_nabijeni:
-        value_template: >-
+      - default_entity_id: sensor.goodwe_mod_nabijeni
+        name: goodwe_mod_nabijeni
+        state: >-
           {% set stav = states('select.goodwe_inverter_operation_mode') %}
           {% if stav == "general" %}
             Ze slunce
@@ -348,38 +353,46 @@ sensor:
           {%- else -%}
             Neznámý
           {%- endif %}
-binary_sensor:
-  - platform: template
-    sensors:
-      fve_vybijeni_baterie:
-        value_template: "{{ not(is_state('binary_sensor.fve_nabijeni_ze_site', 'on') or (is_state('binary_sensor.spot_podprumerna_cena_topeni', 'on') and is_state('input_boolean.fve_topeni_na_baterii', 'off'))) }}"
-      fve_nabijeni_ze_site:
-        value_template: "{{ states('sensor.goodwe_battery_state_of_charge') | float(0) < 90 and is_state('binary_sensor.spot_podprumerna_cena_fve', 'on') and states('sensor.energy_current_hour') | float(0) < 1.0}}"
-      fve_dostatecne_nabito:
-        value_template: "{{ states('sensor.fve_dnes_k_nabiti') | float(0) < 0}}"
-      spot_nejlevnejsi_hodina:
-        friendly_name: "Spot Nejlevnější hodina"
-        value_template: >-
+  - binary_sensor:
+      # Migrace ze starší platformy template zachovává podmínky vybíjení
+      # i ID entity používané automatizací pro nastavení hloubky vybití.
+      - default_entity_id: binary_sensor.fve_vybijeni_baterie
+        name: fve_vybijeni_baterie
+        state: "{{ not(is_state('binary_sensor.fve_nabijeni_ze_site', 'on') or (is_state('binary_sensor.spot_podprumerna_cena_topeni', 'on') and is_state('input_boolean.fve_topeni_na_baterii', 'off'))) }}"
+      # Ostatní binární šablony FVE používají stejný moderní blok;
+      # zachováváme cenové podmínky, dostupnost a časové hranice.
+      - default_entity_id: binary_sensor.fve_nabijeni_ze_site
+        name: fve_nabijeni_ze_site
+        state: "{{ states('sensor.goodwe_battery_state_of_charge') | float(0) < 90 and is_state('binary_sensor.spot_podprumerna_cena_fve', 'on') and states('sensor.energy_current_hour') | float(0) < 1.0}}"
+      - default_entity_id: binary_sensor.fve_dostatecne_nabito
+        name: fve_dostatecne_nabito
+        state: "{{ states('sensor.fve_dnes_k_nabiti') | float(0) < 0}}"
+      - default_entity_id: binary_sensor.spot_nejlevnejsi_hodina
+        name: "Spot Nejlevnější hodina"
+        state: >-
           {{ now().hour == state_attr('sensor.spot_cheapest_electricity_today', 'hour') | int(0) }}
-      spot_nejdrazsi_hodina:
-        friendly_name: "Spot Nejdražší hodina"
-        value_template: >-
+      - default_entity_id: binary_sensor.spot_nejdrazsi_hodina
+        name: "Spot Nejdražší hodina"
+        state: >-
           {{ now().hour == state_attr('sensor.spot_most_expensive_electricity_today', 'hour') | int(0) }}
-      spot_podprumerna_cena_fve:
-        availability_template: >-
+      - default_entity_id: binary_sensor.spot_podprumerna_cena_fve
+        name: spot_podprumerna_cena_fve
+        availability: >-
           {{ is_number(states('sensor.current_spot_electricity_price'))
              and is_number(states('sensor.spot_cena_limit_fve')) }}
-        value_template: >-
+        state: >-
           {% set cena = states('sensor.current_spot_electricity_price') | float(none) %}
           {% set limit = states('sensor.spot_cena_limit_fve') | float(none) %}
           {{ cena is not none and limit is not none and cena < limit }}
-      spot_podprumerna_cena_topeni:
-        value_template: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
-      spot_podprumerna_cena_auto:
-        value_template: "{{ states('sensor.spot_cena_dynamicka_auto') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
-      spot_nizky_tarif:
-        friendly_name: "Spot Nízký tarif"
-        value_template: >-
+      - default_entity_id: binary_sensor.spot_podprumerna_cena_topeni
+        name: spot_podprumerna_cena_topeni
+        state: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
+      - default_entity_id: binary_sensor.spot_podprumerna_cena_auto
+        name: spot_podprumerna_cena_auto
+        state: "{{ states('sensor.spot_cena_dynamicka_auto') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
+      - default_entity_id: binary_sensor.spot_nizky_tarif
+        name: "Spot Nízký tarif"
+        state: >-
           {% set state = now() %}
           {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
 automation:

@@ -128,6 +128,24 @@ tajné údaje, verzi HA a integrace nedoplňovat odhadem.
 
 ## Ověření a předání výsledku
 
+### Rozhodnutí: povinná lokální kontrola před každým commitem (2026-09-09)
+
+- Před každým commitem spusť z kořene svého worktree `python tools/check.py`
+  v prostředí podle `TESTOVANI.md`. Kontroluj všechny verzované YAML soubory
+  i nové neignorované YAML soubory, nikoli pouze změněné soubory.
+- Příkaz musí úspěšně dokončit kontrolu YAML a celou lokální sadu testů.
+  Při chybě ani při chybějícím validátoru commit neprováděj; nejprve problém vyřeš.
+  Po další úpravě spusť kontrolu znovu a výsledek uveď v popisu commitu.
+- U změn řídicí logiky doplň testy doloženého chování, zejména hranic
+  a nedostupných vstupů. Neodvozuj očekávání od odhadů o zařízení.
+- Úspěch lokální kontroly není ověření schémat integrací ani funkčnosti HA.
+  Chybějící include a omezení testů výslovně uveď. Pro úplnou kontrolu použij
+  dostupný `check_config` odpovídající verze HA bez spouštění řízení zařízení.
+- Toto pravidlo samo nepovoluje commit ani nasazení. Postup a rozsah kontrol
+  jsou popsány v `TESTOVANI.md`.
+
+### Postup
+
 1. Přečti dotčenou konfiguraci i navazující automatizace, skripty a šablony.
 2. Proveď nejmenší změnu, která splní zadání. U řízení zařízení zkontroluj také
    podmínky, souběhy, opakované spouštění a chování při výpadku dat.
