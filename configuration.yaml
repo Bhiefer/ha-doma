@@ -89,17 +89,6 @@ input_boolean:
     name: Boost Zkouška
     icon: mdi:fire-circle
 
-  # topeni_boost:
-  #   name: Boost topení
-  #   options:
-  #     - none
-  #     - marek
-  #     - prace
-  #     - kino
-  #     - zkouska
-  #     - vse
-  #   icon: mdi:fire-circle
-
 shell_command:
   zigbee2mqtt_reboot_over_ssh: >-
     sshpass -p "{{ password }}"
@@ -468,7 +457,7 @@ template:
           {{ is_state('binary_sensor.topeni_mod_prace', 'on') and (is_state('input_boolean.topeni_pavla', 'on') or is_state('calendar.pavla_topeni','on')) }}
       - name: "Topení Mód Zima"
         state: >-
-          {{ is_state('input_select.topeni_boost', 'vse') or (states('sensor.teplota_nejnizsi')|float(0) < states('input_number.teplota_kriticka')|float(0)) }}
+          {{ is_state('binary_sensor.boost_vse', 'on') or (states('sensor.teplota_nejnizsi')|float(0) < states('input_number.teplota_kriticka')|float(0)) }}
       - name: "Topení Kotel Stav"
         state: >-
           {{ (is_state('binary_sensor.topeni_vlevo', 'on') or is_state('binary_sensor.topeni_vpravo', 'on')) and is_state('binary_sensor.topeni_voda_alarm', 'off') }}
@@ -493,17 +482,25 @@ template:
       - name: "Pracovní doba"
         state: "{{ is_state('binary_sensor.pracovni_den', 'on') and is_state('schedule.doba_pracovni', 'on') }}"
       - name: "Boost Marek"
-        state: "{{ is_state('input_select.topeni_boost', 'marek') }}"
+        state: "{{ is_state('input_boolean.topeni_boost_marek', 'on') }}"
       - name: "Boost Zkouška"
-        state: "{{ is_state('input_select.topeni_boost', 'zkouska') }}"
+        state: "{{ is_state('input_boolean.topeni_boost_zkouska', 'on') }}"
       - name: "Boost Prodejna"
-        state: "{{ is_state('input_select.topeni_boost', 'prace') }}"
+        state: "{{ is_state('input_boolean.topeni_boost_prace', 'on') }}"
       - name: "Boost Kino"
-        state: "{{ is_state('input_select.topeni_boost', 'kino') }}"
+        state: "{{ is_state('input_boolean.topeni_boost_kino', 'on') }}"
       - name: "Boost none"
-        state: "{{ is_state('input_select.topeni_boost', 'none') }}"
+        state: >-
+          {{ is_state('input_boolean.topeni_boost_marek', 'off')
+             and is_state('input_boolean.topeni_boost_prace', 'off')
+             and is_state('input_boolean.topeni_boost_kino', 'off')
+             and is_state('input_boolean.topeni_boost_zkouska', 'off') }}
       - name: "Boost Vše"
-        state: "{{ is_state('input_select.topeni_boost', 'vse') }}"
+        state: >-
+          {{ is_state('input_boolean.topeni_boost_marek', 'on')
+             and is_state('input_boolean.topeni_boost_prace', 'on')
+             and is_state('input_boolean.topeni_boost_kino', 'on')
+             and is_state('input_boolean.topeni_boost_zkouska', 'on') }}
       - name: "fve_auto_nabijeni"
         state: >-
           'off'
@@ -832,7 +829,8 @@ climate:
     target_temp_step: 0.5
 
 recorder:
-  purge_keep_days: 3
+  # 16 dní pokrývá 14 celých dní statistik FVE i probíhající den.
+  purge_keep_days: 16
   auto_repack: true
   auto_purge: true
   commit_interval: 60

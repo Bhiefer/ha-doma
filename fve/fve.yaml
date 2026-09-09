@@ -343,7 +343,7 @@ sensor:
           {% set stav = states('select.goodwe_inverter_operation_mode') %}
           {% if stav == "general" %}
             Ze slunce
-          {% elif stav == "eco_mode" %}
+          {% elif stav == "eco_charge" %}
             Ze sítě
           {%- else -%}
             Neznámý

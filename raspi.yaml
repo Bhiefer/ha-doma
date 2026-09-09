@@ -19,38 +19,34 @@ views:
             name: Marek
             tap_action:
               action: call-service
-              service: input_select.select_option
-              service_data:
-                entity_id: input_select.topeni_boost
-                option: marek
-              target: {}
+              service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.topeni_boost_marek
           - entity: binary_sensor.boost_zkouska
             name: Zkouška
             tap_action:
               action: call-service
-              service: input_select.select_option
-              service_data:
-                entity_id: input_select.topeni_boost
-                option: zkouska
-              target: {}
+              service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.topeni_boost_zkouska
           - entity: binary_sensor.boost_prodejna
             name: Prodejna
             tap_action:
               action: call-service
-              service: input_select.select_option
-              service_data:
-                entity_id: input_select.topeni_boost
-                option: prace
-              target: {}
+              service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.topeni_boost_prace
           - entity: binary_sensor.boost_none
             name: Vypnutý
             tap_action:
               action: call-service
-              service: input_select.select_option
-              service_data:
-                entity_id: input_select.topeni_boost
-                option: none
-              target: {}
+              service: input_boolean.turn_off
+              target:
+                entity_id:
+                  - input_boolean.topeni_boost_marek
+                  - input_boolean.topeni_boost_prace
+                  - input_boolean.topeni_boost_kino
+                  - input_boolean.topeni_boost_zkouska
         show_icon: true
         state_color: true
         show_state: false
@@ -82,5 +78,11 @@ views:
             show_state: true
       - type: entities
         entities:
-          - entity: timer.timer_topeni_boost
-            name: Časovač boost
+          - entity: timer.topeni_boost_marek
+            name: Boost Marek
+          - entity: timer.topeni_boost_prace
+            name: Boost Prodejna
+          - entity: timer.topeni_boost_kino
+            name: Boost Kino
+          - entity: timer.topeni_boost_zkouska
+            name: Boost Zkouška

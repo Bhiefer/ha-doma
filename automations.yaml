@@ -322,7 +322,8 @@
   - if:
     - condition: state
       entity_id: select.goodwe_inverter_operation_mode
-      state: Eco charge mode
+      # Porovnávat interní stav GoodWe, nikoli zobrazovaný název režimu.
+      state: eco_charge
     - condition: numeric_state
       entity_id: sensor.goodwe_battery_power
       above: -2000
@@ -610,11 +611,10 @@
     discovery_id: 0x70ac08fffe196cde action_2_double
   condition: []
   action:
-  - action: input_select.select_option
-    data:
-      option: marek
+  # Stejný přepínač používá režim topení i dvouhodinový časovač.
+  - action: input_boolean.turn_on
     target:
-      entity_id: input_select.topeni_boost
+      entity_id: input_boolean.topeni_boost_marek
   mode: single
 - id: '1691962989823'
   alias: M Koupelna - Vlhkost
