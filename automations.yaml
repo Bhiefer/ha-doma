@@ -1,3 +1,33 @@
+# Globální retence zůstává 16 dní kvůli třem vstupům history_stats ve FVE.
+# Běžné stavy ze zkontrolovaného seznamu promazáváme denně na 3 dny.
+# Podmínka při prázdném seznamu nebo zařazení chráněné entity mazání zastaví.
+# purge_entities nemění hodnoty zařízení ani délku pětiminutových statistik.
+- id: recorder_bezna_historie_3_dny
+  alias: Recorder - Běžná historie 3 dny
+  description: >-
+    Po noční údržbě zkrátí detailní historii vyjmenovaných entit na tři dny.
+    Vstupy čtrnáctidenních statistik FVE zůstávají na globálních šestnácti dnech.
+  triggers:
+  - trigger: time
+    at: '04:30:00'
+  variables:
+    kratka_historie: !include recorder_short_retention.yaml
+    dlouha_historie:
+    - binary_sensor.spot_podprumerna_cena_fve
+    - binary_sensor.spot_podprumerna_cena_topeni
+    - binary_sensor.spot_podprumerna_cena_auto
+  conditions:
+  - condition: template
+    value_template: >-
+      {{ (kratka_historie | count > 0)
+         and (kratka_historie | select('in', dlouha_historie) | list | count == 0) }}
+  actions:
+  - action: recorder.purge_entities
+    data:
+      keep_days: 3
+      entity_id: '{{ kratka_historie }}'
+  mode: single
+
 - id: 1ad3c56b6737402c97434e24c4c049bb
   alias: HA Start
   description: ''

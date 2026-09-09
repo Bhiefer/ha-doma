@@ -189,6 +189,179 @@ utility_meter:
     cycle: monthly
 
 sensor:
+  # Archivní kopie omezují pouze historii; původní senzory zůstávají zdrojem
+  # regulace, integrálů energie a živých údajů. time_throttle vybírá první
+  # vzorek v intervalu, nikoli průměr. Jednotky a třídy přebírá ze zdroje.
+  # Nové entity mají očekávané ID sensor.archiv_<původní object_id>;
+  # před nasazením grafů je nutné ověřit přidělená ID v registru HA.
+  - platform: filter
+    name: archiv_spotreba_ostatni
+    unique_id: archiv_spotreba_ostatni
+    entity_id: sensor.spotreba_ostatni
+    filters:
+      - filter: time_throttle
+        window_size: "00:01"
+  - platform: filter
+    name: archiv_marek_zasuvka_hlavni_power
+    unique_id: archiv_marek_zasuvka_hlavni_power
+    entity_id: sensor.marek_zasuvka_hlavni_power
+    filters:
+      - filter: time_throttle
+        window_size: "00:01"
+  - platform: filter
+    name: archiv_fve_car_power_available_average
+    unique_id: archiv_fve_car_power_available_average
+    entity_id: sensor.fve_car_power_available_average
+    filters:
+      - filter: time_throttle
+        window_size: "00:01"
+  - platform: filter
+    name: archiv_marek_primotop_prikon_2
+    unique_id: archiv_marek_primotop_prikon_2
+    entity_id: sensor.marek_primotop_prikon_2
+    filters:
+      - filter: time_throttle
+        window_size: "00:01"
+
+  # Teploty topného okruhu byly ověřeny v °C. Pro archiv stačí 0,1 °C
+  # a nejvýše jeden vzorek za dvě minuty; přesnost řízení se tím nemění.
+  - platform: filter
+    name: archiv_topeni_prava_zpatecka
+    unique_id: archiv_topeni_prava_zpatecka
+    entity_id: sensor.topeni_prava_zpatecka
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+  - platform: filter
+    name: archiv_topeni_leva_zpatecka
+    unique_id: archiv_topeni_leva_zpatecka
+    entity_id: sensor.topeni_leva_zpatecka
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+  - platform: filter
+    name: archiv_topeni_levy_privod
+    unique_id: archiv_topeni_levy_privod
+    entity_id: sensor.topeni_levy_privod
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+  - platform: filter
+    name: archiv_topeni_peletkove_cerpadlo
+    unique_id: archiv_topeni_peletkove_cerpadlo
+    entity_id: sensor.topeni_peletkove_cerpadlo
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+  - platform: filter
+    name: archiv_topeni_peletkova_zpatecka
+    unique_id: archiv_topeni_peletkova_zpatecka
+    entity_id: sensor.topeni_peletkova_zpatecka
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+  - platform: filter
+    name: archiv_topeni_peletkovy_privod
+    unique_id: archiv_topeni_peletkovy_privod
+    entity_id: sensor.topeni_peletkovy_privod
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+  - platform: filter
+    name: archiv_topeni_pravy_privod
+    unique_id: archiv_topeni_pravy_privod
+    entity_id: sensor.topeni_pravy_privod
+    filters:
+      - filter: time_throttle
+        window_size: "00:02"
+        precision: 1
+
+  # Ovzduší archivujeme nejvýše jednou za pět minut. Další zaokrouhlení
+  # nepřidáváme: např. VOC používá u dvou zařízení rozdílné jednotky ppm/ppb.
+  - platform: filter
+    name: archiv_m_koupelna_ovzdusi_co2
+    unique_id: archiv_m_koupelna_ovzdusi_co2
+    entity_id: sensor.m_koupelna_ovzdusi_co2
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_m_koupelna_ovzdusi_formaldehyd
+    unique_id: archiv_m_koupelna_ovzdusi_formaldehyd
+    entity_id: sensor.m_koupelna_ovzdusi_formaldehyd
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_m_koupelna_ovzdusi_humidity
+    unique_id: archiv_m_koupelna_ovzdusi_humidity
+    entity_id: sensor.m_koupelna_ovzdusi_humidity
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_m_koupelna_ovzdusi_pm25
+    unique_id: archiv_m_koupelna_ovzdusi_pm25
+    entity_id: sensor.m_koupelna_ovzdusi_pm25
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_m_koupelna_ovzdusi_temperature
+    unique_id: archiv_m_koupelna_ovzdusi_temperature
+    entity_id: sensor.m_koupelna_ovzdusi_temperature
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_m_koupelna_ovzdusi_voc
+    unique_id: archiv_m_koupelna_ovzdusi_voc
+    entity_id: sensor.m_koupelna_ovzdusi_voc
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_marek_ovzdusi_co2
+    unique_id: archiv_marek_ovzdusi_co2
+    entity_id: sensor.marek_ovzdusi_co2
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_marek_ovzdusi_formaldehyd
+    unique_id: archiv_marek_ovzdusi_formaldehyd
+    entity_id: sensor.marek_ovzdusi_formaldehyd
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_marek_ovzdusi_humidity
+    unique_id: archiv_marek_ovzdusi_humidity
+    entity_id: sensor.marek_ovzdusi_humidity
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_marek_ovzdusi_temperature
+    unique_id: archiv_marek_ovzdusi_temperature
+    entity_id: sensor.marek_ovzdusi_temperature
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+  - platform: filter
+    name: archiv_marek_ovzdusi_voc
+    unique_id: archiv_marek_ovzdusi_voc
+    entity_id: sensor.marek_ovzdusi_voc
+    filters:
+      - filter: time_throttle
+        window_size: "00:05"
+
   - platform: min_max
     name: "Teplota nejnižší"
     type: min
@@ -830,6 +1003,8 @@ climate:
 
 recorder:
   # 16 dní pokrývá 14 celých dní statistik FVE i probíhající den.
+  # Ověřený seznam běžné historie promazává automatizace na 3 dny.
+  # Pětiminutové statistiky se i nadále řídí globálními 16 dny.
   purge_keep_days: 16
   auto_repack: true
   auto_purge: true
@@ -844,6 +1019,39 @@ recorder:
       - button
     entities:
       - automation.m_obyvak_lampa_prepni
+      # Historii pohybu těchto kamer nearchivujeme na přání uživatele.
+      # Recorder filtr nemění aktuální stav ani detekci pohybu.
+      - binary_sensor.venek_motion
+      - binary_sensor.sklad_venek_motion
+      # Schválené diagnostické údaje bez potřeby archivu. Vyloučení se
+      # týká recorderu, nikoli běhu automatizace nebo aktuální diagnostiky.
+      - sensor.marek_primotop_napeti_2
+      - automation.topeni_termostaty_nastav
+      - sensor.backup_state
+      # Rychlé zdroje nahrazují v historii výše definované archivní filtry.
+      # Výpočty a regulace zůstávají napojené na původní entity.
+      - sensor.spotreba_ostatni
+      - sensor.marek_zasuvka_hlavni_power
+      - sensor.fve_car_power_available_average
+      - sensor.marek_primotop_prikon_2
+      - sensor.topeni_prava_zpatecka
+      - sensor.topeni_leva_zpatecka
+      - sensor.topeni_levy_privod
+      - sensor.topeni_peletkove_cerpadlo
+      - sensor.topeni_peletkova_zpatecka
+      - sensor.topeni_peletkovy_privod
+      - sensor.topeni_pravy_privod
+      - sensor.m_koupelna_ovzdusi_co2
+      - sensor.m_koupelna_ovzdusi_formaldehyd
+      - sensor.m_koupelna_ovzdusi_humidity
+      - sensor.m_koupelna_ovzdusi_pm25
+      - sensor.m_koupelna_ovzdusi_temperature
+      - sensor.m_koupelna_ovzdusi_voc
+      - sensor.marek_ovzdusi_co2
+      - sensor.marek_ovzdusi_formaldehyd
+      - sensor.marek_ovzdusi_humidity
+      - sensor.marek_ovzdusi_temperature
+      - sensor.marek_ovzdusi_voc
       # - alarm_control_panel.dvere_alarm
       - automation.aktualizace_planovace
       - binary_sensor.octoprint_printing_error
