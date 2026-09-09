@@ -1511,12 +1511,12 @@
         }}'
       s: '{{ states(''sensor.m_kuchyn_vlhkomer_stavel_soil_moisture'')|float(none)
         }}'
-      payload: 'Udělej krátký denní hlasový report o květinách. U každé řekni aktuální
-        vlhkost v procentech a zda je to OK/suché/přemokřené. Ber v potaz, kolik daná
-        květina reálně potřebuje. Nakonec řekni, které květiny dnes zalít. Data: -
-        Dracéna: {{ d if d is not none else ''nedostupné'' }} % - Fialka: {{ f if
-        f is not none else ''nedostupné'' }} % - Šťavel: {{ s if s is not none else
-        ''nedostupné'' }} %'
+      payload: 'Udělej velmi krátký denní hlasový report o květinách. Mluv jen o těch,
+        u kterých vlhkost není v pořádku. Ber v potaz, kolik daná květina reálně potřebuje.
+        U těch co nejsou ok, uveď i procenta. Mluv sarkasticky a vtipně. Data: - Dracéna:
+        {{ d if d is not none else ''nedostupné'' }} % - Fialka: {{ f if f is not
+        none else ''nedostupné'' }} % - Šťavel: {{ s if s is not none else ''nedostupné''
+        }} %'
   - action: conversation.process
     data:
       agent_id: conversation.chatgpt
