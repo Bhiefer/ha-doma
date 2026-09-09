@@ -18,6 +18,23 @@ Jde o pracovní instrukce, nikoli technickou náhradu oprávnění a sandboxu.
 - Běžné vratné pracovní kroky provádět samostatně, pokud nevyžadují domněnky
   o kódu nebo konfiguraci. Při nejasnosti se řídit pravidlem níže.
 
+## Samostatný worktree a větev pro každý chat
+
+- Každý nový chat, který upravuje repozitář, musí před první editací používat
+  vlastní worktree a vlastní větev. Chat pouze pro čtení je nepotřebuje.
+- Při pokračování stejného chatu používat jeho existující worktree a větev.
+  Dva souběžně upravující chaty nesmějí sdílet pracovní adresář ani větev.
+- Větve pojmenovávat `codex/<kratky-popis-ukolu>`; při shodě názvů přidat
+  jedinečný suffix. Nevytvářet změny přímo na `main`.
+- Před editací ověřit pracovní adresář, aktuální větev, stav Gitu a seznam
+  worktrees. Pokud worktree vznikl v detached HEAD, založit v něm vlastní větev.
+- Výchozí bod převzít ze zadání nebo nastavení projektu. Pokud je nejasný,
+  zeptat se; nepřebírat automaticky rozpracované změny jiného chatu.
+- U již rozpracovaných chatů nejprve určit, komu patří změny ve sdílené kopii.
+  Při nejasnosti se zeptat před jejich přesunem, stashem nebo commitem.
+- Sloučení do cílové větve provádět po předložení diffu a v rámci pověření
+  uživatele. Worktree ani větev s nepřenesenou prací automaticky nemazat.
+
 ## Žádné domýšlení kódu
 
 - Nevytvářet domněnky o významu kódu, záměru autora, chování zařízení, entitách,
