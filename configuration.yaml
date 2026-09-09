@@ -17,6 +17,16 @@ homeassistant:
     - /config
   packages:
     fve: !include fve/fve.yaml
+  auth_providers:
+    - type: trusted_networks
+      trusted_networks:
+        - 10.0.0.65/32
+      trusted_users:
+        10.0.0.65:
+          - 4de67a29bc8f4eb2a4b07abc18c202e7
+      allow_bypass_login: true
+
+    - type: homeassistant
 
 # influxdb:
 #   api_version: 2
@@ -187,6 +197,18 @@ utility_meter:
   kotel_peletkovy_spotreba_mesicni:
     source: sensor.kotel_peletkovy_spotreba
     cycle: monthly
+
+rest:
+  - resource: !secret fuel_prices_api_url
+    scan_interval: 21600
+    sensor:
+      - name: "Ceny paliv API"
+        unique_id: ceny_paliv_api
+        value_template: "{{ value_json.generated_at }}"
+        json_attributes:
+          - items
+          - pellets
+          - ruf
 
 sensor:
   # Archivní kopie omezují pouze historii; původní senzory zůstávají zdrojem
@@ -541,18 +563,18 @@ template:
   - sensor:
       - name: "Spotřeba ostatní"
         state: >-
-          {{( states('sensor.goodwe_house_consumption') | float(0)) 
-          - ( states('sensor.bojler_zasuvka_energy_power') | float(0)) 
-          - ( states('sensor.server_zasuvka_power') | float(0)) 
-          - ( states('sensor.marek_zasuvka_hlavni_power') | float(0)) 
-          - ( states('sensor.zkusebna_primotop_prikon') | float(0)) 
-          - ( states('sensor.goodwe_spotreba_stridac') | float(0)) 
+          {{( states('sensor.goodwe_house_consumption') | float(0))
+          - ( states('sensor.bojler_zasuvka_energy_power') | float(0))
+          - ( states('sensor.server_zasuvka_power') | float(0))
+          - ( states('sensor.marek_zasuvka_hlavni_power') | float(0))
+          - ( states('sensor.zkusebna_primotop_prikon') | float(0))
+          - ( states('sensor.goodwe_spotreba_stridac') | float(0))
           - ( states('sensor.marek_zasuvka_lednice_power') | float(0))}}
         unit_of_measurement: "W"
       - name: "Goodwe Spotřeba střídač"
         state: >-
-          {{( states('sensor.goodwe_house_consumption') | float(0)) 
-          - ( states('sensor.goodwe_back_up_load') | float(0)) 
+          {{( states('sensor.goodwe_house_consumption') | float(0))
+          - ( states('sensor.goodwe_back_up_load') | float(0))
           - ( states('sensor.goodwe_load') | float(0))}}
         unit_of_measurement: "W"
       - name: "Plynoměr"

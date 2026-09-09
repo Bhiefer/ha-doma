@@ -144,39 +144,18 @@ obnov_mod_topeni:
       target:
         entity_id: automation.topeni_kotel_ovladani
   mode: single
-  icon: mdi:refresh-circle
-zmena_kotle:
-  alias: Nastavení módu topení po změně kotle
-  sequence:
-    - action: input_boolean.turn_off
-      target:
-        entity_id:
-          - input_boolean.topeni_boost_marek
-          - input_boolean.topeni_boost_prace
-          - input_boolean.topeni_boost_kino
-          - input_boolean.topeni_boost_zkouska
-    - delay: 3
-    - action: script.obnov_mod_topeni
-uklid_chodby:
-  alias: Úklid chodby
-  sequence:
-    - action: vacuum.send_command
-      data:
-        entity_id: vacuum.rockrobo
-        command: app_zoned_clean
-        params:
-          zone_ids:
-            - Chodba
-uklid_prodejny:
-  alias: Úklid prodejny
-  sequence:
-    - action: vacuum.send_command
-      data:
-        entity_id: vacuum.rockrobo
-        command: app_zoned_clean
-        params:
-          zone_ids:
-            - Prodejna
+  icon: mdi:restart
+# zmena_kotle:
+#   alias: Nastavení módu topení po změně kotle
+#   sequence:
+#     - action: input_select.select_option
+#       target:
+#         entity_id: input_select.topeni_boost
+#       data:
+#         option: none
+#     - delay: 3
+#     - action: script.obnov_mod_topeni
+
 notifikace_urgentni:
   alias: Notifikace - urgentní
   sequence:
@@ -409,18 +388,21 @@ topeni_kotel_vypnout:
       data:
         host: 10.0.0.65
         user: bhiefer
-        pass: brambousek
-        command: sudo shutdown
+        private_key: /config/ssh/kancelar_pi_ed25519
+        command: sudo shutdown -h +1
+
     - delay:
         hours: 0
         minutes: 5
         seconds: 0
         milliseconds: 0
+
     - type: turn_off
       device_id: 9da80bcf36648e4f73eab7a48bc34e5d
       entity_id: b08804348bd53d964e54017cf45d0b08
       domain: switch
       enabled: true
+  mode: single
 kancelar_pi_zapnout:
   alias: Kancelar Pi - Zapnout
   sequence:
