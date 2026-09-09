@@ -7,8 +7,14 @@ views:
           - entity: input_number.teplota_eko
           - entity: input_number.teplota_boost
           - entity: input_number.rozdil_kotlu
-          - entity: timer.timer_topeni_boost
-            name: Časovač boost
+          - entity: timer.topeni_boost_marek
+            name: Boost Marek
+          - entity: timer.topeni_boost_prace
+            name: Boost Prodejna
+          - entity: timer.topeni_boost_kino
+            name: Boost Kino
+          - entity: timer.topeni_boost_zkouska
+            name: Boost Zkouška
       - type: horizontal-stack
         cards:
           - show_name: true

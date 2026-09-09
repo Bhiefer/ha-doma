@@ -95,96 +95,66 @@ dinner_ready:
   mode: single
 restart_modu_topeni:
   alias: Topení - Inicializace
-  description:
-    Nastav mod topeni na výchozí hodnotu. Při restartu HA se tak hodnoty
-    správně aktualizují.
+  description: Po startu zruší ruční boosty a obnoví topení podle aktuálních režimů.
   sequence:
     - delay: 90
-    - action: input_select.select_option
-      data:
-        option: vse
+    # Výchozí stav bez ručních boostů; kalendáře a ochrana proti mrazu platí dál.
+    - action: input_boolean.turn_off
       target:
-        entity_id: input_select.topeni_boost
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
+        entity_id:
+          - input_boolean.topeni_boost_marek
+          - input_boolean.topeni_boost_prace
+          - input_boolean.topeni_boost_kino
+          - input_boolean.topeni_boost_zkouska
+    - delay: 3
+    - action: script.obnov_mod_topeni
+  mode: single
+  icon: mdi:restart
+obnov_mod_topeni:
+  alias: Topení - Obnovit režim
+  description: Přepočítá termostaty, ventily a kotel bez změny ručních boostů.
+  sequence:
     - action: automation.trigger
       data:
         skip_condition: true
       target:
         entity_id: automation.topeni_termostaty_nastav
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
-    - action: input_select.select_option
-      data:
-        option: none
-      target:
-        entity_id: input_select.topeni_boost
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
-    - action: automation.trigger
-      data:
-        skip_condition: true
-      target:
-        entity_id: automation.topeni_termostaty_nastav
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
+    - delay: 5
     - action: automation.trigger
       data:
         skip_condition: true
       target:
         entity_id: automation.topeni_ventil_socialky
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
+    - delay: 5
     - action: automation.trigger
       data:
         skip_condition: true
       target:
         entity_id: automation.topeni_prodejna_ventil
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
+    - delay: 5
     - action: automation.trigger
       data:
         skip_condition: true
       target:
         entity_id: automation.topeni_ventil_vlevo
-    - delay:
-        hours: 0
-        minutes: 0
-        seconds: 5
-        milliseconds: 0
+    - delay: 5
     - action: automation.trigger
       data:
         skip_condition: true
       target:
         entity_id: automation.topeni_kotel_ovladani
   mode: single
-  icon: mdi:restart
+  icon: mdi:refresh-circle
 zmena_kotle:
   alias: Nastavení módu topení po změně kotle
   sequence:
-    - action: input_select.select_option
+    - action: input_boolean.turn_off
       target:
-        entity_id: input_select.topeni_boost
-      data:
-        option: none
+        entity_id:
+          - input_boolean.topeni_boost_marek
+          - input_boolean.topeni_boost_prace
+          - input_boolean.topeni_boost_kino
+          - input_boolean.topeni_boost_zkouska
     - delay: 3
     - action: script.obnov_mod_topeni
 uklid_chodby:
