@@ -1,0 +1,546 @@
+# Přehled pro nové REST entity sensor.ceny_paliv_<klíč ze zdrojové tabulky>.
+# Před nasazením ověřit přidělená ID senzorů a dostupnost Bubble Card.
+# Cena je v Kč/kg; změna za 10 dní a dostupnost se přebírají ze zdroje.
+# Čas kontroly je čas ověření nabídky, nikoli čas posledního stažení API.
+title: Ceny paliv
+views:
+  - title: "Pelety"
+    path: pelety
+    cards:
+      - type: markdown
+        content: >-
+          Cena a změna za 10 dní jsou v **Kč/kg**.
+          Dostupnost a čas kontroly najdete u každé nabídky.
+          Pomlčka u změny znamená, že zdroj zatím nemá údaj pro srovnání.
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_evans
+        name: "EVANS Royal"
+        # Formátování mění pouze zobrazení; chybějící údaj nikdy nenahrazuje nulou.
+        styles: &paliva_format |
+          ${(() => {
+            const data = hass.states[entity];
+            const available = data && !['unknown', 'unavailable'].includes(data.state);
+            const attrs = available ? data.attributes : {};
+            const change = attrs.change_10d_per_kg;
+            const changeText = typeof change === 'number' && Number.isFinite(change)
+              ? (change > 0 ? '+' : '') + change.toLocaleString('cs-CZ', {maximumFractionDigits: 3})
+              : '—';
+            const checked = attrs.checked_at;
+            const date = typeof checked === 'string' && checked ? new Date(checked) : null;
+            const dateText = date && !Number.isNaN(date.getTime())
+              ? date.toLocaleString('cs-CZ', {timeZone: 'Europe/Prague', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit'})
+              : '—';
+            const delta = card.querySelector('.bubble-sub-button-1 .bubble-sub-button-name-container');
+            const timestamp = card.querySelector('.bubble-sub-button-2 .bubble-sub-button-name-container');
+            if (delta) delta.textContent = '10 dní: ' + changeText;
+            if (timestamp) timestamp.textContent = 'Ověřeno: ' + dateText;
+            return '';
+          })()}
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_a1_royal
+        name: "A1 Royal"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_kohutovy_mm_royal
+        name: "Kohutovy MM Royal"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_cdp_pfeifer
+        name: "CDP Pfeifer"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_a1_rettenmeier
+        name: "A1 Rettenmeier"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_waldera
+        name: "Waldera"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_biomac_top_a1
+        name: "BIOMAC TOP A1"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_premium_pellets_jenikov
+        name: "PREMIUM PELLETS Jeníkov"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_lysuvky_royal
+        name: "Lysůvky Royal"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_topiva_strom_mt
+        name: "Topiva Strom MT"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+  - title: "RUF brikety"
+    path: ruf
+    cards:
+      - type: markdown
+        content: >-
+          Cena a změna za 10 dní jsou v **Kč/kg**.
+          Dostupnost a čas kontroly najdete u každé nabídky.
+          Pomlčka u změny znamená, že zdroj zatím nemá údaj pro srovnání.
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_evans_ruf_mosaic
+        name: "EVANS RUF Mosaic"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_mosaic_ruf_direct
+        name: "Parkety Mosaic"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_topiva_strom_ruf
+        name: "Topiva Strom RUF"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+  - title: "Válcové brikety"
+    path: valcove
+    cards:
+      - type: markdown
+        content: >-
+          Cena a změna za 10 dní jsou v **Kč/kg**.
+          Dostupnost a čas kontroly najdete u každé nabídky.
+          Pomlčka u změny znamená, že zdroj zatím nemá údaj pro srovnání.
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_evans_tmave_hard
+        name: "EVANS Tmavé Hard"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_a1_tmave_hard
+        name: "A1 Tmavé Hard"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info
+      - type: custom:bubble-card
+        card_type: button
+        button_type: state
+        entity: sensor.ceny_paliv_biomac_energo_hard
+        name: "BIOMAC ENERGO HARD"
+        styles: *paliva_format
+        icon: mdi:fire
+        show_state: true
+        show_attribute: true
+        attribute: status
+        card_layout: large-2-rows
+        button_action:
+          tap_action:
+            action: more-info
+        tap_action:
+          action: more-info
+        sub_button:
+          - name: "10 dní"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: change_10d_per_kg
+            tap_action:
+              action: more-info
+          - name: "Ověřeno"
+            show_name: true
+            show_icon: false
+            show_attribute: true
+            attribute: checked_at
+            tap_action:
+              action: more-info

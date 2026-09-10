@@ -51,6 +51,14 @@ scene: !include scenes.yaml
 
 lovelace:
   mode: storage
+  # Samostatný přehled cen čte nové REST senzory a vyžaduje Bubble Card.
+  dashboards:
+    ceny-paliv:
+      mode: yaml
+      title: Ceny paliv
+      icon: mdi:fire
+      show_in_sidebar: true
+      filename: ceny_paliv_dashboard.yaml
   resources:
     - url: /hacsfiles/bar-card/bar-card.js
       type: module
@@ -198,17 +206,8 @@ utility_meter:
     source: sensor.kotel_peletkovy_spotreba
     cycle: monthly
 
-rest:
-  - resource: !secret fuel_prices_api_url
-    scan_interval: 21600
-    sensor:
-      - name: "Ceny paliv API"
-        unique_id: ceny_paliv_api
-        value_template: "{{ value_json.generated_at }}"
-        json_attributes:
-          - items
-          - pellets
-          - ruf
+# Ceny paliv sdílejí jeden REST požadavek; samostatný soubor obsahuje i nabídky.
+rest: !include ceny_paliv_rest.yaml
 
 sensor:
   # Archivní kopie omezují pouze historii; původní senzory zůstávají zdrojem

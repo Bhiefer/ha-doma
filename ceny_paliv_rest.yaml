@@ -1,0 +1,366 @@
+# Google Apps Script čte tři listy HA dat; všech 17 entit sdílí jeden požadavek.
+# Interval 6 hodin zachovává původní nastavení. URL s tokenem patří do secrets.yaml.
+# Neplatná odpověď a chybějící cena znamenají unavailable, nikdy náhradní nulu.
+# Skladová nedostupnost je atribut nabídky; sama nemaže její doloženou cenu.
+- resource: !secret fuel_prices_api_url
+  scan_interval: 21600
+  timeout: 30
+  sensor:
+    - name: "Ceny paliv API"
+      unique_id: ceny_paliv_api
+      availability: >-
+        {{ value_json is defined and value_json is mapping
+           and value_json.get('ok') is sameas true
+           and value_json.get('generated_at') is string
+           and value_json.get('items') is mapping }}
+      value_template: >-
+        {{ value_json.get('generated_at') if value_json is defined
+           and value_json is mapping else none }}
+      json_attributes:
+        - items
+        - pellets
+        - ruf
+        - valcove
+
+    # Nové entity mají očekávané ID sensor.ceny_paliv_<klíč nabídky>.
+    # Po prvním načtení ověřit přidělená ID v registru HA proti dashboardu.
+    - name: "Ceny paliv evans"
+      unique_id: ceny_paliv_evans
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('evans') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('evans') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.evans"
+      json_attributes: &ceny_paliv_atributy
+        - seller
+        - change_10d_per_kg
+        - status
+        - checked_at
+        - source
+
+    - name: "Ceny paliv a1_royal"
+      unique_id: ceny_paliv_a1_royal
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('a1_royal') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('a1_royal') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.a1_royal"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv kohutovy_mm_royal"
+      unique_id: ceny_paliv_kohutovy_mm_royal
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('kohutovy_mm_royal') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('kohutovy_mm_royal') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.kohutovy_mm_royal"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv cdp_pfeifer"
+      unique_id: ceny_paliv_cdp_pfeifer
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('cdp_pfeifer') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('cdp_pfeifer') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.cdp_pfeifer"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv a1_rettenmeier"
+      unique_id: ceny_paliv_a1_rettenmeier
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('a1_rettenmeier') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('a1_rettenmeier') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.a1_rettenmeier"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv waldera"
+      unique_id: ceny_paliv_waldera
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('waldera') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('waldera') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.waldera"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv biomac_top_a1"
+      unique_id: ceny_paliv_biomac_top_a1
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('biomac_top_a1') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('biomac_top_a1') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.biomac_top_a1"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv premium_pellets_jenikov"
+      unique_id: ceny_paliv_premium_pellets_jenikov
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('premium_pellets_jenikov') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('premium_pellets_jenikov') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.premium_pellets_jenikov"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv lysuvky_royal"
+      unique_id: ceny_paliv_lysuvky_royal
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('lysuvky_royal') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('lysuvky_royal') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.lysuvky_royal"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv topiva_strom_mt"
+      unique_id: ceny_paliv_topiva_strom_mt
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('topiva_strom_mt') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('topiva_strom_mt') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.topiva_strom_mt"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv evans_ruf_mosaic"
+      unique_id: ceny_paliv_evans_ruf_mosaic
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('evans_ruf_mosaic') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('evans_ruf_mosaic') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.evans_ruf_mosaic"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv mosaic_ruf_direct"
+      unique_id: ceny_paliv_mosaic_ruf_direct
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('mosaic_ruf_direct') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('mosaic_ruf_direct') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.mosaic_ruf_direct"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv topiva_strom_ruf"
+      unique_id: ceny_paliv_topiva_strom_ruf
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('topiva_strom_ruf') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('topiva_strom_ruf') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.topiva_strom_ruf"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv evans_tmave_hard"
+      unique_id: ceny_paliv_evans_tmave_hard
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('evans_tmave_hard') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('evans_tmave_hard') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.evans_tmave_hard"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv a1_tmave_hard"
+      unique_id: ceny_paliv_a1_tmave_hard
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('a1_tmave_hard') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('a1_tmave_hard') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.a1_tmave_hard"
+      json_attributes: *ceny_paliv_atributy
+
+    - name: "Ceny paliv biomac_energo_hard"
+      unique_id: ceny_paliv_biomac_energo_hard
+      unit_of_measurement: "Kč/kg"
+      state_class: measurement
+      availability: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('biomac_energo_hard') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) }}
+      value_template: >-
+        {%- set payload = value_json if value_json is defined and value_json is mapping else {} -%}
+        {%- set items = payload.get('items') -%}
+        {%- set item = items.get('biomac_energo_hard') if items is mapping else none -%}
+        {%- set price = item.get('price_per_kg') if item is mapping else none -%}
+        {{ price if payload.get('ok') is sameas true and price is number
+           and price is not boolean and is_number(price) else none }}
+      json_attributes_path: "$.items.biomac_energo_hard"
+      json_attributes: *ceny_paliv_atributy

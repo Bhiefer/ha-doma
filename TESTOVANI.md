@@ -9,7 +9,9 @@ i pro commity dokumentace; nezakládá oprávnění ke commitu ani nasazení.
 
 ## Jednorázová příprava v každém worktree
 
-Je potřeba Python 3.12 nebo novější a Git. Z kořene worktree na Windows:
+Je potřeba Python 3.12 nebo novější, Git a Node.js 18 nebo novější v PATH.
+Node.js spouští původní JavaScript exportéru cen paliv proti lokálním náhradám
+Google služeb; nic se neposílá do sítě. Z kořene worktree na Windows:
 
 ```powershell
 python -m venv .venv
@@ -46,6 +48,11 @@ Pravidlo je závazné v `AGENTS.md`; automatický Git hook zatím není instalov
 - Chování `binary_sensor.fve_vybijeni_baterie` ověřujeme pro 64 kombinací
   stavů vstupů včetně `unknown` a `unavailable`. Další testy hlídají akce a stavy
   všech sedmi přepínačů termostatů a dostupnost i 20% rezervu energie baterie.
+- Ceny paliv: všechny cenové šablony při chybějících a neplatných vstupech,
+  vazbu 16 nabídek na dashboard, export tří kategorií, odmítnutí nesprávného
+  tokenu a rozlišení nulové a chybějící desetidenní změny.
+  JavaScript exportéru a formátování karet se vykonává v Node.js
+  s místními náhradami služeb Google a DOM, bez přístupu do sítě.
 
 Testy šablon používají skutečný Jinja engine a náhrady použitých funkcí HA nad
 testovacími daty. Netestují aktualizace entit, časování, souběhy automatizací,

@@ -15,6 +15,10 @@
 !/TESTOVANI.md
 !/tools/check.py
 !/tests/test_checks.py
+!/tests/test_fuel_prices.py
+!/tests/test_fuel_prices_api.cjs
+!/tools/fuel_prices_api.gs
+!/CENY_PALIV.md
 # Lokální prostředí a ostatní pracovní kopie nejsou konfigurace projektu.
 /.venv/
 /.worktrees/
