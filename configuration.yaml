@@ -1033,10 +1033,9 @@ climate:
     target_temp_step: 0.5
 
 recorder:
-
-  # 16 dní pokrývá 14 celých dní statistik FVE i probíhající den.
-  # Ověřený seznam běžné historie promazává automatizace na 3 dny.
-  # Pětiminutové statistiky se i nadále řídí globálními 16 dny.
+  # Výchozích 16 dní zachovává historii pro grafy Lovelace, FVE a topení,
+  # včetně archivních kopií a vstupů 14denních history_stats.
+  # Kratší retence není zavedena; úsporu řeší filtry a výjimky níže.
   purge_keep_days: 16
   auto_repack: true
   auto_purge: true
