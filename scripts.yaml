@@ -381,33 +381,33 @@ topeni_kotel_vypnout:
       domain: switch
   mode: single
   icon: mdi:heating-coil
-"1713169977678":
-  alias: Kancelar Pi - Vypnout
-  sequence:
-    - action: ssh_command.exec_command
-      data:
-        host: 10.0.0.65
-        user: bhiefer
-        private_key: /config/ssh/kancelar_pi_ed25519
-        command: sudo shutdown -h +1
+# "1713169977678":
+#   alias: Kancelar Pi - Vypnout
+#   sequence:
+#     - action: ssh_command.exec_command
+#       data:
+#         host: 10.0.0.65
+#         user: bhiefer
+#         private_key: /config/ssh/kancelar_pi_ed25519
+#         command: sudo shutdown -h +1
 
-    - delay:
-        hours: 0
-        minutes: 5
-        seconds: 0
-        milliseconds: 0
+#     - delay:
+#         hours: 0
+#         minutes: 5
+#         seconds: 0
+#         milliseconds: 0
 
-    - type: turn_off
-      device_id: 9da80bcf36648e4f73eab7a48bc34e5d
-      entity_id: b08804348bd53d964e54017cf45d0b08
-      domain: switch
-      enabled: true
-  mode: single
-kancelar_pi_zapnout:
-  alias: Kancelar Pi - Zapnout
-  sequence:
-    - type: turn_on
-      device_id: 9da80bcf36648e4f73eab7a48bc34e5d
-      entity_id: b08804348bd53d964e54017cf45d0b08
-      domain: switch
-  mode: single
+#     - type: turn_off
+#       device_id: 9da80bcf36648e4f73eab7a48bc34e5d
+#       entity_id: b08804348bd53d964e54017cf45d0b08
+#       domain: switch
+#       enabled: true
+#   mode: single
+# kancelar_pi_zapnout:
+#   alias: Kancelar Pi - Zapnout
+#   sequence:
+#     - type: turn_on
+#       device_id: 9da80bcf36648e4f73eab7a48bc34e5d
+#       entity_id: b08804348bd53d964e54017cf45d0b08
+#       domain: switch
+#   mode: single

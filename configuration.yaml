@@ -51,14 +51,7 @@ scene: !include scenes.yaml
 
 lovelace:
   mode: storage
-  # Samostatný přehled cen čte nové REST senzory a vyžaduje Bubble Card.
-  dashboards:
-    ceny-paliv:
-      mode: yaml
-      title: Ceny paliv
-      icon: mdi:fire
-      show_in_sidebar: true
-      filename: ceny_paliv_dashboard.yaml
+  # Ceny paliv se zobrazují v dashboardu Kancelář spravovaném přes UI.
   resources:
     - url: /hacsfiles/bar-card/bar-card.js
       type: module
