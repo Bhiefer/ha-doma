@@ -479,6 +479,61 @@ sensor:
     method: left
 
 template:
+  # Místní ovládací adaptér: společný balíček používá jen switch.fve_auto_nabijeni.
+  # Stav vyjadřuje příkaz k povolení, nikoli skutečný odběr auta (ten má binary_sensor).
+  # U relé se tento blok v dané instanci napojí na switch.wallbox_controller.
+  - switch:
+      - name: "FVE Auto Nabíjení"
+        default_entity_id: switch.fve_auto_nabijeni
+        availability: "{{ states('select.wallbox_force_state') in ['Neutral', 'Off', 'On'] }}"
+        state: "{{ not is_state('select.wallbox_force_state', 'Off') }}"
+        turn_on:
+          - action: select.select_option
+            target:
+              entity_id: select.wallbox_force_state
+            data:
+              option: "On"
+        turn_off:
+          - action: select.select_option
+            target:
+              entity_id: select.wallbox_force_state
+            data:
+              option: "Off"
+  # Místní regulace EVANS používá uživatelem ověřený maximální proud go-e (ama).
+  # Společný balíček mění jen tento template number; 6–16 A je rozsah našich aut.
+  # Stav přebírá potvrzený limit wallboxu, nikoli skutečný proud odebíraný autem.
+  - number:
+      - name: "FVE Auto Proud"
+        default_entity_id: number.fve_auto_proud
+        unit_of_measurement: "A"
+        min: 6
+        max: 16
+        step: 1
+        availability: "{{ is_number(states('number.wallbox_set_max_ampere_limit')) }}"
+        state: "{{ states('number.wallbox_set_max_ampere_limit') | float(none) }}"
+        set_value:
+          - condition: template
+            value_template: "{{ is_number(value) and 6 <= value | float <= 16 and value | float == value | int }}"
+          - action: number.set_value
+            target:
+              entity_id: number.wallbox_set_max_ampere_limit
+            data:
+              value: "{{ value | int }}"
+  # Volba fází má stejné rozhraní pro každý adaptivní wallbox.
+  # Auto se nepoužívá: počet fází musí odpovídat ceně vypočtené v balíčku.
+  - select:
+      - name: "FVE Auto Fáze"
+        default_entity_id: select.fve_auto_faze
+        options: "{{ ['1', '3', 'auto'] }}"
+        availability: "{{ states('select.wallbox_phase_switch_mode') in ['Auto', 'Force_1', 'Force_3'] }}"
+        state: >-
+          {{ {'Force_1': '1', 'Force_3': '3', 'Auto': 'auto'}.get(states('select.wallbox_phase_switch_mode'), none) }}
+        select_option:
+          - action: select.select_option
+            target:
+              entity_id: select.wallbox_phase_switch_mode
+            data:
+              option: "{{ 'Auto' if option == 'auto' else 'Force_' ~ option }}"
   # Místní adaptér EVANS: společný fve.yaml zná pouze tyto normalizované vstupy.
   # Přetok patří celé domácnosti, proto má prefix fve_, nikoli fve_auto_.
   # Přetok L1–L3 je v pořadí přípojky: GoodWe má export kladný a odběr záporný.
@@ -740,9 +795,14 @@ template:
              and is_state('input_boolean.topeni_boost_prace', 'on')
              and is_state('input_boolean.topeni_boost_kino', 'on')
              and is_state('input_boolean.topeni_boost_zkouska', 'on') }}
+      # Skutečné nabíjení odlišujeme od povolení; dvacetiminutové minimum
+      # začíná až při stavu Charging. U relé zůstává místní detekce měřením.
       - name: "fve_auto_nabijeni"
-        state: >-
-          'off'
+        availability: "{{ states('sensor.wallbox_car_state') in ['Idle', 'Charging', 'WaitCar', 'Complete'] }}"
+        state: "{{ is_state('sensor.wallbox_car_state', 'Charging') }}"
+        attributes:
+          # Relaci ukončí odpojení; Complete může provázet také vynucenou pauzu.
+          relace_ukoncena: "{{ is_state('sensor.wallbox_car_state', 'Idle') }}"
 
   - switch:
       # Moderní zápis zachovává ID přepínačů používaných termostaty

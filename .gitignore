@@ -15,6 +15,8 @@
 !/TESTOVANI.md
 !/tools/check.py
 !/tests/test_checks.py
+# Regresní testy řídicích akcí nabíjení patří do repozitáře.
+!/tests/test_car_control.py
 !/tests/test_fuel_prices.py
 !/tests/test_fuel_prices_api.cjs
 !/tools/fuel_prices_api.gs

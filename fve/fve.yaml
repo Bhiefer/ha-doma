@@ -11,6 +11,15 @@ input_select:
     # Číslice udávají fáze měřiče přípojky v pořadí L1/L2/L3 wallboxu.
     # Např. 2-1-3 znamená, že jednofázové go-e nabíjí na fázi 2 přípojky.
     options: ["neovereno", "1-2-3", "1-3-2", "2-1-3", "2-3-1", "3-1-2", "3-2-1"]
+# Minimum běží od skutečného začátku nabíjení. Obnova timeru zachová původní
+# konec po restartu; příznak zabrání novým 20 minutám při změně fáze.
+timer:
+  fve_auto_minimum:
+    duration: "00:20:00"
+    restore: true
+input_boolean:
+  fve_auto_relace_zahajena:
+    name: "FVE Auto Relace zahájena"
 input_number:
   fve_denni_spotreba_prumerna_vsedni:
     name: "FVE Denní spotřeba průměrná všední dny"
@@ -147,7 +156,7 @@ sensor:
 template:
   # Doporučený výkon je oddělený od povolení nabíjení: hledá nejvyšší výkon
   # pod cenovým limitem i při stojícím autě. Čisté FVE cenu nepotřebuje.
-  # Zatím neovládá žádné zařízení.
+  # Spínání a regulace níže používají výhradně místní template adaptéry.
   # Společné vstupy definuje každá instance v configuration.yaml: přetok
   # přípojky je kladný do sítě, záporný při odběru; příkon auta je nezáporný.
   # Vše je ve W. Režim určuje jen nabíjecí varianty, nikoli zdroje měření.
@@ -164,8 +173,11 @@ template:
             {% set cena = states('sensor.current_spot_electricity_price') | float(none) %}
             {% set limit = states('sensor.spot_cena_limit_auto') | float(none) %}
             {% set ceny_platne = is_number(cena) and is_number(limit) %}
+            {% set maximum = 16 if rezim == 'fixni'
+                else state_attr('number.fve_auto_proud', 'max') | float(none) %}
             {% set ns = namespace(platne=rezim in ['fixni', 'adaptivni']
-                and mapovani in ['1-2-3', '1-3-2', '2-1-3', '2-3-1', '3-1-2', '3-2-1'], dostupne=[],
+                and mapovani in ['1-2-3', '1-3-2', '2-1-3', '2-3-1', '3-1-2', '3-2-1']
+                and is_number(maximum) and maximum >= 6, dostupne=[], varianty={},
                 vykon=0, proud=0, faze=0, cena=none, podil_site=none) %}
             {% for i in range(1, 4) if ns.platne %}
               {% set faze_site = mapovani.split('-')[i - 1] %}
@@ -181,7 +193,7 @@ template:
             {% endfor %}
             {% if ns.platne %}
               {% for faze in ([3] if rezim == 'fixni' else [1, 3]) %}
-                {% for proud in ([16] if rezim == 'fixni' else range(6, 17)) %}
+                {% for proud in ([16] if rezim == 'fixni' else range(6, ([maximum, 16] | min | int) + 1)) %}
                   {% set varianta = namespace(sit=0) %}
                   {% for i in range(faze) %}
                     {# Každá fáze dokupuje samostatně; export jiné fáze ji nekryje.
@@ -196,8 +208,11 @@ template:
                      časového omezení. Chybějící měření tento závěr neumožňuje. #}
                   {% set cena_varianty = 0 if varianta.sit == 0
                       else cena * podil if ceny_platne else none %}
-                  {% if (varianta.sit == 0 or (ceny_platne and cena_varianty < limit))
-                        and vykon > ns.vykon %}
+                  {% set vyhovuje = varianta.sit == 0 or (ceny_platne and cena_varianty < limit) %}
+                  {% set ns.varianty = dict(ns.varianty.items() | list
+                      + [(faze ~ '/' ~ proud, dict(cena=cena_varianty, podil_site=podil,
+                           vyhovuje=vyhovuje))]) %}
+                  {% if vyhovuje and vykon > ns.vykon %}
                     {% set ns.vykon = vykon %}
                     {% set ns.proud = proud %}
                     {% set ns.faze = faze %}
@@ -207,8 +222,20 @@ template:
                 {% endfor %}
               {% endfor %}
             {% endif %}
+            {# Při překročení ceny nebo výpadku ceny doběhne už zahájené minimum.
+               Adaptivní nabíjení v takovém případě míří na nejnižší výkon.
+               Chybějící měření nemá tuto výjimku. #}
+            {% if ns.platne and ns.vykon == 0 and is_state('timer.fve_auto_minimum', 'active') %}
+              {% set ns.faze = 3 if rezim == 'fixni' else 1 %}
+              {% set ns.proud = 16 if rezim == 'fixni' else 6 %}
+              {% set ns.vykon = ns.faze * ns.proud * 230 %}
+              {% set minimum = ns.varianty[ns.faze ~ '/' ~ ns.proud] %}
+              {% set ns.cena = minimum.cena %}
+              {% set ns.podil_site = minimum.podil_site %}
+            {% endif %}
             {{ dict(platne=ns.platne, vykon=ns.vykon, proud=ns.proud,
-                    faze=ns.faze, cena=ns.cena, podil_site=ns.podil_site) }}
+                    faze=ns.faze, cena=ns.cena, podil_site=ns.podil_site,
+                    varianty=ns.varianty, dostupne=ns.dostupne) }}
     sensor:
       - name: "FVE Auto Výkon doporučený"
         default_entity_id: sensor.fve_auto_vykon_doporuceny
@@ -216,7 +243,7 @@ template:
         device_class: power
         # Nedostupná měření nejsou nulová cena. Platných 0 W znamená, že
         # nevyhovuje žádná varianta (bez ceny připadají v úvahu jen čisté přebytky).
-        # Dvacetiminutové minimum bude řešit navazující povolení nabíjení.
+        # Cena potvrzeného cíle se přepočítává z aktuálních vstupů, ne ze starého doporučení.
         availability: "{{ fve_auto_varianta.platne }}"
         state: "{{ fve_auto_varianta.vykon }}"
         attributes:
@@ -224,6 +251,8 @@ template:
           faze: "{{ fve_auto_varianta.faze }}"
           cena: "{{ fve_auto_varianta.cena }}"
           podil_site: "{{ fve_auto_varianta.podil_site }}"
+          varianty: "{{ fve_auto_varianta.varianty }}"
+          dostupne: "{{ fve_auto_varianta.dostupne }}"
       # Proud i fáze se smí změnit až po celé minutě stejného návrhu.
       # Sledujeme dvojici fáze/proud, nikoli proměnlivou cenu či výkon měření.
       # Cílové nastavení je potvrzené doporučení, nikoli skutečný stav wallboxu.
@@ -234,8 +263,11 @@ template:
         state: >-
           {% set navrh = fve_auto_varianta.faze ~ '/' ~ fve_auto_varianta.proud %}
           {% set zacatek = this.attributes.get('navrh_od', none) | float(none) %}
-          {% if trigger.platform == 'homeassistant' or not fve_auto_varianta.platne %}
+          {% if not fve_auto_varianta.platne %}
             0/0
+          {% elif trigger.platform == 'homeassistant' %}
+            {{ this.state if is_state('timer.fve_auto_minimum', 'active')
+                and this.state in fve_auto_varianta.varianty else '0/0' }}
           {% elif this.state not in ['unknown', 'unavailable']
                   and this.attributes.get('navrh') == navrh and zacatek is not none
                   and as_timestamp(now()) - zacatek >= 60 %}
@@ -249,8 +281,8 @@ template:
           navrh: >-
             {{ (fve_auto_varianta.faze ~ '/' ~ fve_auto_varianta.proud)
                 if fve_auto_varianta.platne else none }}
-          # Po restartu nebo výpadku začíná potvrzování znovu; obnovený stav
-          # nesmí přeskočit minutu ověření aktuálních podmínek.
+          # Po restartu běží potvrzování změn znovu. Jen aktivní původní minimum
+          # může podržet obnovený cíl, je-li stále mezi platnými variantami.
           navrh_od: >-
             {% set navrh = fve_auto_varianta.faze ~ '/' ~ fve_auto_varianta.proud %}
             {% set zacatek = this.attributes.get('navrh_od', none) | float(none) %}
@@ -266,28 +298,35 @@ template:
         name: "FVE Car Power Available"
         unit_of_measurement: "W"
         device_class: power
-        state: >
-          {% if is_state('binary_sensor.fve_auto_nabijeni', 'off') %} 
-            {% set sit = states('sensor.goodwe_active_power') | float(0) %}
-          {% else %}
-            {% set sit = states('sensor.goodwe_active_power') | float(0) + (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230) %}
-          {% endif %}
-
-          {{ sit if sit > 0 else 0 }}
+        # Zachováme původní ID pro přehledy, ale odstraníme chybný odhad A * 230.
+        # Cena používá fáze samostatně; tento součet slouží pouze jako přehled.
+        availability: "{{ is_number(states('sensor.fve_auto_vykon_doporuceny')) }}"
+        state: "{{ (state_attr('sensor.fve_auto_vykon_doporuceny', 'dostupne') or []) | sum }}"
 
       - default_entity_id: sensor.spot_koeficient_ze_site_auto
         name: "Spot Koeficient odběru ze sítě pro nabíjení auta"
         unit_of_measurement: "%"
-        state: >
-          {% set car_charge_koeficient = 1 - (states('sensor.fve_car_power_available_average') | float(0) / (states('input_number.fve_auto_nabijeci_vykon') | float(1) * 230)) %}
-
-          {{  (car_charge_koeficient * 100 )| int if car_charge_koeficient > 0 else 0 | int }}
+        # Podíl dokupu odpovídá potvrzenému cíli, nikoli pouze nejnovějšímu návrhu.
+        availability: >-
+          {{ is_number(states('sensor.fve_auto_vykon_doporuceny')) and
+             states('sensor.fve_auto_nastaveni_cilove') in
+             (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {}) }}
+        state: >-
+          {% set v = (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {})
+              .get(states('sensor.fve_auto_nastaveni_cilove'), {}) %}
+          {{ v.get('podil_site', 0) * 100 }}
 
       - default_entity_id: sensor.spot_cena_dynamicka_auto
         name: "Spot Dynamická cena elektřiny pro nabíjení auta"
         unit_of_measurement: "CZK"
-        state: >
-          {{ states('sensor.spot_koeficient_ze_site_auto') | float(0) / 100 * states('sensor.current_spot_electricity_price') | float(0) }}
+        # Chybějící cena není nula; nulová cena je dovolena pouze při čisté FVE.
+        availability: >-
+          {% set v = (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {})
+              .get(states('sensor.fve_auto_nastaveni_cilove'), {}) %}
+          {{ is_number(states('sensor.fve_auto_vykon_doporuceny')) and is_number(v.get('cena')) }}
+        state: >-
+          {{ (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {})
+              .get(states('sensor.fve_auto_nastaveni_cilove'), {}).get('cena') }}
 
       - default_entity_id: sensor.spot_cena_elektriny_prumerna_24h_predikce
         name: "Spot Cena elektřiny průměrná 24h s predikcí"
@@ -516,13 +555,182 @@ template:
         state: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
       - default_entity_id: binary_sensor.spot_podprumerna_cena_auto
         name: spot_podprumerna_cena_auto
-        state: "{{ states('sensor.spot_cena_dynamicka_auto') | float(0) < states('sensor.spot_cena_limit_auto') | float(0) }}"
+        # Jediné povolení pro oba druhy wallboxu. Výpadek měření vypíná,
+        # samotný výpadek ceny dovolí doběhnout minimum nebo čistou FVE.
+        # Po vypršení minima musí aktuální cena potvrzeného cíle opět vyhovět.
+        state: >-
+          {% set v = (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {})
+              .get(states('sensor.fve_auto_nastaveni_cilove'), {}) %}
+          {{ states('input_select.fve_auto_rezim') in ['fixni', 'adaptivni']
+             and is_number(states('sensor.fve_auto_vykon_doporuceny')) and v != {}
+             and (v.get('vyhovuje', false) or is_state('timer.fve_auto_minimum', 'active')) }}
       - default_entity_id: binary_sensor.spot_nizky_tarif
         name: "Spot Nízký tarif"
         state: >-
           {% set state = now() %}
           {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
 automation:
+  # Jedna relace má jediné minimum. Pauza pro změnu fáze příznak nesmaže;
+  # konec relace poskytuje místní detekce auta (u fixního nabíjení stačí konec odběru).
+  - id: fve_auto_minimum
+    alias: "FVE - Auto - Minimum nabíjení"
+    trigger:
+      - platform: time_pattern
+        seconds: "/10"
+      - platform: state
+        entity_id:
+          - binary_sensor.fve_auto_nabijeni
+          - binary_sensor.spot_podprumerna_cena_auto
+        to:
+    action:
+      - choose:
+          - conditions: >-
+              {{ not is_state('binary_sensor.spot_podprumerna_cena_auto', 'on')
+                 or (is_state('binary_sensor.fve_auto_nabijeni', 'off') and
+                     (is_state('input_select.fve_auto_rezim', 'fixni') or
+                      state_attr('binary_sensor.fve_auto_nabijeni', 'relace_ukoncena') == true)) }}
+            sequence:
+              - if: "{{ is_state('timer.fve_auto_minimum', 'active') }}"
+                then:
+                  - action: timer.cancel
+                    target:
+                      entity_id: timer.fve_auto_minimum
+              - if: "{{ is_state('input_boolean.fve_auto_relace_zahajena', 'on') }}"
+                then:
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id: input_boolean.fve_auto_relace_zahajena
+          - conditions: >-
+              {{ is_state('binary_sensor.spot_podprumerna_cena_auto', 'on')
+                 and is_state('switch.fve_auto_nabijeni', 'on')
+                 and is_state('binary_sensor.fve_auto_nabijeni', 'on')
+                 and is_state('input_boolean.fve_auto_relace_zahajena', 'off') }}
+            sequence:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.fve_auto_relace_zahajena
+              - action: timer.start
+                target:
+                  entity_id: timer.fve_auto_minimum
+    mode: single
+
+  # Společný řadič nezná fyzické entity. Fixní režim pouze spíná template switch.
+  # Adaptivní režim používá místní number.fve_auto_proud a select.fve_auto_faze.
+  # Number hlásí potvrzený nastavený proudový limit; jeho max omezuje výběr variant.
+  # Konkrétní způsob nastavení limitu zajišťuje místní template adaptér.
+  # Restart běhu při změně povolení přeruší čekání a včas provede vypnutí.
+  - id: fve_auto_rizeni
+    alias: "FVE - Auto - Řízení nabíjení"
+    trigger:
+      - platform: time_pattern
+        seconds: "/10"
+      - platform: state
+        entity_id:
+          - binary_sensor.spot_podprumerna_cena_auto
+          - sensor.fve_auto_nastaveni_cilove
+        to:
+      - platform: state
+        entity_id: input_select.fve_auto_rezim
+        to:
+        id: rezim
+    action:
+      - variables:
+          rezim: "{{ states('input_select.fve_auto_rezim') }}"
+          cil: "{{ states('sensor.fve_auto_nastaveni_cilove') }}"
+      # Instance bez řízení se zařízení nedotýká. Přepnutí z aktivního režimu
+      # na vypnuto ale ukončí právě řízenou relaci i během minima.
+      - condition: template
+        value_template: >-
+          {{ rezim in ['fixni', 'adaptivni']
+             or is_state('input_boolean.fve_auto_relace_zahajena', 'on')
+             or (trigger.id | default('') == 'rezim' and trigger.from_state is not none
+                 and trigger.from_state.state in ['fixni', 'adaptivni']) }}
+      - choose:
+          - conditions: >-
+              {{ rezim not in ['fixni', 'adaptivni']
+                 or not is_state('binary_sensor.spot_podprumerna_cena_auto', 'on') }}
+            sequence:
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.fve_auto_nabijeni
+        default:
+          - if: "{{ rezim == 'adaptivni' }}"
+            then:
+              # Nedostupný adaptér nesmí ponechat běžící auto bez regulace.
+              - if: >-
+                  {{ not is_number(states('number.fve_auto_proud'))
+                     or states('select.fve_auto_faze') not in ['1', '3', 'auto'] }}
+                then:
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.fve_auto_nabijeni
+                  - stop: "Nedostupný adaptér proudu nebo fází"
+              - variables:
+                  faze: "{{ cil.split('/')[0] | int(0) }}"
+                  proud: "{{ cil.split('/')[-1] | int(0) }}"
+              - if: >-
+                  {{ faze not in [1, 3] or not (6 <= proud <= 16)
+                     or proud > state_attr('number.fve_auto_proud', 'max') | float(0) }}
+                then:
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.fve_auto_nabijeni
+                  - stop: "Cíl překračuje dostupný rozsah wallboxu"
+              - if: "{{ states('select.fve_auto_faze') | int(0) != faze }}"
+                then:
+                  # Fáze měníme až při potvrzeném zastavení a nulovém příkonu.
+                  # Timer se neobnovuje; při chybě nebo neznámém stavu zůstává vypnuto.
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.fve_auto_nabijeni
+                  - wait_template: >-
+                      {{ is_state('switch.fve_auto_nabijeni', 'off')
+                         and is_state('binary_sensor.fve_auto_nabijeni', 'off')
+                         and states('sensor.fve_auto_prikon_l1') | float(-1) == 0
+                         and states('sensor.fve_auto_prikon_l2') | float(-1) == 0
+                         and states('sensor.fve_auto_prikon_l3') | float(-1) == 0 }}
+                    timeout: "00:00:30"
+                    continue_on_timeout: false
+              - if: "{{ states('number.fve_auto_proud') | float(0) != proud }}"
+                then:
+                  - action: number.set_value
+                    target:
+                      entity_id: number.fve_auto_proud
+                    data:
+                      value: "{{ proud }}"
+              - if: "{{ states('select.fve_auto_faze') | int(0) != faze }}"
+                then:
+                  - action: select.select_option
+                    target:
+                      entity_id: select.fve_auto_faze
+                    data:
+                      option: "{{ faze }}"
+              - wait_template: >-
+                  {{ states('select.fve_auto_faze') | int(0) == faze
+                     and states('number.fve_auto_proud') | float(0) == proud }}
+                timeout: "00:00:05"
+                continue_on_timeout: true
+              - if: "{{ not wait.completed }}"
+                then:
+                  # Nepotvrzený proud by neodpovídal vypočtené ceně. Vypneme
+                  # ještě před dalším desetisekundovým pokusem o regulaci.
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.fve_auto_nabijeni
+                  - stop: "Wallbox nepotvrdil cílové nastavení"
+          # Po čekání znovu ověříme cíl i cenu. Zapnutí je vždy přes template switch.
+          - condition: template
+            value_template: >-
+              {{ is_state('binary_sensor.spot_podprumerna_cena_auto', 'on')
+                 and states('input_select.fve_auto_rezim') == rezim
+                 and states('sensor.fve_auto_nastaveni_cilove') == cil }}
+          - if: "{{ not is_state('switch.fve_auto_nabijeni', 'on') }}"
+            then:
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.fve_auto_nabijeni
+    mode: restart
+
   - alias: "FVE - Workaround aktualizace koeficientů"
     trigger:
       - platform: state

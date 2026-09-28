@@ -237,7 +237,7 @@ class CarChargingProposalTests(unittest.TestCase):
             block["action"][0]["variables"]["fve_auto_varianta"])
 
     def proposal(self, mode="adaptivni", grid=(0, 0, 0), car=(0, 0, 0),
-                 price=3, limit=0.6, overrides=None):
+                 price=3, limit=0.6, overrides=None, maximum=16, minimum=False):
         states = {"input_select.fve_auto_rezim": mode,
                   "input_select.fve_auto_mapovani_fazi": "1-2-3",
                   "sensor.current_spot_electricity_price": price,
@@ -255,7 +255,9 @@ class CarChargingProposalTests(unittest.TestCase):
 
         return ast.literal_eval(self.template.render(
             states=lambda entity: str(states.get(entity, "unknown")),
-            is_number=is_number).strip())
+            is_number=is_number,
+            state_attr=lambda entity, attr: maximum,
+            is_state=lambda entity, value: minimum and entity == "timer.fve_auto_minimum" and value == "active").strip())
 
     def test_six_ampere_from_five_solar_and_one_grid(self):
         result = self.proposal(grid=(1150, 0, 0))
@@ -273,6 +275,24 @@ class CarChargingProposalTests(unittest.TestCase):
                 result = self.proposal(mode=mode, price=0.5)
                 self.assertEqual(result["vykon"], 11040)
                 self.assertEqual(result["podil_site"], 1)
+
+    def test_adaptive_obeys_local_current_cap(self):
+        result = self.proposal(price=0.5, maximum=8)
+        self.assertEqual((result["faze"], result["proud"]), (3, 8))
+        self.assertEqual(self.proposal(price=0.5, maximum=32)["proud"], 16)
+        for maximum in (None, "unknown", float("nan"), 5):
+            self.assertFalse(self.proposal(maximum=maximum)["platne"])
+        self.assertEqual(self.proposal(mode="fixni", price=0.5, maximum=None)["proud"], 16)
+
+    def test_minimum_falls_back_without_price_but_not_without_measurement(self):
+        for mode, pair in (("fixni", (3, 16)), ("adaptivni", (1, 6))):
+            result = self.proposal(mode=mode, price="unavailable", minimum=True)
+            self.assertEqual((result["faze"], result["proud"]), pair)
+            self.assertIsNone(result["cena"])
+            self.assertFalse(result["varianty"][f"{pair[0]}/{pair[1]}"]["vyhovuje"])
+        result = self.proposal(minimum=True, overrides={"sensor.fve_pretok_l2": "unavailable"})
+        self.assertFalse(result["platne"])
+        self.assertEqual(result["vykon"], 0)
 
     def test_equal_limit_does_not_allow_charging(self):
         result = self.proposal(grid=(1150, 0, 0), limit=0.5)
@@ -416,10 +436,11 @@ class CarChargingStabilityTests(unittest.TestCase):
                           if s.get("default_entity_id") == "sensor.fve_auto_nastaveni_cilove")
         cls.env = jinja2.Environment(undefined=jinja2.StrictUndefined)
 
-    def step(self, previous, time, phases=3, amps=16, valid=True, startup=False):
+    def step(self, previous, time, phases=3, amps=16, valid=True, startup=False, minimum=False):
         context = dict(this=previous, now=lambda: time, as_timestamp=lambda value: value,
                        trigger=SimpleNamespace(platform="homeassistant" if startup else "time_pattern"),
-                       fve_auto_varianta=SimpleNamespace(faze=phases, proud=amps, platne=valid))
+                       fve_auto_varianta=SimpleNamespace(faze=phases, proud=amps, platne=valid, varianty={"3/16": {}}),
+                       is_state=lambda entity, value: minimum and value == "active")
         render = lambda text: self.env.from_string(text).render(**context).strip()
         # HA při nedostupnosti nepoužije číselný/stavový výsledek šablony.
         state = render(self.sensor["state"]) if valid else "unavailable"
@@ -440,6 +461,14 @@ class CarChargingStabilityTests(unittest.TestCase):
         self.assertEqual(current.state, "3/16")
         current = self.step(current, 130, phases=1, amps=6)
         self.assertEqual(current.state, "1/6")
+
+    def test_restart_preserves_active_minimum_without_new_deadline(self):
+        previous = SimpleNamespace(state="3/16", attributes={"navrh": "3/16", "navrh_od": 0})
+        current = self.step(previous, 500, startup=True, minimum=True)
+        self.assertEqual(current.state, "3/16")
+        self.assertEqual(current.attributes["navrh_od"], 500)
+        # Jiný cíl musí i po restartu znovu počkat minutu.
+        self.assertEqual(self.step(current, 510, phases=1, amps=6, minimum=True).state, "3/16")
 
     def test_changing_proposal_restarts_confirmation(self):
         current = self.step(SimpleNamespace(state="0/0", attributes={}), 0)
