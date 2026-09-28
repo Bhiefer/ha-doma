@@ -537,6 +537,8 @@ template:
   # Místní adaptér EVANS: společný fve.yaml zná pouze tyto normalizované vstupy.
   # Přetok patří celé domácnosti, proto má prefix fve_, nikoli fve_auto_.
   # Přetok L1–L3 je v pořadí přípojky: GoodWe má export kladný a odběr záporný.
+  # Dočasně násobíme obě znaménka třemi: dle uživatele GoodWe měří jen třetinu FVE.
+  # Jde o odhad do instalace Shelly; při výměně zdroje se násobení odstraní.
   # Při výměně měřiče se mění jen zdroje zde; případná změna znaménka také zde.
   # Příkon L1–L3 je v pořadí wallboxu. Pro relé se zde použije měření Shelly.
   # Nedostupné měření nesmí vytvořit falešný nulový odběr nebo přebytek.
@@ -546,19 +548,19 @@ template:
         unit_of_measurement: "W"
         device_class: power
         availability: "{{ is_number(states('sensor.goodwe_active_power_l1')) }}"
-        state: "{{ states('sensor.goodwe_active_power_l1') | float(none) }}"
+        state: "{{ states('sensor.goodwe_active_power_l1') | float * 3 if is_number(states('sensor.goodwe_active_power_l1')) else none }}"
       - default_entity_id: sensor.fve_pretok_l2
         name: "FVE Přetok L2"
         unit_of_measurement: "W"
         device_class: power
         availability: "{{ is_number(states('sensor.goodwe_active_power_l2')) }}"
-        state: "{{ states('sensor.goodwe_active_power_l2') | float(none) }}"
+        state: "{{ states('sensor.goodwe_active_power_l2') | float * 3 if is_number(states('sensor.goodwe_active_power_l2')) else none }}"
       - default_entity_id: sensor.fve_pretok_l3
         name: "FVE Přetok L3"
         unit_of_measurement: "W"
         device_class: power
         availability: "{{ is_number(states('sensor.goodwe_active_power_l3')) }}"
-        state: "{{ states('sensor.goodwe_active_power_l3') | float(none) }}"
+        state: "{{ states('sensor.goodwe_active_power_l3') | float * 3 if is_number(states('sensor.goodwe_active_power_l3')) else none }}"
       - default_entity_id: sensor.fve_auto_prikon_l1
         name: "FVE Auto Příkon L1"
         unit_of_measurement: "W"
