@@ -1,3 +1,16 @@
+# Stejný balíček se synchronizuje na všechny instance. Bez initial si helpery
+# obnoví místní hodnoty; nová instance začíná s vypnutým řízením a neověřeným
+# zapojením. Místní zdroje měření definují template senzory v configuration.yaml.
+input_select:
+  fve_auto_rezim:
+    # Režim označuje způsob nabíjení, aby společný balíček nezávisel na názvu místa.
+    name: "FVE Auto Režim"
+    options: ["vypnuto", "fixni", "adaptivni"]
+  fve_auto_mapovani_fazi:
+    name: "FVE Auto Mapování fází"
+    # Číslice udávají fáze měřiče přípojky v pořadí L1/L2/L3 wallboxu.
+    # Např. 2-1-3 znamená, že jednofázové go-e nabíjí na fázi 2 přípojky.
+    options: ["neovereno", "1-2-3", "1-3-2", "2-1-3", "2-3-1", "3-1-2", "3-2-1"]
 input_number:
   fve_denni_spotreba_prumerna_vsedni:
     name: "FVE Denní spotřeba průměrná všední dny"
@@ -132,6 +145,120 @@ sensor:
     max_age:
       minutes: 20
 template:
+  # Doporučený výkon je oddělený od povolení nabíjení: hledá nejvyšší výkon
+  # pod cenovým limitem i při stojícím autě. Čisté FVE cenu nepotřebuje.
+  # Zatím neovládá žádné zařízení.
+  # Společné vstupy definuje každá instance v configuration.yaml: přetok
+  # přípojky je kladný do sítě, záporný při odběru; příkon auta je nezáporný.
+  # Vše je ve W. Režim určuje jen nabíjecí varianty, nikoli zdroje měření.
+  - trigger:
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        seconds: "/10"
+    action:
+      - variables:
+          fve_auto_varianta: >-
+            {% set rezim = states('input_select.fve_auto_rezim') %}
+            {% set mapovani = states('input_select.fve_auto_mapovani_fazi') %}
+            {% set cena = states('sensor.current_spot_electricity_price') | float(none) %}
+            {% set limit = states('sensor.spot_cena_limit_auto') | float(none) %}
+            {% set ceny_platne = is_number(cena) and is_number(limit) %}
+            {% set ns = namespace(platne=rezim in ['fixni', 'adaptivni']
+                and mapovani in ['1-2-3', '1-3-2', '2-1-3', '2-3-1', '3-1-2', '3-2-1'], dostupne=[],
+                vykon=0, proud=0, faze=0, cena=none, podil_site=none) %}
+            {% for i in range(1, 4) if ns.platne %}
+              {% set faze_site = mapovani.split('-')[i - 1] %}
+              {% set pretok = states('sensor.fve_pretok_l' ~ faze_site) | float(none) %}
+              {% set auto = states('sensor.fve_auto_prikon_l' ~ i) | float(none) %}
+              {% if is_number(pretok) and is_number(auto) and auto >= 0 %}
+                {# Přičtením skutečného příkonu odstraníme vlastní odběr auta.
+                   Záporný zbytek je spotřeba domu, nikoli další náklad auta. #}
+                {% set ns.dostupne = ns.dostupne + [[pretok + auto, 0] | max] %}
+              {% else %}
+                {% set ns.platne = false %}
+              {% endif %}
+            {% endfor %}
+            {% if ns.platne %}
+              {% for faze in ([3] if rezim == 'fixni' else [1, 3]) %}
+                {% for proud in ([16] if rezim == 'fixni' else range(6, 17)) %}
+                  {% set varianta = namespace(sit=0) %}
+                  {% for i in range(faze) %}
+                    {# Každá fáze dokupuje samostatně; export jiné fáze ji nekryje.
+                       230 V je jmenovitý odhad budoucího příkonu, nikoli měření. #}
+                    {% set varianta.sit = varianta.sit
+                        + [230 * proud - ns.dostupne[i], 0] | max %}
+                  {% endfor %}
+                  {% set vykon = faze * 230 * proud %}
+                  {% set podil = varianta.sit / vykon %}
+                  {# Nulový dokup je ověřený měřením na všech použitých fázích.
+                     Čisté FVE proto smí nabíjet i bez ceny nebo limitu a bez
+                     časového omezení. Chybějící měření tento závěr neumožňuje. #}
+                  {% set cena_varianty = 0 if varianta.sit == 0
+                      else cena * podil if ceny_platne else none %}
+                  {% if (varianta.sit == 0 or (ceny_platne and cena_varianty < limit))
+                        and vykon > ns.vykon %}
+                    {% set ns.vykon = vykon %}
+                    {% set ns.proud = proud %}
+                    {% set ns.faze = faze %}
+                    {% set ns.cena = cena_varianty %}
+                    {% set ns.podil_site = podil %}
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            {% endif %}
+            {{ dict(platne=ns.platne, vykon=ns.vykon, proud=ns.proud,
+                    faze=ns.faze, cena=ns.cena, podil_site=ns.podil_site) }}
+    sensor:
+      - name: "FVE Auto Výkon doporučený"
+        default_entity_id: sensor.fve_auto_vykon_doporuceny
+        unit_of_measurement: "W"
+        device_class: power
+        # Nedostupná měření nejsou nulová cena. Platných 0 W znamená, že
+        # nevyhovuje žádná varianta (bez ceny připadají v úvahu jen čisté přebytky).
+        # Dvacetiminutové minimum bude řešit navazující povolení nabíjení.
+        availability: "{{ fve_auto_varianta.platne }}"
+        state: "{{ fve_auto_varianta.vykon }}"
+        attributes:
+          proud: "{{ fve_auto_varianta.proud }}"
+          faze: "{{ fve_auto_varianta.faze }}"
+          cena: "{{ fve_auto_varianta.cena }}"
+          podil_site: "{{ fve_auto_varianta.podil_site }}"
+      # Proud i fáze se smí změnit až po celé minutě stejného návrhu.
+      # Sledujeme dvojici fáze/proud, nikoli proměnlivou cenu či výkon měření.
+      # Cílové nastavení je potvrzené doporučení, nikoli skutečný stav wallboxu.
+      # Samo nic nespíná a neobnovuje minimum délky nabíjení.
+      - name: "FVE Auto Nastavení cílové"
+        default_entity_id: sensor.fve_auto_nastaveni_cilove
+        availability: "{{ fve_auto_varianta.platne }}"
+        state: >-
+          {% set navrh = fve_auto_varianta.faze ~ '/' ~ fve_auto_varianta.proud %}
+          {% set zacatek = this.attributes.get('navrh_od', none) | float(none) %}
+          {% if trigger.platform == 'homeassistant' or not fve_auto_varianta.platne %}
+            0/0
+          {% elif this.state not in ['unknown', 'unavailable']
+                  and this.attributes.get('navrh') == navrh and zacatek is not none
+                  and as_timestamp(now()) - zacatek >= 60 %}
+            {{ navrh }}
+          {% elif this.state not in ['unknown', 'unavailable'] %}
+            {{ this.state }}
+          {% else %}
+            0/0
+          {% endif %}
+        attributes:
+          navrh: >-
+            {{ (fve_auto_varianta.faze ~ '/' ~ fve_auto_varianta.proud)
+                if fve_auto_varianta.platne else none }}
+          # Po restartu nebo výpadku začíná potvrzování znovu; obnovený stav
+          # nesmí přeskočit minutu ověření aktuálních podmínek.
+          navrh_od: >-
+            {% set navrh = fve_auto_varianta.faze ~ '/' ~ fve_auto_varianta.proud %}
+            {% set zacatek = this.attributes.get('navrh_od', none) | float(none) %}
+            {{ zacatek if fve_auto_varianta.platne
+                and trigger.platform != 'homeassistant'
+                and this.state not in ['unknown', 'unavailable']
+                and this.attributes.get('navrh') == navrh and zacatek is not none
+                else as_timestamp(now()) }}
   - sensor:
       # Migrace starších šablon zachovává ID, názvy, jednotky a výpočty;
       # podmínky dostupnosti a ochranné limity zůstávají beze změny.

@@ -479,6 +479,49 @@ sensor:
     method: left
 
 template:
+  # Místní adaptér EVANS: společný fve.yaml zná pouze tyto normalizované vstupy.
+  # Přetok patří celé domácnosti, proto má prefix fve_, nikoli fve_auto_.
+  # Přetok L1–L3 je v pořadí přípojky: GoodWe má export kladný a odběr záporný.
+  # Při výměně měřiče se mění jen zdroje zde; případná změna znaménka také zde.
+  # Příkon L1–L3 je v pořadí wallboxu. Pro relé se zde použije měření Shelly.
+  # Nedostupné měření nesmí vytvořit falešný nulový odběr nebo přebytek.
+  - sensor:
+      - default_entity_id: sensor.fve_pretok_l1
+        name: "FVE Přetok L1"
+        unit_of_measurement: "W"
+        device_class: power
+        availability: "{{ is_number(states('sensor.goodwe_active_power_l1')) }}"
+        state: "{{ states('sensor.goodwe_active_power_l1') | float(none) }}"
+      - default_entity_id: sensor.fve_pretok_l2
+        name: "FVE Přetok L2"
+        unit_of_measurement: "W"
+        device_class: power
+        availability: "{{ is_number(states('sensor.goodwe_active_power_l2')) }}"
+        state: "{{ states('sensor.goodwe_active_power_l2') | float(none) }}"
+      - default_entity_id: sensor.fve_pretok_l3
+        name: "FVE Přetok L3"
+        unit_of_measurement: "W"
+        device_class: power
+        availability: "{{ is_number(states('sensor.goodwe_active_power_l3')) }}"
+        state: "{{ states('sensor.goodwe_active_power_l3') | float(none) }}"
+      - default_entity_id: sensor.fve_auto_prikon_l1
+        name: "FVE Auto Příkon L1"
+        unit_of_measurement: "W"
+        device_class: power
+        availability: "{{ is_number(states('sensor.wallbox_power_l1')) }}"
+        state: "{{ states('sensor.wallbox_power_l1') | float(none) }}"
+      - default_entity_id: sensor.fve_auto_prikon_l2
+        name: "FVE Auto Příkon L2"
+        unit_of_measurement: "W"
+        device_class: power
+        availability: "{{ is_number(states('sensor.wallbox_power_l2')) }}"
+        state: "{{ states('sensor.wallbox_power_l2') | float(none) }}"
+      - default_entity_id: sensor.fve_auto_prikon_l3
+        name: "FVE Auto Příkon L3"
+        unit_of_measurement: "W"
+        device_class: power
+        availability: "{{ is_number(states('sensor.wallbox_power_l3')) }}"
+        state: "{{ states('sensor.wallbox_power_l3') | float(none) }}"
   - sensor:
       # Migrace starších šablon zachovává ID, názvy, jednotky a výpočty;
       # podmínky dostupnosti a ochranné limity zůstávají beze změny.

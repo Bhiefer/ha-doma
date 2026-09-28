@@ -1,10 +1,12 @@
 """Regrese parseru a doložených podmínek vybíjení baterie."""
 
+import ast
 import importlib.util
 import itertools
 import math
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -220,6 +222,247 @@ class TemplateMigrationTests(unittest.TestCase):
             with self.subTest(soc=soc, capacity=capacity):
                 self.assertEqual(self.render("sensor.fve_baterie_nabito", "availability", **context), available)
                 self.assertEqual(self.render("sensor.fve_baterie_nabito", **context), energy)
+
+
+class CarChargingProposalTests(unittest.TestCase):
+    """Výpočet z reálné YAML šablony, bez volání služeb nebo změn zařízení."""
+
+    @classmethod
+    def setUpClass(cls):
+        package = check.load_yaml(ROOT / "fve" / "fve.yaml")
+        block = next(b for b in package["template"]
+                     if any(s.get("default_entity_id") == "sensor.fve_auto_vykon_doporuceny"
+                            for s in b.get("sensor", [])))
+        cls.template = jinja2.Environment(undefined=jinja2.StrictUndefined).from_string(
+            block["action"][0]["variables"]["fve_auto_varianta"])
+
+    def proposal(self, mode="adaptivni", grid=(0, 0, 0), car=(0, 0, 0),
+                 price=3, limit=0.6, overrides=None):
+        states = {"input_select.fve_auto_rezim": mode,
+                  "input_select.fve_auto_mapovani_fazi": "1-2-3",
+                  "sensor.current_spot_electricity_price": price,
+                  "sensor.spot_cena_limit_auto": limit}
+        for i, (export, power) in enumerate(zip(grid, car), 1):
+            states[f"sensor.fve_pretok_l{i}"] = export
+            states[f"sensor.fve_auto_prikon_l{i}"] = power
+        states.update(overrides or {})
+
+        def is_number(value):
+            try:
+                return math.isfinite(float(value))
+            except (ValueError, TypeError):
+                return False
+
+        return ast.literal_eval(self.template.render(
+            states=lambda entity: str(states.get(entity, "unknown")),
+            is_number=is_number).strip())
+
+    def test_six_ampere_from_five_solar_and_one_grid(self):
+        result = self.proposal(grid=(1150, 0, 0))
+        self.assertEqual((result["faze"], result["proud"], result["vykon"]), (1, 6, 1380))
+        self.assertAlmostEqual(result["cena"], 0.5)
+
+    def test_highest_power_not_lowest_price_or_highest_current(self):
+        # 1 x 16 A je zdarma, ale 3 x 6 A má vyšší výkon a ještě vyhoví limitu.
+        result = self.proposal(grid=(3680, 1000, 1000))
+        self.assertEqual((result["faze"], result["proud"]), (3, 6))
+
+    def test_full_power_when_grid_price_below_limit(self):
+        for mode in ("fixni", "adaptivni"):
+            with self.subTest(mode=mode):
+                result = self.proposal(mode=mode, price=0.5)
+                self.assertEqual(result["vykon"], 11040)
+                self.assertEqual(result["podil_site"], 1)
+
+    def test_equal_limit_does_not_allow_charging(self):
+        result = self.proposal(grid=(1150, 0, 0), limit=0.5)
+        self.assertTrue(result["platne"])
+        self.assertEqual(result["vykon"], 0)
+        self.assertIsNone(result["cena"])
+
+    def test_other_phase_export_cannot_supply_single_phase(self):
+        result = self.proposal(grid=(0, 0, 11040))
+        self.assertEqual(result["vykon"], 0)
+
+    def test_fixed_has_only_three_phase_sixteen_ampere(self):
+        result = self.proposal(mode="fixni", grid=(1150, 0, 0))
+        self.assertEqual(result["vykon"], 0)
+        result = self.proposal(mode="fixni", grid=(3680, 3680, 3680))
+        self.assertEqual((result["faze"], result["proud"]), (3, 16))
+
+    def test_measured_car_load_is_added_back_on_each_phase(self):
+        before = self.proposal(grid=(2000, 1700, 1300))
+        during = self.proposal(grid=(-1000, -300, 300), car=(3000, 2000, 1000))
+        self.assertEqual(before, during)
+
+    def test_house_import_is_not_charged_to_car(self):
+        result = self.proposal(grid=(-5000, -2000, -1000), price=0.5)
+        self.assertEqual(result["podil_site"], 1)
+        self.assertEqual(result["cena"], 0.5)
+
+    def test_zero_and_negative_spot_are_valid(self):
+        for price in (0, -2):
+            with self.subTest(price=price):
+                result = self.proposal(price=price)
+                self.assertTrue(result["platne"])
+                self.assertEqual(result["vykon"], 11040)
+
+    def test_missing_and_nonfinite_measurements_are_not_surplus(self):
+        inputs = [f"sensor.{kind}{i}"
+                  for kind in ("fve_pretok_l", "fve_auto_prikon_l") for i in range(1, 4)]
+        for entity, value in itertools.product(inputs, ("unknown", "unavailable", "nan", "inf", "-inf")):
+            with self.subTest(entity=entity, value=value):
+                result = self.proposal(grid=(11040, 11040, 11040),
+                                       price="unavailable", overrides={entity: value})
+                self.assertFalse(result["platne"])
+                self.assertEqual(result["vykon"], 0)
+
+    def test_missing_price_or_limit_allows_only_measured_surplus(self):
+        # Výpadek ceny nemění skutečně změřené přebytky na neplatná data,
+        # ale nesmí povolit ani malý dokup. Platí pro obě instalace.
+        for mode, entity, value in itertools.product(
+                ("fixni", "adaptivni"),
+                ("sensor.current_spot_electricity_price", "sensor.spot_cena_limit_auto"),
+                ("unknown", "unavailable", "nan", "inf", "-inf")):
+            with self.subTest(mode=mode, entity=entity, value=value):
+                result = self.proposal(mode=mode, overrides={entity: value})
+                self.assertTrue(result["platne"])
+                self.assertEqual(result["vykon"], 0)
+                self.assertIsNone(result["cena"])
+                result = self.proposal(mode=mode, grid=(3680, 3680, 3680),
+                                       overrides={entity: value})
+                self.assertEqual(result["vykon"], 11040)
+                self.assertEqual(result["cena"], 0)
+                self.assertEqual(result["podil_site"], 0)
+
+    def test_solar_without_price_selects_highest_fully_covered_power(self):
+        result = self.proposal(grid=(3680, 1380, 1380), price="unavailable")
+        self.assertEqual((result["faze"], result["proud"]), (3, 6))
+        self.assertEqual(result["podil_site"], 0)
+        result = self.proposal(grid=(1380, 0, 0), price="unavailable")
+        self.assertEqual((result["faze"], result["proud"]), (1, 6))
+        self.assertEqual(self.proposal(grid=(1379, 0, 0), price="unavailable")["vykon"], 0)
+
+    def test_solar_does_not_need_positive_limit_or_price(self):
+        result = self.proposal(grid=(3680, 3680, 3680), price="unavailable", limit="unknown")
+        self.assertEqual(result["vykon"], 11040)
+        result = self.proposal(grid=(3680, 3680, 3680), price=10, limit=0)
+        self.assertEqual(result["vykon"], 11040)
+
+    def test_negative_car_consumption_is_invalid(self):
+        self.assertFalse(self.proposal(car=(-1, 0, 0))["platne"])
+
+    def test_instance_without_car_is_not_enabled(self):
+        for mode in ("off", "unknown", "unavailable", ""):
+            with self.subTest(mode=mode):
+                self.assertFalse(self.proposal(mode=mode)["platne"])
+
+    def test_phase_mapping_uses_normalized_grid_order(self):
+        # Wallbox L1 je na fázi 2 přípojky; zdroj měření nezávisí na režimu.
+        result = self.proposal(price="unavailable", overrides={
+            "input_select.fve_auto_mapovani_fazi": "2-1-3",
+            "sensor.fve_pretok_l2": 1380,
+        })
+        self.assertEqual((result["faze"], result["proud"]), (1, 6))
+
+    def test_unverified_mapping_blocks_proposal(self):
+        for value in ("neovereno", "1-1-3"):
+            with self.subTest(value=value):
+                self.assertFalse(self.proposal(overrides={
+                    "input_select.fve_auto_mapovani_fazi": value})["platne"])
+
+    def test_local_adapter_preserves_measurements_and_unavailability(self):
+        # Lokální aliasy musí zachovat znaménko i odmítnout výpadek měřiče.
+        config = check.load_yaml(ROOT / "configuration.yaml")
+        env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+        for kind, source in (("fve_pretok", "goodwe_active_power_l"),
+                             ("fve_auto_prikon", "wallbox_power_l")):
+            for i in range(1, 4):
+                sensor = next(s for b in config["template"] for s in b.get("sensor", [])
+                              if s.get("default_entity_id") == f"sensor.{kind}_l{i}")
+                for value in ("-500", "0", "1380", "unknown", "unavailable", "nan", "inf"):
+                    def states(entity):
+                        self.assertEqual(entity, f"sensor.{source}{i}")
+                        return value
+                    def is_number(v):
+                        try:
+                            return math.isfinite(float(v))
+                        except (ValueError, TypeError):
+                            return False
+                    valid = env.from_string(sensor["availability"]).render(
+                        states=states, is_number=is_number)
+                    self.assertEqual(valid, str(is_number(value)))
+                    if is_number(value):
+                        self.assertEqual(float(env.from_string(sensor["state"]).render(
+                            states=states)), float(value))
+
+    def test_local_helpers_do_not_reset_on_restart(self):
+        # Po synchronizaci souboru se nesmí místní hodnoty režimu nabíjení přepsat initial.
+        package = check.load_yaml(ROOT / "fve" / "fve.yaml")
+        self.assertEqual(package["input_select"]["fve_auto_rezim"]["options"][0], "vypnuto")
+        for domain in ("input_select", "input_text"):
+            for name, config in package.get(domain, {}).items():
+                if name.startswith("fve_auto_"):
+                    self.assertNotIn("initial", config)
+
+
+class CarChargingStabilityTests(unittest.TestCase):
+    """Minutové potvrzení vyhodnocujeme skutečnými šablonami s řízeným časem."""
+
+    @classmethod
+    def setUpClass(cls):
+        package = check.load_yaml(ROOT / "fve" / "fve.yaml")
+        cls.sensor = next(s for b in package["template"] for s in b.get("sensor", [])
+                          if s.get("default_entity_id") == "sensor.fve_auto_nastaveni_cilove")
+        cls.env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+
+    def step(self, previous, time, phases=3, amps=16, valid=True, startup=False):
+        context = dict(this=previous, now=lambda: time, as_timestamp=lambda value: value,
+                       trigger=SimpleNamespace(platform="homeassistant" if startup else "time_pattern"),
+                       fve_auto_varianta=SimpleNamespace(faze=phases, proud=amps, platne=valid))
+        render = lambda text: self.env.from_string(text).render(**context).strip()
+        # HA při nedostupnosti nepoužije číselný/stavový výsledek šablony.
+        state = render(self.sensor["state"]) if valid else "unavailable"
+        attributes = {key: ast.literal_eval(render(text)) if key == "navrh_od"
+                      else render(text) for key, text in self.sensor["attributes"].items()}
+        return SimpleNamespace(state=state, attributes=attributes)
+
+    def test_exact_minute_then_change_does_not_apply_immediately(self):
+        current = self.step(SimpleNamespace(state="unknown", attributes={}), 0)
+        self.assertEqual(current.state, "0/0")
+        current = self.step(current, 59)
+        self.assertEqual(current.state, "0/0")
+        current = self.step(current, 60)
+        self.assertEqual(current.state, "3/16")
+        current = self.step(current, 70, phases=1, amps=6)
+        self.assertEqual(current.state, "3/16")
+        current = self.step(current, 129, phases=1, amps=6)
+        self.assertEqual(current.state, "3/16")
+        current = self.step(current, 130, phases=1, amps=6)
+        self.assertEqual(current.state, "1/6")
+
+    def test_changing_proposal_restarts_confirmation(self):
+        current = self.step(SimpleNamespace(state="0/0", attributes={}), 0)
+        current = self.step(current, 50, amps=15)
+        current = self.step(current, 60)
+        current = self.step(current, 110)
+        self.assertEqual(current.state, "0/0")
+        self.assertEqual(self.step(current, 120).state, "3/16")
+
+    def test_restart_and_recovery_do_not_reuse_old_confirmation(self):
+        previous = SimpleNamespace(state="3/16", attributes={"navrh": "3/16", "navrh_od": 0})
+        current = self.step(previous, 1000, startup=True)
+        self.assertEqual(current.state, "0/0")
+        self.assertEqual(current.attributes["navrh_od"], 1000)
+        current = self.step(current, 1060)
+        current = self.step(current, 1070, valid=False)
+        self.assertEqual(current.state, "unavailable")
+        # I kdyby HA při unavailable ponechal staré atributy, musí čekat znovu.
+        current.attributes = previous.attributes
+        current = self.step(current, 2000)
+        self.assertEqual(current.state, "0/0")
+        self.assertEqual(self.step(current, 2059).state, "0/0")
+        self.assertEqual(self.step(current, 2060).state, "3/16")
 
 
 if __name__ == "__main__":
