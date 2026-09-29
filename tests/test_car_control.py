@@ -223,8 +223,8 @@ class CarControlTests(unittest.TestCase):
             if self.numeric(value):
                 self.assertEqual(self.render(number['state']), float(value))
 
-    def test_temporary_goodwe_scale_preserves_sign_and_rejects_missing_data(self):
-        # Odhad celé FVE násobí jen přetok; skutečný příkon auta zůstává měřený.
+    def test_goodwe_unscaled_preserves_sign_and_rejects_missing_data(self):
+        # Po zrušení ×3 se přetok ani příkon auta nenásobí; výpadek není nula.
         sensors = {s.get('default_entity_id'): s for b in self.config['template']
                    for s in b.get('sensor', [])}
         for phase in range(1, 4):
@@ -234,7 +234,7 @@ class CarControlTests(unittest.TestCase):
                 with self.subTest(phase=phase, value=value):
                     self.states[f'sensor.goodwe_active_power_l{phase}'] = value
                     self.assertEqual(self.render(grid['availability']), self.numeric(value))
-                    expected = float(value) * 3 if self.numeric(value) else None
+                    expected = float(value) if self.numeric(value) else None
                     self.assertEqual(self.render(grid['state']), expected)
             self.states[f'sensor.wallbox_power_l{phase}'] = '1380'
             self.assertEqual(self.render(car['state']), 1380)

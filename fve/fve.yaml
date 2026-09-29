@@ -795,7 +795,7 @@ recorder:
       - sensor.goodwe_*
   include:
     entities:
-      # Výjimka z goodwe_* pro porovnání surových přetoků s místním odhadem ×3.
+      # Výjimka z goodwe_* pro kontrolu zdrojových přetoků i po zrušení odhadu ×3.
       # Normalizované fve_pretok_*, fve_auto_* i ceny spot_* současné filtry
       # nevylučují: jejich stavy, atributy a průběh řízení se již ukládají.
       - sensor.goodwe_active_power_l1

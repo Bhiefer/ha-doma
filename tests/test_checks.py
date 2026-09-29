@@ -392,7 +392,7 @@ class CarChargingProposalTests(unittest.TestCase):
                     "input_select.fve_auto_mapovani_fazi": value})["platne"])
 
     def test_local_adapter_preserves_measurements_and_unavailability(self):
-        # Dočasný odhad GoodWe je ×3; příkon auta a znaménko se zachovávají.
+        # Po zrušení odhadu ×3 přebíráme oba zdroje beze změny znaménka i hodnoty.
         config = check.load_yaml(ROOT / "configuration.yaml")
         env = jinja2.Environment(undefined=jinja2.StrictUndefined)
         for kind, source in (("fve_pretok", "goodwe_active_power_l"),
@@ -415,7 +415,7 @@ class CarChargingProposalTests(unittest.TestCase):
                     if is_number(value):
                         self.assertEqual(float(env.from_string(sensor["state"]).render(
                             states=states, is_number=is_number)),
-                            float(value) * (3 if kind == "fve_pretok" else 1))
+                            float(value))
 
     def test_local_helpers_do_not_reset_on_restart(self):
         # Po synchronizaci souboru se nesmí místní hodnoty režimu nabíjení přepsat initial.
