@@ -28,6 +28,7 @@ class CarControlTests(unittest.TestCase):
             'binary_sensor.fve_auto_nabijeni': 'off',
             'input_boolean.fve_auto_relace_zahajena': 'off',
             'timer.fve_auto_minimum': 'idle',
+            'timer.fve_auto_start': 'idle',
             **{f'sensor.fve_auto_prikon_l{i}': '0' for i in range(1, 4)},
         }
         self.attrs = {('number.fve_auto_proud', 'max'): 16}
@@ -105,7 +106,7 @@ class CarControlTests(unittest.TestCase):
     def test_adaptive_configures_before_start_using_only_adapters(self):
         self.run_automation('fve_auto_rizeni')
         self.assertEqual([c[0] for c in self.calls],
-                         ['switch.turn_off', 'number.set_value', 'select.select_option', 'switch.turn_on'])
+                         ['switch.turn_off', 'number.set_value', 'select.select_option', 'timer.start', 'switch.turn_on'])
         self.assertTrue(all('.fve_auto_' in c[1] for c in self.calls))
 
     def test_fixed_only_switches_and_needs_no_adjustable_entities(self):
@@ -113,7 +114,8 @@ class CarControlTests(unittest.TestCase):
         self.states.pop('number.fve_auto_proud')
         self.states.pop('select.fve_auto_faze')
         self.run_automation('fve_auto_rizeni')
-        self.assertEqual(self.calls, [('switch.turn_on', 'switch.fve_auto_nabijeni', {})])
+        self.assertEqual(self.calls, [('timer.start', 'timer.fve_auto_start', {}),
+                                     ('switch.turn_on', 'switch.fve_auto_nabijeni', {})])
 
     def test_unconfirmed_stop_prevents_phase_change(self):
         for value in ('1380', 'unavailable'):
@@ -167,12 +169,80 @@ class CarControlTests(unittest.TestCase):
         self.assertEqual(self.package['timer']['fve_auto_minimum']['duration'], '00:20:00')
         self.assertTrue(self.package['timer']['fve_auto_minimum']['restore'])
 
-    def test_permission_loss_cancels_minimum(self):
+    def test_reload_preserves_original_minimum_but_controller_stops(self):
+        # Reload nesmí dát nové minimum; chybějící povolení přesto vypne výstup.
         self.states.update({'timer.fve_auto_minimum': 'active',
                             'input_boolean.fve_auto_relace_zahajena': 'on',
-                            'binary_sensor.spot_podprumerna_cena_auto': 'off'})
+                            'binary_sensor.spot_podprumerna_cena_auto': 'off',
+                            'switch.fve_auto_nabijeni': 'on'})
         self.run_automation('fve_auto_minimum')
-        self.assertEqual([c[0] for c in self.calls], ['timer.cancel', 'input_boolean.turn_off'])
+        self.assertEqual(self.calls, [])
+        self.run_automation('fve_auto_rizeni')
+        self.assertEqual(self.states['switch.fve_auto_nabijeni'], 'off')
+        self.assertEqual(self.states['timer.fve_auto_minimum'], 'active')
+        self.states['binary_sensor.spot_podprumerna_cena_auto'] = 'on'
+        self.states['binary_sensor.fve_auto_nabijeni'] = 'on'
+        self.states['switch.fve_auto_nabijeni'] = 'on'
+        self.run_automation('fve_auto_minimum')
+        self.assertFalse(any(c[0] == 'timer.start' for c in self.calls))
+        self.states['timer.fve_auto_minimum'] = 'idle'
+        self.states['binary_sensor.spot_podprumerna_cena_auto'] = 'off'
+        self.run_automation('fve_auto_minimum')
+        self.assertEqual(self.states['input_boolean.fve_auto_relace_zahajena'], 'off')
+
+    def test_disabled_mode_or_disconnection_cancels_both_timers(self):
+        # Výslovné vypnutí a doložené odpojení mají přednost před oběma ochranami.
+        for disconnected in (False, True):
+            with self.subTest(disconnected=disconnected):
+                self.setUp()
+                self.states['timer.fve_auto_start'] = 'active'
+                self.states['timer.fve_auto_minimum'] = 'active'
+                self.states['input_boolean.fve_auto_relace_zahajena'] = 'on'
+                if disconnected:
+                    self.attrs[('binary_sensor.fve_auto_nabijeni', 'relace_ukoncena')] = True
+                else:
+                    self.states['input_select.fve_auto_rezim'] = 'vypnuto'
+                self.run_automation('fve_auto_minimum')
+                self.assertEqual(self.states['timer.fve_auto_start'], 'idle')
+                self.assertEqual(self.states['timer.fve_auto_minimum'], 'idle')
+                self.assertEqual(self.states['input_boolean.fve_auto_relace_zahajena'], 'off')
+
+    def test_price_change_during_start_transfers_protection_without_gap(self):
+        # Regrese 29. 9. 14:03: cena zanikla těsně před potvrzením Charging.
+        gate = next(s for b in self.package['template'] for s in b.get('binary_sensor', [])
+                    if s.get('default_entity_id') == 'binary_sensor.spot_podprumerna_cena_auto')
+        self.assertEqual(gate['delay_on'], '00:01:00')
+        self.assertNotIn('delay_off', gate)
+        self.assertEqual(self.package['timer']['fve_auto_start']['duration'], '00:01:00')
+        self.run_automation('fve_auto_rizeni')
+        self.attrs[('sensor.fve_auto_vykon_doporuceny', 'varianty')] = {'3/16': {'vyhovuje': False}}
+        self.states['sensor.fve_auto_vykon_doporuceny'] = '0'
+        self.assertTrue(self.render(gate['state']))
+        self.states['binary_sensor.fve_auto_nabijeni'] = 'on'
+        self.calls = []
+        self.run_automation('fve_auto_minimum')
+        self.assertEqual([c[:2] for c in self.calls], [
+            ('input_boolean.turn_on', 'input_boolean.fve_auto_relace_zahajena'),
+            ('timer.start', 'timer.fve_auto_minimum'),
+            ('timer.cancel', 'timer.fve_auto_start')])
+        self.assertTrue(self.render(gate['state']))
+
+    def test_unconfirmed_start_expires_and_does_not_hide_missing_measurements(self):
+        gate = next(s for b in self.package['template'] for s in b.get('binary_sensor', [])
+                    if s.get('default_entity_id') == 'binary_sensor.spot_podprumerna_cena_auto')
+        self.attrs[('sensor.fve_auto_vykon_doporuceny', 'varianty')] = {'3/16': {'vyhovuje': False}}
+        self.run_automation('fve_auto_rizeni')
+        self.states['sensor.fve_auto_vykon_doporuceny'] = 'unavailable'
+        self.assertFalse(self.render(gate['state']))
+        self.states['sensor.fve_auto_vykon_doporuceny'] = '0'
+        self.assertTrue(self.render(gate['state']))
+        self.states['timer.fve_auto_start'] = 'idle'  # Vypršela minuta bez odběru.
+        self.assertFalse(self.render(gate['state']))
+        self.states['binary_sensor.spot_podprumerna_cena_auto'] = 'off'
+        self.calls = []
+        self.run_automation('fve_auto_rizeni')
+        self.assertEqual(self.states['switch.fve_auto_nabijeni'], 'off')
+        self.assertFalse(any(c[0] == 'timer.start' for c in self.calls))
 
     def test_price_gate_allows_minimum_but_measurement_loss_always_stops(self):
         gate = next(s for b in self.package['template'] for s in b.get('binary_sensor', [])

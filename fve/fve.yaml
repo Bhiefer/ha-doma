@@ -14,6 +14,11 @@ input_select:
 # Minimum běží od skutečného začátku nabíjení. Obnova timeru zachová původní
 # konec po restartu; příznak zabrání novým 20 minutám při změně fáze.
 timer:
+  # Rozběh chrání před změnou ceny dřív, než wallbox potvrdí skutečný odběr.
+  # Je oddělený od 20minutového minima a bez potvrzení odběru za minutu skončí.
+  fve_auto_start:
+    duration: "00:01:00"
+    restore: true
   fve_auto_minimum:
     duration: "00:20:00"
     restore: true
@@ -555,6 +560,9 @@ template:
         state: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
       - default_entity_id: binary_sensor.spot_podprumerna_cena_auto
         name: spot_podprumerna_cena_auto
+        # Krátké cenové příležitosti nespínají wallbox opakovaně na 20–60 sekund.
+        # Odklad se týká jen zapnutí; ztráta platného měření vypínání nezdržuje.
+        delay_on: "00:01:00"
         # Jediné povolení pro oba druhy wallboxu. Výpadek měření vypíná,
         # samotný výpadek ceny dovolí doběhnout minimum nebo čistou FVE.
         # Po vypršení minima musí aktuální cena potvrzeného cíle opět vyhovět.
@@ -563,7 +571,8 @@ template:
               .get(states('sensor.fve_auto_nastaveni_cilove'), {}) %}
           {{ states('input_select.fve_auto_rezim') in ['fixni', 'adaptivni']
              and is_number(states('sensor.fve_auto_vykon_doporuceny')) and v != {}
-             and (v.get('vyhovuje', false) or is_state('timer.fve_auto_minimum', 'active')) }}
+             and (v.get('vyhovuje', false) or is_state('timer.fve_auto_minimum', 'active')
+                  or is_state('timer.fve_auto_start', 'active')) }}
       - default_entity_id: binary_sensor.spot_nizky_tarif
         name: "Spot Nízký tarif"
         state: >-
@@ -571,7 +580,7 @@ template:
           {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
 automation:
   # Jedna relace má jediné minimum. Pauza pro změnu fáze příznak nesmaže;
-  # konec relace poskytuje místní detekce auta (u fixního nabíjení stačí konec odběru).
+  # ukončí ji odpojení auta, vypnutí režimu nebo zánik povolení po doběhnutí minima.
   - id: fve_auto_minimum
     alias: "FVE - Auto - Minimum nabíjení"
     trigger:
@@ -585,11 +594,20 @@ automation:
     action:
       - choose:
           - conditions: >-
-              {{ not is_state('binary_sensor.spot_podprumerna_cena_auto', 'on')
+              {# Dočasné off/unknown při reloadu nebo výpadku měření nesmaže
+                 původní konec minima. Řadič přesto vypne; návrat dat minimum neobnoví. #}
+              {{ is_state('input_select.fve_auto_rezim', 'vypnuto')
+                 or (is_state('binary_sensor.spot_podprumerna_cena_auto', 'off')
+                     and not is_state('timer.fve_auto_minimum', 'active')
+                     and not is_state('timer.fve_auto_start', 'active'))
                  or (is_state('binary_sensor.fve_auto_nabijeni', 'off') and
-                     (is_state('input_select.fve_auto_rezim', 'fixni') or
-                      state_attr('binary_sensor.fve_auto_nabijeni', 'relace_ukoncena') == true)) }}
+                     state_attr('binary_sensor.fve_auto_nabijeni', 'relace_ukoncena') == true) }}
             sequence:
+              - if: "{{ is_state('timer.fve_auto_start', 'active') }}"
+                then:
+                  - action: timer.cancel
+                    target:
+                      entity_id: timer.fve_auto_start
               - if: "{{ is_state('timer.fve_auto_minimum', 'active') }}"
                 then:
                   - action: timer.cancel
@@ -606,12 +624,19 @@ automation:
                  and is_state('binary_sensor.fve_auto_nabijeni', 'on')
                  and is_state('input_boolean.fve_auto_relace_zahajena', 'off') }}
             sequence:
+              # Nejdřív začne plných 20 minut, potom skončí ochrana rozběhu;
+              # opačné pořadí by při vyšší ceně na okamžik zrušilo povolení.
               - action: input_boolean.turn_on
                 target:
                   entity_id: input_boolean.fve_auto_relace_zahajena
               - action: timer.start
                 target:
                   entity_id: timer.fve_auto_minimum
+              - if: "{{ is_state('timer.fve_auto_start', 'active') }}"
+                then:
+                  - action: timer.cancel
+                    target:
+                      entity_id: timer.fve_auto_start
     mode: single
 
   # Společný řadič nezná fyzické entity. Fixní režim pouze spíná template switch.
@@ -726,6 +751,13 @@ automation:
                  and states('sensor.fve_auto_nastaveni_cilove') == cil }}
           - if: "{{ not is_state('switch.fve_auto_nabijeni', 'on') }}"
             then:
+              # Ochranu spustíme před příkazem, aby změna ceny nepředběhla
+              # potvrzení odběru. Změna fází již zahájené relace ji neobnovuje.
+              - if: "{{ is_state('input_boolean.fve_auto_relace_zahajena', 'off') and not is_state('timer.fve_auto_start', 'active') }}"
+                then:
+                  - action: timer.start
+                    target:
+                      entity_id: timer.fve_auto_start
               - action: switch.turn_on
                 target:
                   entity_id: switch.fve_auto_nabijeni
