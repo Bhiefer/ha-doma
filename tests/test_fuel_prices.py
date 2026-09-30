@@ -25,7 +25,6 @@ class FuelPriceTests(unittest.TestCase):
     def setUpClass(cls):
         cls.rest = check.load_yaml(ROOT / "ceny_paliv_rest.yaml")[0]
         cls.sensors = cls.rest["sensor"][1:]
-        cls.dashboard = check.load_yaml(ROOT / "ceny_paliv_dashboard.yaml")
         cls.env = NativeEnvironment(undefined=StrictUndefined)
         cls.env.globals["is_number"] = lambda value: (
             isinstance(value, (int, float)) and not isinstance(value, bool)
@@ -77,35 +76,25 @@ class FuelPriceTests(unittest.TestCase):
         payload = {"ok": True, "generated_at": "2026-09-09T08:00:00Z", "items": {}}
         self.assertIs(self.render(sensor, "availability", payload), True)
 
-    def test_wiring_and_dashboard_actions(self):
+    def test_sensor_wiring(self):
+        # Dashboard je od změny v main spravovaný v UI, není součástí repozitáře.
         config = check.load_yaml(ROOT / "configuration.yaml")
         self.assertEqual(config["rest"], check.Reference("!include", "ceny_paliv_rest.yaml"))
-        self.assertEqual(config["lovelace"]["dashboards"]["ceny-paliv"]["filename"],
-                         "ceny_paliv_dashboard.yaml")
+        self.assertEqual(config["lovelace"]["mode"], "storage")
         self.assertEqual(self.rest["resource"], check.Reference("!secret", "fuel_prices_api_url"))
         self.assertEqual(self.rest["scan_interval"], 21600)
-        cards = [card for view in self.dashboard["views"] for card in view["cards"]
-                 if card["type"] == "custom:bubble-card"]
-        self.assertEqual(len(cards), 16)
         self.assertEqual({s["unique_id"].removeprefix("ceny_paliv_")
                           for s in self.sensors}, SOURCE_KEYS)
-        self.assertEqual({card["entity"] for card in cards},
-                         {"sensor." + sensor["unique_id"] for sensor in self.sensors})
         self.assertEqual(len({s["unique_id"] for s in self.rest["sensor"]}), 17)
-        for card in cards:
-            for action in (card["tap_action"], card["button_action"]["tap_action"],
-                           *[sub["tap_action"] for sub in card["sub_button"]]):
-                self.assertEqual(action, {"action": "more-info"})
 
-    def test_actual_exporter_and_dashboard_javascript(self):
+    def test_actual_exporter_javascript(self):
         # Node vykonává skutečný zdroj; Google služby jsou pouze místní náhrady.
         node = shutil.which("node")
         self.assertIsNotNone(node, "Pro test exportéru je potřeba Node.js 18+ v PATH.")
         keys = [sensor["unique_id"].removeprefix("ceny_paliv_") for sensor in self.sensors]
-        styles = self.dashboard["views"][0]["cards"][1]["styles"]
         result = subprocess.run(
             [node, str(ROOT / "tests" / "test_fuel_prices_api.cjs")],
-            input=json.dumps({"keys": keys, "styles": styles}),
+            input=json.dumps({"keys": keys}),
             text=True, capture_output=True, cwd=ROOT, encoding="utf-8", timeout=20,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

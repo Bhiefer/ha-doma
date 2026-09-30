@@ -322,7 +322,6 @@
   - if:
     - condition: state
       entity_id: select.goodwe_inverter_operation_mode
-      # Porovnávat interní stav GoodWe, nikoli zobrazovaný název režimu.
       state: eco_charge
     - condition: numeric_state
       entity_id: sensor.goodwe_battery_power
@@ -476,15 +475,16 @@
     entity_id:
     - binary_sensor.pracovni_doba
     to: 'on'
-  condition: []
-  action:
+  conditions: []
+  actions:
   - type: turn_on
     device_id: bd2f5dd258eb0de0202da3afc85a70cb
     entity_id: light.koberce_svetlo_dvere
     domain: light
-  - action: script.kancelar_pi_zapnout
-    metadata: {}
-    data: {}
+  - type: turn_on
+    device_id: 94d561f5d2c2d4a124d2c940963c9309
+    entity_id: 3499c7d6a875c7afbd53e9c37363c728
+    domain: switch
   mode: single
 - id: '1678818955253'
   alias: Pracovní doba - Stop
@@ -508,33 +508,43 @@
     data: {}
     target:
       entity_id: input_boolean.topeni_pavla
-  - action: script.1713169977678
-    metadata: {}
-    data: {}
   - action: climate.turn_off
     metadata: {}
     data: {}
     target:
       entity_id: climate.zkusebna_termostat_primotop
+  - action: ssh_command.exec_command
+    metadata: {}
+    data:
+      host: 10.0.0.65
+      user: bhiefer
+      private_key: /config/ssh/kancelar_pi_ed25519
+      command: sudo shutdown -h +1
+  - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+  - type: turn_off
+    device_id: 94d561f5d2c2d4a124d2c940963c9309
+    entity_id: 3499c7d6a875c7afbd53e9c37363c728
+    domain: switch
   mode: single
 - id: '1678958657961'
   alias: Topení - Přehřátá voda
   description: Otevře velký okruh při přehřátí a zavře jej až po ochlazení všech čidel.
   triggers:
-  # Běžné spuštění: libovolné čidlo je nad 70 °C alespoň 30 sekund.
   - trigger: numeric_state
     entity_id:
     - sensor.topeni_6
     - sensor.topeni_4
     - sensor.topeni_1
     above: 70
-    for: '00:00:30'
-  # Rozběhnuté čekání nepřežije restart ani reload automatizací.
+    for: 00:00:30
   - trigger: homeassistant
     event: start
   - trigger: event
     event_type: automation_reloaded
-  # Ventil může být při startu nedostupný; po připojení kontrolu zopakujeme.
   - trigger: state
     entity_id: switch.sonoff_kotelna1
     from:
@@ -545,36 +555,23 @@
     - 'off'
   conditions:
   - condition: template
-    value_template: >-
-      {% set t1 = states('sensor.topeni_1') %}
-      {% set t4 = states('sensor.topeni_4') %}
-      {% set t6 = states('sensor.topeni_6') %}
-      {{ is_state('switch.sonoff_kotelna1', 'on')
-         or (is_number(t1) and (t1 | float) > 70)
-         or (is_number(t4) and (t4 | float) > 70)
-         or (is_number(t6) and (t6 | float) > 70) }}
+    value_template: "{% set t1 = states('sensor.topeni_1') %} {% set t4 = states('sensor.topeni_4')
+      %} {% set t6 = states('sensor.topeni_6') %} {{ is_state('switch.sonoff_kotelna1',
+      'on')\n   or (is_number(t1) and (t1 | float) > 70)\n   or (is_number(t4) and
+      (t4 | float) > 70)\n   or (is_number(t6) and (t6 | float) > 70) }}"
   actions:
-  # ON otevře ventil do velkého okruhu. Čerpadlo řídí vlastní čidlo.
   - action: switch.turn_on
     target:
       entity_id: switch.sonoff_kotelna1
-  - wait_template: "{{ is_state('switch.sonoff_kotelna1', 'on') }}"
-  # Minimální doba otevření; po obnovení kontroly se počítá znovu.
-  - delay: '00:10:00'
-  # Bez časového limitu: chybějící měření nesmí povolit zavření ventilu.
-  # Hystereze 70/65 °C brání opakovanému přepínání kolem jedné hranice.
-  - wait_template: >-
-      {% set t1 = states('sensor.topeni_1') %}
-      {% set t4 = states('sensor.topeni_4') %}
-      {% set t6 = states('sensor.topeni_6') %}
-      {{ is_number(t1) and is_number(t4) and is_number(t6)
-         and (t1 | float) < 65
-         and (t4 | float) < 65
-         and (t6 | float) < 65 }}
+  - wait_template: '{{ is_state(''switch.sonoff_kotelna1'', ''on'') }}'
+  - delay: 00:10:00
+  - wait_template: "{% set t1 = states('sensor.topeni_1') %} {% set t4 = states('sensor.topeni_4')
+      %} {% set t6 = states('sensor.topeni_6') %} {{ is_number(t1) and is_number(t4)
+      and is_number(t6)\n   and (t1 | float) < 65\n   and (t4 | float) < 65\n   and
+      (t6 | float) < 65 }}"
   - action: switch.turn_off
     target:
       entity_id: switch.sonoff_kotelna1
-  # Nové triggery během čekání nesmí rušit ani prodlužovat rozběhnutou kontrolu.
   mode: single
   max_exceeded: silent
 - id: '1680526566395'
@@ -611,7 +608,6 @@
     discovery_id: 0x70ac08fffe196cde action_2_double
   condition: []
   action:
-  # Stejný přepínač používá režim topení i dvouhodinový časovač.
   - action: input_boolean.turn_on
     target:
       entity_id: input_boolean.topeni_boost_marek

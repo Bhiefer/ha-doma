@@ -65,21 +65,5 @@ assert.equal(context.numberOrNull_('12,2'), 12.2);
 delete sheets['Válcové HA data'];
 assert.equal(context.doGet({parameter: {token: 'test-only-token'}}).ok, false);
 
-// Pomlčka odlišuje chybějící změnu od skutečné nuly, i při výpadku senzoru.
-function render(state, change) {
-  const elements = [{}, {}];
-  const hass = {states: {test: {state, attributes: {
-    change_10d_per_kg: change, checked_at: '2026-09-09T06:18:00Z'
-  }}}};
-  const card = {querySelector: selector => elements[selector.includes('-1 ') ? 0 : 1]};
-  vm.runInNewContext('result = `' + input.styles + '`', {hass, card, entity: 'test'});
-  return elements;
-}
-assert.equal(render('12.2', null)[0].textContent, '10 dní: —');
-assert.equal(render('12.2', 0)[0].textContent, '10 dní: 0');
-assert.equal(render('12.2', 1.364102)[0].textContent, '10 dní: +1,364');
-assert.equal(render('12.2', -0.5)[0].textContent, '10 dní: -0,5');
-assert.equal(render('unavailable', 0)[0].textContent, '10 dní: —');
-assert.equal(render('unknown', 0)[1].textContent, 'Ověřeno: —');
-assert.match(render('12.2', 0)[1].textContent, /8:18/);
-console.log('Export tří kategorií, ochrana tokenem a zobrazení chybějících dat: OK');
+// Dashboard se spravuje v UI; lokálně ověřujeme jen verzovaný exportér.
+console.log('Export tří kategorií, ochrana tokenem a chybějící data: OK');
