@@ -203,6 +203,61 @@ sensor:
     method: left
     max_sub_interval: "00:01:00"
 template:
+  # Výhled používá všechny známé hodinové ceny v atributech spotového senzoru.
+  # Od aktuální hodiny počítá jen zbývající část; mezery ani další dny nedoplňuje.
+  # Jde o čas POD nynějším limitem, nikoli předpověď přebytků či skutečného odběru.
+  # Sekundy UTC zachovají délku intervalů také při změně letního času.
+  - trigger:
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        minutes: "/1"
+      - platform: state
+        entity_id:
+          - sensor.current_spot_electricity_price
+          - sensor.spot_cena_limit_auto
+    action:
+      - variables:
+          fve_auto_vyhled: >-
+            {% set limit = states('sensor.spot_cena_limit_auto') | float(none) %}
+            {% set ted = as_timestamp(now()) %}
+            {% set ns = namespace(celkem=0, levne=0, konec=none) %}
+            {% set ceny = states.sensor.current_spot_electricity_price.attributes
+                if is_number(states('sensor.current_spot_electricity_price')) else {} %}
+            {% for key, value in ceny.items() %}
+              {% set zacatek = as_timestamp(key, none) %}
+              {% if zacatek is not none and is_number(value) and value is not boolean
+                    and zacatek + 3600 > ted %}
+                {% set trvani = (zacatek + 3600 - [zacatek, ted] | max) / 3600 %}
+                {% set ns.celkem = ns.celkem + trvani %}
+                {% set ns.konec = [ns.konec or 0, zacatek + 3600] | max %}
+                {% if is_number(limit) and value | float < limit %}
+                  {% set ns.levne = ns.levne + trvani %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {{ dict(platne=is_number(limit) and ns.celkem > 0,
+                    procent=100 * ns.levne / ns.celkem if ns.celkem > 0 else none,
+                    hodiny=ns.levne, celkem=ns.celkem,
+                    konec=as_datetime(ns.konec).isoformat() if ns.konec is not none else none) }}
+    sensor:
+      - default_entity_id: sensor.fve_auto_spot_podil
+        unique_id: fve_auto_spot_podil
+        name: "FVE Auto Spot Podíl času"
+        unit_of_measurement: "%"
+        icon: mdi:percent
+        availability: "{{ fve_auto_vyhled.platne }}"
+        state: "{{ fve_auto_vyhled.procent | round(1) if fve_auto_vyhled.platne else none }}"
+        attributes:
+          hodiny_celkem: "{{ fve_auto_vyhled.celkem | round(2) }}"
+          platnost_do: "{{ fve_auto_vyhled.konec }}"
+      - default_entity_id: sensor.fve_auto_spot_hodiny
+        unique_id: fve_auto_spot_hodiny
+        name: "FVE Auto Spot Hodiny pod limitem"
+        unit_of_measurement: "h"
+        device_class: duration
+        availability: "{{ fve_auto_vyhled.platne }}"
+        state: "{{ fve_auto_vyhled.hodiny | round(2) if fve_auto_vyhled.platne else none }}"
   # Doporučený výkon je oddělený od povolení nabíjení: hledá nejvyšší výkon
   # pod cenovým limitem i při stojícím autě. Čisté FVE cenu nepotřebuje.
   # Spínání a regulace níže používají výhradně místní template adaptéry.
@@ -442,7 +497,28 @@ template:
           hodiny: "{{ fve_auto_potencial.hodiny }}"
           odhad_spotreby_domu_w: "{{ fve_auto_potencial.spotreba_domu_w | round(0) }}"
   - sensor:
-      # Migrace starších šablon zachovává ID, názvy, jednotky a výpočty;
+      # Skutečný nabíjecí příkon je součet měření všech tří fází, nikoli
+      # nastavený proud ani doporučený výkon. Chybějící fáze není nula.
+      - default_entity_id: sensor.fve_auto_prikon
+        unique_id: fve_auto_prikon
+        name: "FVE Auto Příkon"
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        availability: >-
+          {{ is_number(states('sensor.fve_auto_prikon_l1'))
+             and is_number(states('sensor.fve_auto_prikon_l2'))
+             and is_number(states('sensor.fve_auto_prikon_l3'))
+             and states('sensor.fve_auto_prikon_l1') | float(-1) >= 0
+             and states('sensor.fve_auto_prikon_l2') | float(-1) >= 0
+             and states('sensor.fve_auto_prikon_l3') | float(-1) >= 0 }}
+        state: >-
+          {% set l1 = states('sensor.fve_auto_prikon_l1') | float(none) %}
+          {% set l2 = states('sensor.fve_auto_prikon_l2') | float(none) %}
+          {% set l3 = states('sensor.fve_auto_prikon_l3') | float(none) %}
+          {{ ((l1 + l2 + l3) / 1000) | round(3)
+             if is_number(l1) and is_number(l2) and is_number(l3) else none }}
+      # Migrace starších šablon zachovává ID, názvy a výpočty;
       # podmínky dostupnosti a ochranné limity zůstávají beze změny.
       - default_entity_id: sensor.fve_car_power_available
         name: "FVE Car Power Available"
@@ -468,7 +544,8 @@ template:
 
       - default_entity_id: sensor.spot_cena_dynamicka_auto
         name: "Spot Dynamická cena elektřiny pro nabíjení auta"
-        unit_of_measurement: "CZK"
+        # Stejná jednotka jako cenový limit: cena energie, nikoli částka za relaci.
+        unit_of_measurement: "Kč/kWh"
         # Chybějící cena není nula; nulová cena je dovolena pouze při čisté FVE.
         availability: >-
           {% set v = (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {})
@@ -563,8 +640,9 @@ template:
 
           {% for key, value in states.sensor.current_spot_electricity_price.attributes.items() %}
             {% if key not in ['unit_of_measurement', 'icon', 'friendly_name'] %}
-              {% set ns.timestamp = as_datetime(key) %}
-              {% if ns.timestamp > ns.current_time %}
+              {# Nová metadata integrace (např. state_class) nejsou datum. #}
+              {% set ns.timestamp = as_datetime(key, none) %}
+              {% if ns.timestamp is not none and ns.timestamp > ns.current_time %}
                 {% if value is number %}
                   {% set ns.total = ns.total + value %}
                   {% set ns.count = ns.count + 1 %}
@@ -781,6 +859,26 @@ template:
       - default_entity_id: binary_sensor.spot_podprumerna_cena_topeni
         name: spot_podprumerna_cena_topeni
         state: "{{ states('sensor.current_spot_electricity_price') | float(0) < states('sensor.spot_cena_limit_topeni') | float(0) }}"
+      # Pro UI a upozornění rozlišujeme cenu od povolení nabíjení:
+      # doběh minima ani rozběhový timer sám o sobě neznamená levnou energii.
+      # Cena vyhovuje, pokud existuje nabíjecí varianta pod limitem (či čistá FVE).
+      # Minuta potvrzení potlačuje stejné krátké příležitosti jako řízení auta.
+      - default_entity_id: binary_sensor.fve_auto_prizniva_cena
+        unique_id: fve_auto_prizniva_cena
+        name: "FVE Auto Příznivá cena"
+        delay_on: "00:01:00"
+        availability: >-
+          {% set ns = namespace(cena=false) %}
+          {% for v in (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {}).values() %}
+            {% if is_number(v.get('cena')) %}{% set ns.cena = true %}{% endif %}
+          {% endfor %}
+          {{ is_number(states('sensor.fve_auto_vykon_doporuceny')) and ns.cena }}
+        state: >-
+          {% set ns = namespace(vyhovuje=false) %}
+          {% for v in (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {}).values() %}
+            {% if v.get('vyhovuje', false) %}{% set ns.vyhovuje = true %}{% endif %}
+          {% endfor %}
+          {{ ns.vyhovuje }}
       - default_entity_id: binary_sensor.spot_podprumerna_cena_auto
         name: spot_podprumerna_cena_auto
         # Krátké cenové příležitosti nespínají wallbox opakovaně na 20–60 sekund.

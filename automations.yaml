@@ -1498,3 +1498,25 @@
     target:
       entity_id: tts.home_assistant_cloud
   mode: single
+
+# Jednou při potvrzeném začátku levného období; připojení i cena musí být
+# známé. Obnova z unknown/unavailable ani odpojení během levného období
+# další zprávu nespouští. Tato automatizace neovládá nabíječku.
+- id: auto_levno_nepripojeno
+  alias: Auto - Levno a auto není připojeno
+  description: Upozorní Marka na začátku levného období, pokud je auto odpojené.
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.fve_auto_prizniva_cena
+      from: "off"
+      to: "on"
+  conditions:
+    - condition: state
+      entity_id: binary_sensor.fve_auto_pripojeno
+      state: "off"
+  actions:
+    - action: notify.mobile_app_marek_mobil
+      data:
+        title: Levné nabíjení auta
+        message: Cena je příznivá pro nabíjení, ale auto není připojené k nabíječce.
+  mode: single

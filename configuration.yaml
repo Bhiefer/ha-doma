@@ -790,6 +790,15 @@ template:
              and is_state('input_boolean.topeni_boost_prace', 'on')
              and is_state('input_boolean.topeni_boost_kino', 'on')
              and is_state('input_boolean.topeni_boost_zkouska', 'on') }}
+      # Připojení pro kartu Auto a upozornění vychází ze stejného místního
+      # wallboxu jako detekce nabíjení. Idle znamená odpojeno; neznámý stav
+      # se nesmí vydávat za odpojené auto a vyvolat upozornění.
+      - default_entity_id: binary_sensor.fve_auto_pripojeno
+        unique_id: fve_auto_pripojeno
+        name: "FVE Auto Připojeno"
+        device_class: plug
+        availability: "{{ states('sensor.wallbox_car_state') in ['Idle', 'Charging', 'WaitCar', 'Complete'] }}"
+        state: "{{ states('sensor.wallbox_car_state') in ['Charging', 'WaitCar', 'Complete'] }}"
       # Skutečné nabíjení odlišujeme od povolení; dvacetiminutové minimum
       # začíná až při stavu Charging. U relé zůstává místní detekce měřením.
       - name: "fve_auto_nabijeni"
