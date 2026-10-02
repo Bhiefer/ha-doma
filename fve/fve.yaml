@@ -11,6 +11,17 @@ input_select:
     # Číslice udávají fáze měřiče přípojky v pořadí L1/L2/L3 wallboxu.
     # Např. 2-1-3 znamená, že jednofázové go-e nabíjí na fázi 2 přípojky.
     options: ["neovereno", "1-2-3", "1-3-2", "2-1-3", "2-3-1", "3-1-2", "3-2-1"]
+  fve_auto_vozidlo:
+    # Ruční volbu může později nastavovat automatická detekce podle připojeného kabelu.
+    # Nezvolené auto ani Kona se neevidují; náklady a energii sledujeme jen
+    # pro Enyaq a Amperu, aby se cizí relace nepřipsala poslednímu vozidlu.
+    name: "FVE Auto Vozidlo"
+    options: ["nezvoleno", "enyaq", "ampera", "kona"]
+input_text:
+  fve_auto_vozidlo_relace:
+    # Vozidlo se při skutečném rozběhu uloží, aby změna volby nerozdělila relaci.
+    name: "FVE Auto Vozidlo relace"
+    max: 20
 # Minimum běží od skutečného začátku nabíjení. Obnova timeru zachová původní
 # konec po restartu; příznak zabrání novým 20 minutám při změně fáze.
 timer:
@@ -158,6 +169,39 @@ sensor:
     keep_last_sample: true
     max_age:
       minutes: 20
+  # Integrály používají skutečný měřený příkon a okamžitý náklad. Metoda left
+  # nepřičítá přechod mezi starou a novou cenou jako plynulou změnu. Minutový
+  # mezikrok průběžně uloží stav i při dlouho stejné hodnotě zdrojového senzoru.
+  - platform: integration
+    source: sensor.fve_auto_prikon_enyaq
+    name: "FVE Auto Energie Enyaq"
+    unit_prefix: k
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval: "00:01:00"
+  - platform: integration
+    source: sensor.fve_auto_naklad_za_hodinu_enyaq
+    name: "FVE Auto Náklady Enyaq"
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval: "00:01:00"
+  - platform: integration
+    source: sensor.fve_auto_prikon_ampera
+    name: "FVE Auto Energie Ampera"
+    unit_prefix: k
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval: "00:01:00"
+  - platform: integration
+    source: sensor.fve_auto_naklad_za_hodinu_ampera
+    name: "FVE Auto Náklady Ampera"
+    unit_time: h
+    round: 3
+    method: left
+    max_sub_interval: "00:01:00"
 template:
   # Doporučený výkon je oddělený od povolení nabíjení: hledá nejvyšší výkon
   # pod cenovým limitem i při stojícím autě. Čisté FVE cenu nepotřebuje.
@@ -332,6 +376,84 @@ template:
         state: >-
           {{ (state_attr('sensor.fve_auto_vykon_doporuceny', 'varianty') or {})
               .get(states('sensor.fve_auto_nastaveni_cilove'), {}).get('cena') }}
+
+      # Skutečný náklad vychází z měřeného příkonu auta. Z toku přípojky nejprve
+      # odstraníme příkon auta stejně jako v řízení a oceníme jen dokup ze sítě.
+      - default_entity_id: sensor.fve_auto_prikon_skutecny
+        name: "FVE Auto Příkon skutečný"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        availability: >-
+          {{ is_number(states('sensor.fve_auto_prikon_l1'))
+             and is_number(states('sensor.fve_auto_prikon_l2'))
+             and is_number(states('sensor.fve_auto_prikon_l3')) }}
+        state: >-
+          {{ (states('sensor.fve_auto_prikon_l1') | float
+              + states('sensor.fve_auto_prikon_l2') | float
+              + states('sensor.fve_auto_prikon_l3') | float)
+              if is_state('binary_sensor.fve_auto_nabijeni', 'on') else 0 }}
+
+      - default_entity_id: sensor.fve_auto_naklad_za_hodinu
+        name: "FVE Auto Náklad za hodinu"
+        unit_of_measurement: "CZK/h"
+        state_class: measurement
+        availability: >-
+          {% set mapovani = states('input_select.fve_auto_mapovani_fazi') %}
+          {{ mapovani in ['1-2-3', '1-3-2', '2-1-3', '2-3-1', '3-1-2', '3-2-1']
+             and is_number(states('sensor.fve_auto_prikon_l1'))
+             and is_number(states('sensor.fve_auto_prikon_l2'))
+             and is_number(states('sensor.fve_auto_prikon_l3'))
+             and is_number(states('sensor.fve_pretok_l1'))
+             and is_number(states('sensor.fve_pretok_l2'))
+             and is_number(states('sensor.fve_pretok_l3'))
+             and (not is_state('binary_sensor.fve_auto_nabijeni', 'on')
+                  or is_number(states('sensor.current_spot_electricity_price'))) }}
+        state: >-
+          {% set mapovani = states('input_select.fve_auto_mapovani_fazi').split('-') %}
+          {% set ns = namespace(sit=0) %}
+          {% if is_state('binary_sensor.fve_auto_nabijeni', 'on') and mapovani | length == 3 %}
+            {% for i in range(1, 4) %}
+              {% set auto = states('sensor.fve_auto_prikon_l' ~ i) | float %}
+              {% set pretok = states('sensor.fve_pretok_l' ~ mapovani[i - 1]) | float %}
+              {% set dostupne = [pretok + auto, 0] | max %}
+              {% set ns.sit = ns.sit + [auto - dostupne, 0] | max %}
+            {% endfor %}
+          {% endif %}
+          {{ (ns.sit / 1000 * states('sensor.current_spot_electricity_price') | float(0)) | round(6) }}
+
+      # Oddělené integrační senzory potřebují samostatný zdroj. Aktivní vozidlo
+      # je uzamčené pro celou relaci; budoucí detekce pouze nahradí ruční volbu.
+      - default_entity_id: sensor.fve_auto_prikon_enyaq
+        name: "FVE Auto Příkon Enyaq"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >-
+          {{ states('sensor.fve_auto_prikon_skutecny') | float(0)
+             if is_state('input_text.fve_auto_vozidlo_relace', 'enyaq') else 0 }}
+      - default_entity_id: sensor.fve_auto_naklad_za_hodinu_enyaq
+        name: "FVE Auto Náklad za hodinu Enyaq"
+        unit_of_measurement: "CZK/h"
+        state_class: measurement
+        state: >-
+          {{ states('sensor.fve_auto_naklad_za_hodinu') | float(0)
+             if is_state('input_text.fve_auto_vozidlo_relace', 'enyaq') else 0 }}
+      - default_entity_id: sensor.fve_auto_prikon_ampera
+        name: "FVE Auto Příkon Ampera"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >-
+          {{ states('sensor.fve_auto_prikon_skutecny') | float(0)
+             if is_state('input_text.fve_auto_vozidlo_relace', 'ampera') else 0 }}
+      - default_entity_id: sensor.fve_auto_naklad_za_hodinu_ampera
+        name: "FVE Auto Náklad za hodinu Ampera"
+        unit_of_measurement: "CZK/h"
+        state_class: measurement
+        state: >-
+          {{ states('sensor.fve_auto_naklad_za_hodinu') | float(0)
+             if is_state('input_text.fve_auto_vozidlo_relace', 'ampera') else 0 }}
 
       - default_entity_id: sensor.spot_cena_elektriny_prumerna_24h_predikce
         name: "Spot Cena elektřiny průměrná 24h s predikcí"
@@ -618,6 +740,15 @@ automation:
                   - action: input_boolean.turn_off
                     target:
                       entity_id: input_boolean.fve_auto_relace_zahajena
+              - if: >-
+                  {{ states('input_text.fve_auto_vozidlo_relace')
+                     not in ['', 'unknown', 'unavailable'] }}
+                then:
+                  - action: input_text.set_value
+                    target:
+                      entity_id: input_text.fve_auto_vozidlo_relace
+                    data:
+                      value: ""
           - conditions: >-
               {{ is_state('binary_sensor.spot_podprumerna_cena_auto', 'on')
                  and is_state('switch.fve_auto_nabijeni', 'on')
@@ -626,6 +757,12 @@ automation:
             sequence:
               # Nejdřív začne plných 20 minut, potom skončí ochrana rozběhu;
               # opačné pořadí by při vyšší ceně na okamžik zrušilo povolení.
+              # Vozidlo uložíme ve stejném okamžiku jako začátek skutečného odběru.
+              - action: input_text.set_value
+                target:
+                  entity_id: input_text.fve_auto_vozidlo_relace
+                data:
+                  value: "{{ states('input_select.fve_auto_vozidlo') }}"
               - action: input_boolean.turn_on
                 target:
                   entity_id: input_boolean.fve_auto_relace_zahajena

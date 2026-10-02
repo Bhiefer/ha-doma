@@ -27,6 +27,8 @@ class CarControlTests(unittest.TestCase):
             'number.fve_auto_proud': '6', 'select.fve_auto_faze': '1',
             'binary_sensor.fve_auto_nabijeni': 'off',
             'input_boolean.fve_auto_relace_zahajena': 'off',
+            'input_select.fve_auto_vozidlo': 'enyaq',
+            'input_text.fve_auto_vozidlo_relace': '',
             'timer.fve_auto_minimum': 'idle',
             'timer.fve_auto_start': 'idle',
             **{f'sensor.fve_auto_prikon_l{i}': '0' for i in range(1, 4)},
@@ -159,10 +161,13 @@ class CarControlTests(unittest.TestCase):
         self.states['binary_sensor.fve_auto_nabijeni'] = 'on'
         self.run_automation('fve_auto_minimum')
         self.assertEqual(self.states['timer.fve_auto_minimum'], 'active')
+        self.assertEqual(self.states['input_text.fve_auto_vozidlo_relace'], 'enyaq')
+        self.states['input_select.fve_auto_vozidlo'] = 'ampera'
         self.states['binary_sensor.fve_auto_nabijeni'] = 'off'
         self.run_automation('fve_auto_minimum')
         self.states['binary_sensor.fve_auto_nabijeni'] = 'on'
         self.run_automation('fve_auto_minimum')
+        self.assertEqual(self.states['input_text.fve_auto_vozidlo_relace'], 'enyaq')
         self.states['timer.fve_auto_minimum'] = 'idle'  # Původních 20 minut uplynulo.
         self.run_automation('fve_auto_minimum')
         self.assertEqual(sum(c[0] == 'timer.start' for c in self.calls), 1)
@@ -222,6 +227,7 @@ class CarControlTests(unittest.TestCase):
         self.calls = []
         self.run_automation('fve_auto_minimum')
         self.assertEqual([c[:2] for c in self.calls], [
+            ('input_text.set_value', 'input_text.fve_auto_vozidlo_relace'),
             ('input_boolean.turn_on', 'input_boolean.fve_auto_relace_zahajena'),
             ('timer.start', 'timer.fve_auto_minimum'),
             ('timer.cancel', 'timer.fve_auto_start')])
@@ -308,3 +314,44 @@ class CarControlTests(unittest.TestCase):
                     self.assertEqual(self.render(grid['state']), expected)
             self.states[f'sensor.wallbox_power_l{phase}'] = '1380'
             self.assertEqual(self.render(car['state']), 1380)
+
+    def test_actual_cost_uses_measured_grid_share_and_locked_vehicle(self):
+        self.assertEqual(self.package['input_select']['fve_auto_vozidlo']['options'],
+                         ['nezvoleno', 'enyaq', 'ampera', 'kona'])
+        sensors = {s.get('default_entity_id'): s for b in self.package['template']
+                   for s in b.get('sensor', [])}
+        self.states.update({
+            'binary_sensor.fve_auto_nabijeni': 'on',
+            'input_select.fve_auto_mapovani_fazi': '2-1-3',
+            'sensor.current_spot_electricity_price': '4',
+            'sensor.fve_auto_prikon_l1': '2300',
+            'sensor.fve_auto_prikon_l2': '2300',
+            'sensor.fve_auto_prikon_l3': '2300',
+            # Wallbox L1 je mapovaný na přípojkovou L2. L2 dokupuje 1 kW,
+            # L1 má 0,5 kW přebytku a L3 pokryje celý příkon ze slunce.
+            'sensor.fve_pretok_l1': '500',
+            'sensor.fve_pretok_l2': '-1000',
+            'sensor.fve_pretok_l3': '0',
+            'input_text.fve_auto_vozidlo_relace': 'enyaq',
+        })
+        cost = sensors['sensor.fve_auto_naklad_za_hodinu']
+        self.assertTrue(self.render(cost['availability']))
+        self.assertEqual(self.render(cost['state']), 4.0)
+        self.states['sensor.fve_auto_naklad_za_hodinu'] = '4'
+        self.states['sensor.fve_auto_prikon_skutecny'] = '6900'
+        self.assertEqual(self.render(sensors['sensor.fve_auto_prikon_enyaq']['state']), 6900)
+        self.assertEqual(self.render(
+            sensors['sensor.fve_auto_naklad_za_hodinu_enyaq']['state']), 4)
+        self.assertEqual(self.render(sensors['sensor.fve_auto_prikon_ampera']['state']), 0)
+        self.states['input_text.fve_auto_vozidlo_relace'] = 'kona'
+        self.assertEqual(self.render(sensors['sensor.fve_auto_prikon_enyaq']['state']), 0)
+        self.assertEqual(self.render(sensors['sensor.fve_auto_prikon_ampera']['state']), 0)
+
+    def test_vehicle_is_cleared_only_when_session_really_ends(self):
+        self.states.update({
+            'input_text.fve_auto_vozidlo_relace': 'ampera',
+            'input_boolean.fve_auto_relace_zahajena': 'on',
+            'binary_sensor.spot_podprumerna_cena_auto': 'off',
+        })
+        self.run_automation('fve_auto_minimum')
+        self.assertEqual(self.states['input_text.fve_auto_vozidlo_relace'], '')
