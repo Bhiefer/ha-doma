@@ -340,6 +340,107 @@ template:
                 and this.state not in ['unknown', 'unavailable']
                 and this.attributes.get('navrh') == navrh and zacatek is not none
                 else as_timestamp(now()) }}
+  # Energy dashboard získává hodinovou křivku přímo z Forecast.Solar. Veřejná
+  # akce poskytne stejná data pro plán zbývajícího nabíjecího potenciálu.
+  # ID integrace se odvodí z místního senzoru, takže sdílený soubor nic nehardcoduje.
+  - trigger:
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        minutes: "0"
+      - platform: state
+        entity_id:
+          - sensor.energy_production_today_remaining
+          - sensor.current_spot_electricity_price
+          - sensor.spot_cena_limit_auto
+          - input_select.fve_auto_rezim
+          - number.fve_auto_proud
+    action:
+      # Forecast.Solar může po startu naběhnout později; změna jeho souhrnného
+      # senzoru výpočet zopakuje, aniž by chybějící integrace vytvářela odhad nula.
+      - condition: template
+        value_template: >-
+          {{ config_entry_id('sensor.energy_production_today') is not none }}
+      - action: forecast_solar.get_forecast
+        data:
+          config_entry: "{{ config_entry_id('sensor.energy_production_today') }}"
+          start: "{{ today_at() }}"
+          end: "{{ today_at() + timedelta(days=1) }}"
+          resolution: hourly
+        response_variable: fve_solar_predikce
+      - variables:
+          fve_auto_potencial: >-
+            {% set rezim = states('input_select.fve_auto_rezim') %}
+            {% set limit = states('sensor.spot_cena_limit_auto') | float(none) %}
+            {% set maximum = 16 if rezim == 'fixni'
+                else state_attr('number.fve_auto_proud', 'max') | float(none) %}
+            {% set spotreba_den = states('sensor.fve_denni_spotreba_prumerna') | float(none) %}
+            {% set predikce = fve_solar_predikce.get('watts', {}) %}
+            {% set ceny = states.sensor.current_spot_electricity_price.attributes %}
+            {% set ns = namespace(platne=rezim in ['fixni', 'adaptivni']
+                and is_number(limit) and is_number(maximum) and maximum >= 6
+                and is_number(spotreba_den) and predikce is mapping,
+                wh=0, hodiny={}) %}
+            {# Forecast.Solar předpovídá celou FVE, nikoli budoucí přetok fází.
+               Stávající průměrnou spotřebu domu proto rozložíme do 24 hodin
+               a výrobu i spotřebu rovnoměrně do tří fází. Baterii nepredikujeme. #}
+            {% set spotreba_w = spotreba_den * 1000 / 24 if ns.platne else 0 %}
+            {% for cas, fve_w in predikce.items() if ns.platne %}
+              {% set hodina = as_local(as_datetime(cas)) %}
+              {% if hodina.date() == now().date() and hodina.hour >= now().hour
+                    and is_number(fve_w) %}
+                {% set cena_hodiny = namespace(hodnota=none) %}
+                {% for klic, hodnota in ceny.items() if is_number(hodnota) %}
+                  {% set cas_ceny = as_datetime(klic, none) %}
+                  {% if cas_ceny is not none and
+                        as_local(cas_ceny).strftime('%Y-%m-%dT%H') == hodina.strftime('%Y-%m-%dT%H') %}
+                    {% set cena_hodiny.hodnota = hodnota | float %}
+                  {% endif %}
+                {% endfor %}
+                {% set dostupne = [(fve_w | float - spotreba_w) / 3, 0] | max %}
+                {% set nej = namespace(vykon=0, faze=0, proud=0, cena=none, podil=none) %}
+                {% for faze in ([3] if rezim == 'fixni' else [1, 3]) %}
+                  {% for proud in ([16] if rezim == 'fixni' else range(6, ([maximum, 16] | min | int) + 1)) %}
+                    {% set vykon = faze * 230 * proud %}
+                    {% set sit = faze * ([230 * proud - dostupne, 0] | max) %}
+                    {% set podil = sit / vykon %}
+                    {% set cena = 0 if sit == 0 else
+                        cena_hodiny.hodnota * podil if is_number(cena_hodiny.hodnota) else none %}
+                    {% if (sit == 0 or (is_number(cena) and cena < limit)) and vykon > nej.vykon %}
+                      {% set nej.vykon = vykon %}
+                      {% set nej.faze = faze %}
+                      {% set nej.proud = proud %}
+                      {% set nej.cena = cena %}
+                      {% set nej.podil = podil %}
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+                {% set zacatek = [as_timestamp(hodina), as_timestamp(now())] | max %}
+                {% set konec = [as_timestamp(hodina + timedelta(hours=1)),
+                    as_timestamp(today_at() + timedelta(days=1))] | min %}
+                {% set delka = [[(konec - zacatek) / 3600, 0] | max, 1] | min %}
+                {% set ns.wh = ns.wh + nej.vykon * delka %}
+                {% set ns.hodiny = dict(ns.hodiny.items() | list + [(hodina.isoformat(),
+                    dict(vykon=nej.vykon, faze=nej.faze, proud=nej.proud,
+                         cena=nej.cena, podil_site=nej.podil,
+                         spot_cena=cena_hodiny.hodnota, fve_w=fve_w | float,
+                         dostupne_na_fazi_w=dostupne, delka_h=delka))]) %}
+              {% endif %}
+            {% endfor %}
+            {{ dict(platne=ns.platne, kwh=ns.wh / 1000, hodiny=ns.hodiny,
+                    spotreba_domu_w=spotreba_w) }}
+    sensor:
+      - name: "FVE Auto Potenciál nabití do konce dne"
+        default_entity_id: sensor.fve_auto_potencial_nabiti_do_konce_dne
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: measurement
+        availability: "{{ fve_auto_potencial.platne }}"
+        state: "{{ fve_auto_potencial.kwh | round(2) }}"
+        attributes:
+          # Hodinový plán umožní zkontrolovat, kdy a proč predikce nabíjení čeká.
+          hodiny: "{{ fve_auto_potencial.hodiny }}"
+          odhad_spotreby_domu_w: "{{ fve_auto_potencial.spotreba_domu_w | round(0) }}"
   - sensor:
       # Migrace starších šablon zachovává ID, názvy, jednotky a výpočty;
       # podmínky dostupnosti a ochranné limity zůstávají beze změny.

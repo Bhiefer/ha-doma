@@ -1,6 +1,7 @@
 """Regrese parseru a doložených podmínek vybíjení baterie."""
 
 import ast
+import datetime
 import importlib.util
 import itertools
 import math
@@ -11,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 import jinja2
+from jinja2.nativetypes import NativeEnvironment
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -493,6 +495,79 @@ class CarChargingStabilityTests(unittest.TestCase):
         self.assertEqual(current.state, "0/0")
         self.assertEqual(self.step(current, 2059).state, "0/0")
         self.assertEqual(self.step(current, 2060).state, "3/16")
+
+
+class CarChargingForecastTests(unittest.TestCase):
+    """Hodinový potenciál používá cenový princip živého řízení."""
+
+    @classmethod
+    def setUpClass(cls):
+        package = check.load_yaml(ROOT / "fve" / "fve.yaml")
+        cls.block = next(b for b in package["template"]
+                         if any(s.get("default_entity_id") ==
+                                "sensor.fve_auto_potencial_nabiti_do_konce_dne"
+                                for s in b.get("sensor", [])))
+        cls.template = NativeEnvironment(undefined=jinja2.StrictUndefined).from_string(
+            cls.block["action"][2]["variables"]["fve_auto_potencial"])
+
+    def test_uses_dynamic_forecast_entry_and_hourly_price(self):
+        action = self.block["action"][1]
+        self.assertEqual(action["action"], "forecast_solar.get_forecast")
+        self.assertEqual(action["data"]["config_entry"],
+                         "{{ config_entry_id('sensor.energy_production_today') }}")
+        self.assertEqual(action["data"]["resolution"], "hourly")
+
+        zone = datetime.timezone(datetime.timedelta(hours=2))
+        current = datetime.datetime(2026, 10, 2, 10, 30, tzinfo=zone)
+        forecasts = {
+            "2026-10-02T10:00:00+02:00": 12040,  # FVE pokryje 11,04 kW i dům.
+            "2026-10-02T11:00:00+02:00": 0,      # Levná síť dovolí plný výkon.
+            "2026-10-02T12:00:00+02:00": 0,      # Drahá síť nabíjení nepovolí.
+        }
+        prices = {
+            "2026-10-02T10:00:00+02:00": 10,
+            "2026-10-02T11:00:00+02:00": 1,
+            "2026-10-02T12:00:00+02:00": 10,
+        }
+        values = {
+            "input_select.fve_auto_rezim": "adaptivni",
+            "sensor.spot_cena_limit_auto": "2",
+            "sensor.fve_denni_spotreba_prumerna": "24",
+        }
+
+        class States:
+            sensor = SimpleNamespace(current_spot_electricity_price=SimpleNamespace(
+                attributes=prices))
+
+            def __call__(self, entity):
+                return values.get(entity, "unknown")
+
+        def as_datetime(value, default=None):
+            try:
+                return datetime.datetime.fromisoformat(value)
+            except (TypeError, ValueError):
+                return default
+
+        result = self.template.render(
+            states=States(),
+            state_attr=lambda entity, attr: 16,
+            is_number=lambda value: isinstance(value, (int, float)) or
+            (isinstance(value, str) and value.replace('.', '', 1).isdigit()),
+            fve_solar_predikce={"watts": forecasts},
+            as_datetime=as_datetime,
+            as_local=lambda value: value,
+            as_timestamp=lambda value: value.timestamp(),
+            now=lambda: current,
+            today_at=lambda: current.replace(hour=0, minute=0, second=0, microsecond=0),
+            timedelta=datetime.timedelta,
+        )
+        if isinstance(result, str):
+            result = ast.literal_eval(result.strip())
+        self.assertTrue(result["platne"])
+        self.assertAlmostEqual(result["kwh"], 16.56)
+        self.assertEqual(result["hodiny"]["2026-10-02T10:00:00+02:00"]["vykon"], 11040)
+        self.assertEqual(result["hodiny"]["2026-10-02T11:00:00+02:00"]["vykon"], 11040)
+        self.assertEqual(result["hodiny"]["2026-10-02T12:00:00+02:00"]["vykon"], 0)
 
 
 if __name__ == "__main__":
