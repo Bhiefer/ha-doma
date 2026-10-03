@@ -900,6 +900,25 @@ template:
           {% set state = now() %}
           {{ today_at('00:00') < state  < today_at('6:00') or today_at('19:00') < state < today_at('21:00') }}
 automation:
+  # Po výpadku proudu může GoodWe zůstat nedostupné až do reloadu integrace.
+  # Dvě hodiny bez všech tří zdrojových přetoků vyvolají jeden pokus o obnovu.
+  # ID bereme z místní entity, aby sdílený balíček fungoval ve všech instancích.
+  # Po restartu HA či reloadu automatizací se dvouhodinové čekání počítá znovu.
+  - id: fve_goodwe_obnova
+    alias: "FVE - GoodWe - Obnova při nedostupnosti"
+    mode: single
+    trigger:
+      - platform: template
+        value_template: >-
+          {{ config_entry_id('sensor.goodwe_active_power_l1') is not none
+             and states('sensor.goodwe_active_power_l1') in ['unknown', 'unavailable']
+             and states('sensor.goodwe_active_power_l2') in ['unknown', 'unavailable']
+             and states('sensor.goodwe_active_power_l3') in ['unknown', 'unavailable'] }}
+        for: "02:00:00"
+    action:
+      - action: homeassistant.reload_config_entry
+        data:
+          entry_id: "{{ config_entry_id('sensor.goodwe_active_power_l1') }}"
   # Jedna relace má jediné minimum. Pauza pro změnu fáze příznak nesmaže;
   # ukončí ji odpojení auta, vypnutí režimu nebo zánik povolení po doběhnutí minima.
   - id: fve_auto_minimum
