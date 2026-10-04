@@ -1,0 +1,194 @@
+# Dopoledne 00–24, odpoledne 12–12: Apex nepodporuje dynamickou šablonu span.
+# Časový příznak z fve.yaml zobrazí právě jednu variantu stejného grafu.
+# Sloupce skládají FVE a síť; dvě nesčítané cenové křivky používají pravou osu.
+# Všechny hodnoty jsou z jediného hodinového odhadu v balíčku FVE.
+type: vertical-stack
+cards:
+- type: tile
+  entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+  name: Zbývající potenciál
+  icon: mdi:battery-clock-outline
+- type: conditional
+  conditions:
+  - condition: state
+    entity: binary_sensor.fve_auto_predikce_odpoledne
+    state: 'off'
+  card:
+    type: custom:apexcharts-card
+    header:
+      show: true
+      title: Výhled nabíjení
+      show_states: false
+    graph_span: 24h
+    span:
+      start: day
+      offset: +0h
+    stacked: true
+    now:
+      show: true
+      color: '#eeeeee'
+      label: Teď
+    apex_config:
+      chart:
+        height: 250
+        # Skládají se jen sloupce energie; cenové křivky se nikdy nesčítají.
+        stackOnlyBar: true
+      plotOptions:
+        bar:
+          columnWidth: 70%
+      xaxis:
+        labels:
+          datetimeUTC: false
+          format: HH:mm
+      legend:
+        position: bottom
+    yaxis:
+    - min: 0
+      max: 12
+      decimals: 0
+      apex_config:
+        title:
+          text: kWh
+      id: energie
+    - id: cena
+      opposite: true
+      decimals: 2
+      apex_config:
+        title:
+          text: Kč/kWh
+    all_series_config:
+      type: column
+      unit: kWh
+      float_precision: 2
+      show:
+        legend_value: false
+      yaxis_id: energie
+    series:
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Z FVE
+      color: '#ffb74d'
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.fve_kwh])\n  .sort((a, b) => a[0] - b[0]);\n"
+      stack_group: energie
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Ze sítě
+      color: '#ab80d5'
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.sit_kwh])\n  .sort((a, b) => a[0] - b[0]);\n"
+      stack_group: energie
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Cena · odhad
+      color: '#66bb6a'
+      type: line
+      unit: Kč/kWh
+      yaxis_id: cena
+      stack_group: cena
+      stroke_width: 2
+      curve: stepline
+      extend_to: false
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.cena ?? null])\n  .sort((a, b) => a[0] - b[0]);\n"
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Limit · odhad
+      color: '#ef5350'
+      type: line
+      unit: Kč/kWh
+      yaxis_id: cena
+      stack_group: limit
+      stroke_width: 2
+      curve: stepline
+      extend_to: false
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.limit ?? null])\n  .sort((a, b) => a[0] - b[0]);\n"
+- type: conditional
+  conditions:
+  - condition: state
+    entity: binary_sensor.fve_auto_predikce_odpoledne
+    state: 'on'
+  card:
+    type: custom:apexcharts-card
+    header:
+      show: true
+      title: Výhled nabíjení
+      show_states: false
+    graph_span: 24h
+    span:
+      start: day
+      offset: +12h
+    stacked: true
+    now:
+      show: true
+      color: '#eeeeee'
+      label: Teď
+    apex_config:
+      chart:
+        height: 250
+        # Stejné nastavení pro odpolední variantu, kterou vybírá časový příznak.
+        stackOnlyBar: true
+      plotOptions:
+        bar:
+          columnWidth: 70%
+      xaxis:
+        labels:
+          datetimeUTC: false
+          format: HH:mm
+      legend:
+        position: bottom
+    yaxis:
+    - min: 0
+      max: 12
+      decimals: 0
+      apex_config:
+        title:
+          text: kWh
+      id: energie
+    - id: cena
+      opposite: true
+      decimals: 2
+      apex_config:
+        title:
+          text: Kč/kWh
+    all_series_config:
+      type: column
+      unit: kWh
+      float_precision: 2
+      show:
+        legend_value: false
+      yaxis_id: energie
+    series:
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Z FVE
+      color: '#ffb74d'
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.fve_kwh])\n  .sort((a, b) => a[0] - b[0]);\n"
+      stack_group: energie
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Ze sítě
+      color: '#ab80d5'
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.sit_kwh])\n  .sort((a, b) => a[0] - b[0]);\n"
+      stack_group: energie
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Cena · odhad
+      color: '#66bb6a'
+      type: line
+      unit: Kč/kWh
+      yaxis_id: cena
+      stack_group: cena
+      stroke_width: 2
+      curve: stepline
+      extend_to: false
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.cena ?? null])\n  .sort((a, b) => a[0] - b[0]);\n"
+    - entity: sensor.fve_auto_potencial_nabiti_do_konce_dne
+      name: Limit · odhad
+      color: '#ef5350'
+      type: line
+      unit: Kč/kWh
+      yaxis_id: cena
+      stack_group: limit
+      stroke_width: 2
+      curve: stepline
+      extend_to: false
+      data_generator: "if (['unknown', 'unavailable'].includes(entity.state)) return [];\nreturn Object.entries(entity.attributes.hodiny_den\
+        \ || {})\n  .map(([cas, h]) => [new Date(cas).getTime(), h.limit ?? null])\n  .sort((a, b) => a[0] - b[0]);\n"

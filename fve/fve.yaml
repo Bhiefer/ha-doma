@@ -412,6 +412,8 @@ template:
           - sensor.energy_production_today_remaining
           - sensor.current_spot_electricity_price
           - sensor.spot_cena_limit_auto
+          - sensor.spot_cena_elektriny_prumerna_24h
+          - input_number.spot_koeficient_ceny_auto
           - input_select.fve_auto_rezim
           - number.fve_auto_proud
     action:
@@ -424,71 +426,127 @@ template:
         data:
           config_entry: "{{ config_entry_id('sensor.energy_production_today') }}"
           start: "{{ today_at() }}"
-          end: "{{ today_at() + timedelta(days=1) }}"
+          # Odpolední graf sahá do zítřejšího poledne; dnešní součet se nemění.
+          end: "{{ today_at() + timedelta(days=2) }}"
           resolution: hourly
         response_variable: fve_solar_predikce
       - variables:
           fve_auto_potencial: >-
             {% set rezim = states('input_select.fve_auto_rezim') %}
             {% set limit = states('sensor.spot_cena_limit_auto') | float(none) %}
+            {% set prumer = states('sensor.spot_cena_elektriny_prumerna_24h') | float(none) %}
+            {% set koeficient = states('input_number.spot_koeficient_ceny_auto') | float(none) %}
             {% set maximum = 16 if rezim == 'fixni'
                 else state_attr('number.fve_auto_proud', 'max') | float(none) %}
             {% set spotreba_den = states('sensor.fve_denni_spotreba_prumerna') | float(none) %}
             {% set predikce = fve_solar_predikce.get('watts', {}) %}
             {% set ceny = states.sensor.current_spot_electricity_price.attributes %}
+            {% set aktualni_hodina = now().replace(minute=0, second=0, microsecond=0) %}
+            {% set graf_od = today_at() + timedelta(hours=12 if now().hour >= 12 else 0) %}
+            {% set graf_do = graf_od + timedelta(hours=24) %}
             {% set ns = namespace(platne=rezim in ['fixni', 'adaptivni']
-                and is_number(limit) and is_number(maximum) and maximum >= 6
-                and is_number(spotreba_den) and predikce is mapping,
-                wh=0, hodiny={}, den={}) %}
-            {# Forecast.Solar předpovídá celou FVE, nikoli budoucí přetok fází.
-               Stávající průměrnou spotřebu domu proto rozložíme do 24 hodin
-               a výrobu i spotřebu rovnoměrně do tří fází. Baterii nepredikujeme. #}
+                and is_number(limit) and is_number(prumer) and is_number(koeficient)
+                and is_number(maximum) and maximum >= 6 and is_number(spotreba_den)
+                and predikce is mapping and predikce | length > 0,
+                wh=0, hodiny={}, den={}, ceny={}) %}
+            {# Ceny seskupíme po hodinách; metadata nejsou datum a chybějící cena
+               není nula. Stejný hodinový plán slouží grafu i odhadu potenciálu. #}
+            {% for i in range(48) %}
+              {% set h = today_at() + timedelta(hours=i) %}
+              {% set c = namespace(soucet=0, pocet=0) %}
+              {% for klic, hodnota in ceny.items() if is_number(hodnota) %}
+                {% set cas = as_datetime(klic, none) %}
+                {% if cas is not none and as_local(cas).replace(minute=0, second=0, microsecond=0) == h %}
+                  {% set c.soucet = c.soucet + hodnota | float %}
+                  {% set c.pocet = c.pocet + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% if c.pocet > 0 %}
+                {% set ns.ceny = dict(ns.ceny.items() | list + [(h.isoformat(), c.soucet / c.pocet)]) %}
+              {% endif %}
+            {% endfor %}
+            {# Výrobu a průměrnou spotřebu domu rozložíme rovnoměrně do tří
+               fází, stejně jako dosavadní předpověď; baterii nepredikujeme. #}
             {% set spotreba_w = spotreba_den * 1000 / 24 if ns.platne else 0 %}
-            {% for cas, fve_w in predikce.items() if ns.platne %}
-              {% set hodina = as_local(as_datetime(cas)) %}
-              {% if hodina.date() == now().date() and is_number(fve_w) %}
-                {% set cena_hodiny = namespace(hodnota=none) %}
-                {% for klic, hodnota in ceny.items() if is_number(hodnota) %}
-                  {% set cas_ceny = as_datetime(klic, none) %}
-                  {% if cas_ceny is not none and
-                        as_local(cas_ceny).strftime('%Y-%m-%dT%H') == hodina.strftime('%Y-%m-%dT%H') %}
-                    {% set cena_hodiny.hodnota = hodnota | float %}
+            {% for i in range(48) if ns.platne %}
+              {% set hodina = today_at() + timedelta(hours=i) %}
+              {% if hodina.date() == now().date() or graf_od <= hodina < graf_do %}
+                {% set solar = namespace(vykon=none, prvni=none, posledni=none) %}
+                {% for cas, fve_w in predikce.items() if is_number(fve_w) %}
+                  {% set h = as_local(as_datetime(cas)) %}
+                  {% if h.date() == hodina.date() %}
+                    {% set solar.prvni = h if solar.prvni is none or h < solar.prvni else solar.prvni %}
+                    {% set solar.posledni = h if solar.posledni is none or h > solar.posledni else solar.posledni %}
+                    {% if h == hodina %}{% set solar.vykon = fve_w | float %}{% endif %}
                   {% endif %}
                 {% endfor %}
-                {% set dostupne = [(fve_w | float - spotreba_w) / 3, 0] | max %}
-                {% set nej = namespace(vykon=0, faze=0, proud=0, cena=none, podil=none) %}
-                {% for faze in ([3] if rezim == 'fixni' else [1, 3]) %}
-                  {% for proud in ([16] if rezim == 'fixni' else range(6, ([maximum, 16] | min | int) + 1)) %}
-                    {% set vykon = faze * 230 * proud %}
-                    {% set sit = faze * ([230 * proud - dostupne, 0] | max) %}
-                    {% set podil = sit / vykon %}
-                    {% set cena = 0 if sit == 0 else
-                        cena_hodiny.hodnota * podil if is_number(cena_hodiny.hodnota) else none %}
-                    {% if (sit == 0 or (is_number(cena) and cena < limit)) and vykon > nej.vykon %}
-                      {% set nej.vykon = vykon %}
-                      {% set nej.faze = faze %}
-                      {% set nej.proud = proud %}
-                      {% set nej.cena = cena %}
-                      {% set nej.podil = podil %}
-                    {% endif %}
-                  {% endfor %}
+                {# Forecast.Solar vrací denní křivku bez nočních hodin. Noc mimo
+                   její meze má nulovou výrobu; mezera uvnitř či chybějící den
+                   zůstává neznámý, aby se výpadek dat nevydával za nulu. #}
+                {% if solar.vykon is none and solar.prvni is not none
+                      and (hodina < solar.prvni or hodina > solar.posledni) %}
+                  {% set solar.vykon = 0 %}
+                {% endif %}
+                {% set cena_hodiny = ns.ceny.get(hodina.isoformat()) %}
+                {# Odhad klouzavého průměru nahrazuje odcházející historii jejím
+                   dnešním průměrem a přidává zveřejněné budoucí ceny. Neznáme
+                   budoucí výsledek filtru odlehlých hodnot; není to skutečný limit.
+                   Navazující kombinace historie a budoucích cen i zaokrouhlení
+                   odpovídají současnému výpočtu limitu. Aktuální hodinu ukotvíme
+                   přímo na živém limitu; stejný odhad dále řídí i potenciál. #}
+                {% set odhad = namespace(minulost=prumer * 24, budoucnost=0, pocet=0, platne=true) %}
+                {% for posun in range(24) %}
+                  {% set h = hodina - timedelta(hours=24 - posun) %}
+                  {% if h >= aktualni_hodina and h < hodina %}
+                    {% set c = ns.ceny.get(h.isoformat()) %}
+                    {% if is_number(c) %}
+                      {% set odhad.minulost = odhad.minulost + c - prumer %}
+                    {% else %}{% set odhad.platne = false %}{% endif %}
+                  {% endif %}
                 {% endfor %}
-                {% set zacatek = [as_timestamp(hodina), as_timestamp(now())] | max %}
-                {% set konec = [as_timestamp(hodina + timedelta(hours=1)),
-                    as_timestamp(today_at() + timedelta(days=1))] | min %}
-                {% set delka = [[(konec - zacatek) / 3600, 0] | max, 1] | min %}
-                {% set ns.wh = ns.wh + nej.vykon * delka %}
-                {# Celodenní graf potřebuje celé hodiny včetně uplynulých. Zbývající
-                   potenciál výše nadále sčítá pouze čas od nynějška. #}
-                {% set ns.den = dict(ns.den.items() | list + [(hodina.isoformat(),
-                    dict(fve_kwh=nej.vykon * (1 - (nej.podil or 0)) / 1000,
-                         sit_kwh=nej.vykon * (nej.podil or 0) / 1000))]) %}
-                {% if hodina.hour >= now().hour %}
+                {% for cas, c in ns.ceny.items() if as_datetime(cas) > hodina %}
+                  {% set odhad.budoucnost = odhad.budoucnost + c %}
+                  {% set odhad.pocet = odhad.pocet + 1 %}
+                {% endfor %}
+                {% set limit_hodiny = limit if hodina == aktualni_hodina else
+                    ((odhad.minulost + odhad.budoucnost) / (24 + odhad.pocet)) | round(2) * koeficient / 100
+                    if odhad.platne else none %}
+                {% set dostupne = [(solar.vykon - spotreba_w) / 3, 0] | max if is_number(solar.vykon) else none %}
+                {% set nej = namespace(vykon=0, faze=0, proud=0, cena=none, podil=none, minimum=none) %}
+                {% if is_number(dostupne) and is_number(limit_hodiny) %}
+                  {% for faze in ([3] if rezim == 'fixni' else [1, 3]) %}
+                    {% for proud in ([16] if rezim == 'fixni' else range(6, ([maximum, 16] | min | int) + 1)) %}
+                      {% set vykon = faze * 230 * proud %}
+                      {% set sit = faze * ([230 * proud - dostupne, 0] | max) %}
+                      {% set podil = sit / vykon %}
+                      {% set cena = 0 if sit == 0 else cena_hodiny * podil if is_number(cena_hodiny) else none %}
+                      {% if nej.minimum is none %}{% set nej.minimum = cena %}{% endif %}
+                      {% if (sit == 0 or (is_number(cena) and cena < limit_hodiny)) and vykon > nej.vykon %}
+                        {% set nej.vykon = vykon %}{% set nej.faze = faze %}{% set nej.proud = proud %}
+                        {% set nej.cena = cena %}{% set nej.podil = podil %}
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+                {% endif %}
+                {% set platne = is_number(dostupne) and is_number(limit_hodiny)
+                    and (is_number(cena_hodiny) or nej.vykon > 0) %}
+                {% set cena_grafu = nej.cena if nej.vykon > 0 else nej.minimum %}
+                {% if graf_od <= hodina < graf_do %}
+                  {% set ns.den = dict(ns.den.items() | list + [(hodina.isoformat(),
+                    dict(fve_kwh=nej.vykon * (1 - (nej.podil or 0)) / 1000 if platne else none,
+                         sit_kwh=nej.vykon * (nej.podil or 0) / 1000 if platne else none,
+                         cena=cena_grafu, limit=limit_hodiny))]) %}
+                {% endif %}
+                {# Název senzoru i zbývající součet zachovávají dnešek. Zítřek
+                   patří jen do grafu a nezvyšuje dnešní potenciál. #}
+                {% if hodina.date() == now().date() and hodina >= aktualni_hodina %}
+                  {% if not platne %}{% set ns.platne = false %}{% endif %}
+                  {% set delka = [[(as_timestamp(hodina + timedelta(hours=1)) - as_timestamp(now())) / 3600, 0] | max, 1] | min %}
+                  {% set ns.wh = ns.wh + nej.vykon * delka %}
                   {% set ns.hodiny = dict(ns.hodiny.items() | list + [(hodina.isoformat(),
-                    dict(vykon=nej.vykon, faze=nej.faze, proud=nej.proud,
-                         cena=nej.cena, podil_site=nej.podil,
-                         spot_cena=cena_hodiny.hodnota, fve_w=fve_w | float,
-                         dostupne_na_fazi_w=dostupne, delka_h=delka))]) %}
+                    dict(vykon=nej.vykon, faze=nej.faze, proud=nej.proud, cena=nej.cena,
+                         limit=limit_hodiny, podil_site=nej.podil, spot_cena=cena_hodiny,
+                         fve_w=solar.vykon, dostupne_na_fazi_w=dostupne, delka_h=delka))]) %}
                 {% endif %}
               {% endif %}
             {% endfor %}
@@ -505,7 +563,7 @@ template:
         attributes:
           # Hodinový plán umožní zkontrolovat, kdy a proč predikce nabíjení čeká.
           hodiny: "{{ fve_auto_potencial.hodiny }}"
-          # Celý dnešní výhled pro skládaný graf; nejde o skutečně nabitou energii.
+          # 24hodinový výhled od půlnoci či poledne; ceny a limit jsou odhady, nikoli historie.
           hodiny_den: "{{ fve_auto_potencial.den }}"
           odhad_spotreby_domu_w: "{{ fve_auto_potencial.spotreba_domu_w | round(0) }}"
   - sensor:
@@ -838,6 +896,11 @@ template:
             Neznámý
           {%- endif %}
   - binary_sensor:
+      # Apex nemá šablonovaný posun osy. Tento časový příznak vybere jednu
+      # ze dvou podob stejného grafu bez dalšího pluginu a bez vlivu na řízení.
+      - default_entity_id: binary_sensor.fve_auto_predikce_odpoledne
+        name: "FVE Auto Predikce odpoledne"
+        state: "{{ now().hour >= 12 }}"
       # Migrace ze starší platformy template zachovává podmínky vybíjení
       # i ID entity používané automatizací pro nastavení hloubky vybití.
       - default_entity_id: binary_sensor.fve_vybijeni_baterie

@@ -510,6 +510,108 @@ class CarChargingForecastTests(unittest.TestCase):
         cls.template = NativeEnvironment(undefined=jinja2.StrictUndefined).from_string(
             cls.block["action"][2]["variables"]["fve_auto_potencial"])
 
+    def forecast(self, hour=12, prices=None, solar=None, mode="adaptivni", average="4"):
+        """Dva doložené dny; změny vstupů zkoušejí mezery a hranici poledne."""
+        zone = datetime.timezone(datetime.timedelta(hours=2))
+        now = datetime.datetime(2026, 10, 2, hour, tzinfo=zone)
+        midnight = now.replace(hour=0)
+        timestamps = [(midnight + datetime.timedelta(hours=h)).isoformat() for h in range(48)]
+        prices = dict(zip(timestamps, [5] * 24 + [1] * 24)) if prices is None else prices
+        solar = dict.fromkeys(timestamps, 0) if solar is None else solar
+        values = {"input_select.fve_auto_rezim": mode,
+                  "sensor.spot_cena_limit_auto": "2",
+                  "sensor.spot_cena_elektriny_prumerna_24h": average,
+                  "input_number.spot_koeficient_ceny_auto": "50",
+                  "sensor.fve_denni_spotreba_prumerna": "24"}
+
+        class States:
+            sensor = SimpleNamespace(current_spot_electricity_price=SimpleNamespace(attributes=prices))
+            def __call__(self, entity):
+                return values.get(entity, "unknown")
+
+        def parse(value, default=None):
+            try:
+                return datetime.datetime.fromisoformat(value)
+            except (TypeError, ValueError):
+                return default
+
+        def numeric(value):
+            try:
+                return math.isfinite(float(value))
+            except (TypeError, ValueError):
+                return False
+
+        result = self.template.render(states=States(), state_attr=lambda *args: 16,
+            is_number=numeric, fve_solar_predikce={"watts": solar},
+            as_datetime=parse, as_local=lambda value: value,
+            as_timestamp=lambda value: value.timestamp(), now=lambda: now,
+            today_at=lambda: midnight, timedelta=datetime.timedelta)
+        return ast.literal_eval(result.strip()) if isinstance(result, str) else result
+
+    def test_noon_changes_window_and_tomorrow_does_not_increase_today_total(self):
+        morning, afternoon = self.forecast(hour=11), self.forecast(hour=12)
+        self.assertEqual(len(morning["den"]), 24)
+        self.assertEqual(min(morning["den"]), "2026-10-02T00:00:00+02:00")
+        self.assertEqual(len(afternoon["den"]), 24)
+        self.assertEqual(min(afternoon["den"]), "2026-10-02T12:00:00+02:00")
+        self.assertEqual(max(afternoon["den"]), "2026-10-03T11:00:00+02:00")
+        self.assertEqual(afternoon["kwh"], 0)
+        self.assertEqual(afternoon["den"]["2026-10-03T00:00:00+02:00"]["sit_kwh"], 11.04)
+        self.assertEqual(afternoon["den"]["2026-10-02T12:00:00+02:00"]["cena"], 5)
+        self.assertEqual(afternoon["hodiny"]["2026-10-02T12:00:00+02:00"]["limit"], 2)
+
+    def test_potential_and_graph_share_estimated_limit_and_maximum_power(self):
+        data = self.forecast()
+        for key, row in data["hodiny"].items():
+            self.assertEqual(data["den"][key]["limit"], row["limit"])
+        # Jiný historický průměr mění i zítřejší odhad limitu, nikoli jen legendu.
+        low = self.forecast(average="0")
+        key = "2026-10-03T00:00:00+02:00"
+        self.assertLess(low["den"][key]["limit"], data["den"][key]["limit"])
+        self.assertEqual(low["den"][key]["sit_kwh"], 0)
+        self.assertEqual(low["den"][key]["cena"], 1)
+
+    def test_missing_tomorrow_prices_are_gaps_not_free_energy(self):
+        prices = {f"2026-10-02T{h:02d}:00:00+02:00": 5 for h in range(24)}
+        data = self.forecast(prices=prices)
+        self.assertTrue(data["platne"])
+        row = data["den"]["2026-10-03T00:00:00+02:00"]
+        self.assertIsNone(row["cena"])
+        self.assertIsNone(row["sit_kwh"])
+
+    def test_solar_night_is_zero_but_daytime_hole_is_unknown(self):
+        solar = {f"2026-10-0{d}T{h:02d}:00:00+02:00": 0
+                 for d in [2, 3] for h in range(7, 18) if d == 2 or h != 9}
+        data = self.forecast(solar=solar)
+        self.assertTrue(data["platne"])
+        self.assertEqual(data["den"]["2026-10-03T00:00:00+02:00"]["sit_kwh"], 11.04)
+        self.assertIsNone(data["den"]["2026-10-03T09:00:00+02:00"]["sit_kwh"])
+        self.assertFalse(self.forecast(solar={}, average="unavailable")["platne"])
+
+    def test_maximum_under_limit_and_minimum_price_when_blocked(self):
+        prices = {f"2026-10-0{d}T{h:02d}:00:00+02:00": 10 for d in [2, 3] for h in range(24)}
+        solar = dict.fromkeys(prices, 6000)
+        row = self.forecast(prices=prices, solar=solar)["hodiny"]["2026-10-02T12:00:00+02:00"]
+        self.assertEqual((row["faze"], row["proud"]), (3, 9))
+        self.assertLess(row["cena"], row["limit"])
+        # Další proud 10 A už přesně stejný limit překročí.
+        self.assertGreater((6900 - 5000) / 6900 * 10, row["limit"])
+        blocked = self.forecast(prices=prices, solar=dict.fromkeys(prices, 4000))
+        row = blocked["den"]["2026-10-02T12:00:00+02:00"]
+        self.assertEqual(row["fve_kwh"] + row["sit_kwh"], 0)
+        self.assertAlmostEqual(row["cena"], (1380 - 1000) / 1380 * 10)
+
+    def test_grid_only_and_pure_solar_exception_in_both_modes(self):
+        prices = {f"2026-10-0{d}T{h:02d}:00:00+02:00": 1 for d in [2, 3] for h in range(24)}
+        for mode in ["fixni", "adaptivni"]:
+            data = self.forecast(prices=prices, mode=mode)
+            self.assertEqual(data["hodiny"]["2026-10-02T12:00:00+02:00"]["vykon"], 11040)
+            solar = dict.fromkeys(prices, 20000)
+            expensive = dict.fromkeys(prices, 100)
+            data = self.forecast(prices=expensive, solar=solar, mode=mode)
+            row = data["den"]["2026-10-02T12:00:00+02:00"]
+            self.assertEqual((row["fve_kwh"], row["sit_kwh"], row["cena"]), (11.04, 0, 0))
+
     def test_uses_dynamic_forecast_entry_and_hourly_price(self):
         action = self.block["action"][1]
         self.assertEqual(action["action"], "forecast_solar.get_forecast")
@@ -526,7 +628,9 @@ class CarChargingForecastTests(unittest.TestCase):
             "2026-10-02T11:00:00+02:00": 0,      # Levná síť dovolí plný výkon.
             "2026-10-02T12:00:00+02:00": 0,      # Drahá síť nabíjení nepovolí.
         }
-        prices = {
+        # Celý dnešní den má zveřejněné ceny; chybějící budoucí cenu nově
+        # rozlišujeme od nuly, takže ji běžný scénář nesmí vynechat.
+        prices = {f"2026-10-02T{h:02d}:00:00+02:00": 10 for h in range(24)} | {
             "2026-10-02T08:00:00+02:00": 1,
             "2026-10-02T10:00:00+02:00": 10,
             "2026-10-02T11:00:00+02:00": 1,
@@ -535,6 +639,8 @@ class CarChargingForecastTests(unittest.TestCase):
         values = {
             "input_select.fve_auto_rezim": "adaptivni",
             "sensor.spot_cena_limit_auto": "2",
+            "sensor.spot_cena_elektriny_prumerna_24h": "2",
+            "input_number.spot_koeficient_ceny_auto": "50",
             "sensor.fve_denni_spotreba_prumerna": "24",
         }
 
@@ -575,14 +681,18 @@ class CarChargingForecastTests(unittest.TestCase):
         # původní zbývající potenciál. Obě složky se sčítají na nabíjecí energii.
         self.assertNotIn("2026-10-02T08:00:00+02:00", result["hodiny"])
         self.assertNotIn("2026-10-03T08:00:00+02:00", result["den"])
-        self.assertEqual(result["den"]["2026-10-02T08:00:00+02:00"],
+        # Cenové křivky doplňují sloupce; ověřujeme zvlášť energii i cenu.
+        energy = lambda h: {k: result["den"][h][k] for k in ["fve_kwh", "sit_kwh"]}
+        self.assertEqual(energy("2026-10-02T08:00:00+02:00"),
                          {"fve_kwh": 5.52, "sit_kwh": 5.52})
-        self.assertEqual(result["den"]["2026-10-02T10:00:00+02:00"],
+        self.assertEqual(energy("2026-10-02T10:00:00+02:00"),
                          {"fve_kwh": 11.04, "sit_kwh": 0})
-        self.assertEqual(result["den"]["2026-10-02T11:00:00+02:00"],
+        self.assertEqual(energy("2026-10-02T11:00:00+02:00"),
                          {"fve_kwh": 0, "sit_kwh": 11.04})
-        self.assertEqual(result["den"]["2026-10-02T12:00:00+02:00"],
+        self.assertEqual(energy("2026-10-02T12:00:00+02:00"),
                          {"fve_kwh": 0, "sit_kwh": 0})
+        self.assertEqual(result["den"]["2026-10-02T12:00:00+02:00"]["cena"], 10)
+        self.assertEqual(result["hodiny"]["2026-10-02T10:00:00+02:00"]["limit"], 2)
 
 
 if __name__ == "__main__":
