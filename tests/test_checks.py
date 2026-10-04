@@ -520,11 +520,14 @@ class CarChargingForecastTests(unittest.TestCase):
         zone = datetime.timezone(datetime.timedelta(hours=2))
         current = datetime.datetime(2026, 10, 2, 10, 30, tzinfo=zone)
         forecasts = {
+            "2026-10-02T08:00:00+02:00": 6520,   # Uplynulá hodina zůstává v grafu.
+            "2026-10-03T08:00:00+02:00": 12040,  # Zítřek do dnešního grafu nepatří.
             "2026-10-02T10:00:00+02:00": 12040,  # FVE pokryje 11,04 kW i dům.
             "2026-10-02T11:00:00+02:00": 0,      # Levná síť dovolí plný výkon.
             "2026-10-02T12:00:00+02:00": 0,      # Drahá síť nabíjení nepovolí.
         }
         prices = {
+            "2026-10-02T08:00:00+02:00": 1,
             "2026-10-02T10:00:00+02:00": 10,
             "2026-10-02T11:00:00+02:00": 1,
             "2026-10-02T12:00:00+02:00": 10,
@@ -568,6 +571,18 @@ class CarChargingForecastTests(unittest.TestCase):
         self.assertEqual(result["hodiny"]["2026-10-02T10:00:00+02:00"]["vykon"], 11040)
         self.assertEqual(result["hodiny"]["2026-10-02T11:00:00+02:00"]["vykon"], 11040)
         self.assertEqual(result["hodiny"]["2026-10-02T12:00:00+02:00"]["vykon"], 0)
+        # Graf má celé hodiny; aktuální půlhodina ani minulost nezvýší
+        # původní zbývající potenciál. Obě složky se sčítají na nabíjecí energii.
+        self.assertNotIn("2026-10-02T08:00:00+02:00", result["hodiny"])
+        self.assertNotIn("2026-10-03T08:00:00+02:00", result["den"])
+        self.assertEqual(result["den"]["2026-10-02T08:00:00+02:00"],
+                         {"fve_kwh": 5.52, "sit_kwh": 5.52})
+        self.assertEqual(result["den"]["2026-10-02T10:00:00+02:00"],
+                         {"fve_kwh": 11.04, "sit_kwh": 0})
+        self.assertEqual(result["den"]["2026-10-02T11:00:00+02:00"],
+                         {"fve_kwh": 0, "sit_kwh": 11.04})
+        self.assertEqual(result["den"]["2026-10-02T12:00:00+02:00"],
+                         {"fve_kwh": 0, "sit_kwh": 0})
 
 
 if __name__ == "__main__":

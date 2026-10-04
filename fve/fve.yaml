@@ -82,11 +82,12 @@ input_number:
     mode: slider
     unit_of_measurement: "%"
   # Pokud cena dosáhne hranice pod koeficient*dlouhodobý průměr, začne se nabíjet auto ze sítě
+  # Nižší minimum a krok 2 procentní body umožní jemnější nastavení cenového limitu v UI.
   spot_koeficient_ceny_auto:
     name: "Koeficient ceny auto"
-    min: 30
+    min: 10
     max: 300
-    step: 5
+    step: 2
     mode: slider
     unit_of_measurement: "%"
   fve_auto_nabijeci_vykon:
@@ -401,6 +402,9 @@ template:
   - trigger:
       - platform: homeassistant
         event: start
+      # Po načtení šablon naplníme graf hned, bez čekání na další celou hodinu.
+      - platform: event
+        event_type: event_template_reloaded
       - platform: time_pattern
         minutes: "0"
       - platform: state
@@ -435,15 +439,14 @@ template:
             {% set ns = namespace(platne=rezim in ['fixni', 'adaptivni']
                 and is_number(limit) and is_number(maximum) and maximum >= 6
                 and is_number(spotreba_den) and predikce is mapping,
-                wh=0, hodiny={}) %}
+                wh=0, hodiny={}, den={}) %}
             {# Forecast.Solar předpovídá celou FVE, nikoli budoucí přetok fází.
                Stávající průměrnou spotřebu domu proto rozložíme do 24 hodin
                a výrobu i spotřebu rovnoměrně do tří fází. Baterii nepredikujeme. #}
             {% set spotreba_w = spotreba_den * 1000 / 24 if ns.platne else 0 %}
             {% for cas, fve_w in predikce.items() if ns.platne %}
               {% set hodina = as_local(as_datetime(cas)) %}
-              {% if hodina.date() == now().date() and hodina.hour >= now().hour
-                    and is_number(fve_w) %}
+              {% if hodina.date() == now().date() and is_number(fve_w) %}
                 {% set cena_hodiny = namespace(hodnota=none) %}
                 {% for klic, hodnota in ceny.items() if is_number(hodnota) %}
                   {% set cas_ceny = as_datetime(klic, none) %}
@@ -475,14 +478,21 @@ template:
                     as_timestamp(today_at() + timedelta(days=1))] | min %}
                 {% set delka = [[(konec - zacatek) / 3600, 0] | max, 1] | min %}
                 {% set ns.wh = ns.wh + nej.vykon * delka %}
-                {% set ns.hodiny = dict(ns.hodiny.items() | list + [(hodina.isoformat(),
+                {# Celodenní graf potřebuje celé hodiny včetně uplynulých. Zbývající
+                   potenciál výše nadále sčítá pouze čas od nynějška. #}
+                {% set ns.den = dict(ns.den.items() | list + [(hodina.isoformat(),
+                    dict(fve_kwh=nej.vykon * (1 - (nej.podil or 0)) / 1000,
+                         sit_kwh=nej.vykon * (nej.podil or 0) / 1000))]) %}
+                {% if hodina.hour >= now().hour %}
+                  {% set ns.hodiny = dict(ns.hodiny.items() | list + [(hodina.isoformat(),
                     dict(vykon=nej.vykon, faze=nej.faze, proud=nej.proud,
                          cena=nej.cena, podil_site=nej.podil,
                          spot_cena=cena_hodiny.hodnota, fve_w=fve_w | float,
                          dostupne_na_fazi_w=dostupne, delka_h=delka))]) %}
+                {% endif %}
               {% endif %}
             {% endfor %}
-            {{ dict(platne=ns.platne, kwh=ns.wh / 1000, hodiny=ns.hodiny,
+            {{ dict(platne=ns.platne, kwh=ns.wh / 1000, hodiny=ns.hodiny, den=ns.den,
                     spotreba_domu_w=spotreba_w) }}
     sensor:
       - name: "FVE Auto Potenciál nabití do konce dne"
@@ -495,6 +505,8 @@ template:
         attributes:
           # Hodinový plán umožní zkontrolovat, kdy a proč predikce nabíjení čeká.
           hodiny: "{{ fve_auto_potencial.hodiny }}"
+          # Celý dnešní výhled pro skládaný graf; nejde o skutečně nabitou energii.
+          hodiny_den: "{{ fve_auto_potencial.den }}"
           odhad_spotreby_domu_w: "{{ fve_auto_potencial.spotreba_domu_w | round(0) }}"
   - sensor:
       # Skutečný nabíjecí příkon je součet měření všech tří fází, nikoli
