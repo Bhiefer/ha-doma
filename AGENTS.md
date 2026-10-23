@@ -114,6 +114,22 @@ změnu, dopad a postup návratu. Na schválení má čekat jen dotčený provozn
   zvažovat `unknown`, `unavailable`, stáří dat a chování po restartu; bezpečný
   výchozí stav odvodit od konkrétního zařízení, nikoli od univerzálního předpokladu.
 
+## Přístup k dashboardu Evans
+
+- Hlavní adresa instance Evans: `https://k1oy5d69r8xuj11wr2gil99frybmwxsy.ui.nabu.casa`.
+- Ověřená lokální alternativa stejné instance: `http://10.0.0.42:8123`.
+- Dashboard Evans: `/dashboard-evans`; záložka FVE: `/dashboard-evans/fve`.
+- Odkazy na Auto (`/dashboard-evans/auto`) a FVE byly ověřeny v UI 2026-10-23.
+  Dashboard Kancelář dohledávej v UI stejné instance; jeho cestu neodhaduj.
+- Dashboard Evans je spravován v UI;
+  aktuální YAML karty čti v jeho editoru, nikoli z předávacích kopií.
+- Když uživatel uvede Evans, použij hlavní adresu a dostupný prohlížeč.
+  Nežádej znovu o adresu, která je zde již uložená.
+  Pokud se přístup změnil, hledej v projektových podkladech a souvisejících
+  předchozích chatech, než požádáš uživatele o adresu nebo YAML.
+- Neukládej zde přihlašovací údaje. Čtení UI v rámci zadané kontroly
+  není pověřením měnit helpery, spouštět zařízení nebo nasazovat změny.
+
 ## Orientace v konfiguraci
 
 - `configuration.yaml`: hlavní konfigurace, integrace, helpery a šablony.
