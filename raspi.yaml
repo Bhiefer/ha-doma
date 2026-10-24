@@ -61,16 +61,6 @@ views:
             name: Marek
           - type: button
             tap_action:
-              action: call-service
-              service: script.obnov_mod_topeni
-              service_data: {}
-              target: {}
-            entity: input_select.topeni_mod
-            name: Obnov mod topeni
-            show_icon: true
-            icon: mdi:refresh-circle
-          - type: button
-            tap_action:
               action: toggle
             entity: switch.primotop_marek
             icon: mdi:radiator

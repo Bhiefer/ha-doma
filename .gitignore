@@ -14,7 +14,12 @@
 !/requirements-test.txt
 !/TESTOVANI.md
 !/tools/check.py
+!/tools/zigbee2mqtt_ssh.py
+!/tests/test_zigbee_ssh.py
 !/tests/test_checks.py
+!/tests/test_heating_startup.py
+# Stavové hranice a zámek automatické obnovy Zigbee Evans.
+!/tests/test_zigbee_recovery.py
 # Regresní testy řídicích akcí nabíjení patří do repozitáře.
 !/tests/test_car_control.py
 !/tests/test_fuel_prices.py

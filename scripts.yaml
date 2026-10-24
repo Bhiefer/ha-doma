@@ -27,12 +27,27 @@ vypnout_trv:
 zigbee2mqtt_reboot:
   alias: "Restart Zigbee2MQTT Evans hostu přes SSH"
   sequence:
+    # SSH helper načte stávající secrets sám; nenosit heslo do dat ani trace skriptu.
+    # Nenulový výsledek se musí projevit jako chyba, nikoli jako úspěšný restart.
     - service: shell_command.zigbee2mqtt_reboot_over_ssh
-      data:
-        host: !secret zigbee2mqtt_ssh_host
-        port: !secret zigbee2mqtt_ssh_port
-        user: !secret zigbee2mqtt_ssh_user
-        password: !secret zigbee2mqtt_ssh_pass
+      response_variable: ssh_result
+    - if: "{{ ssh_result.returncode != 0 }}"
+      then:
+        - stop: "SSH restart selhal; další pokus neprovádím."
+          error: true
+  mode: single
+
+zigbee2mqtt_doma_reboot:
+  alias: "Restart Zigbee2MQTT Doma hostu přes SSH"
+  sequence:
+    # SSH helper načte stávající secrets sám; nenosit heslo do dat ani trace skriptu.
+    # Nenulový výsledek se musí projevit jako chyba, nikoli jako úspěšný restart.
+    - service: shell_command.zigbee2mqtt_doma_reboot_over_ssh
+      response_variable: ssh_result
+    - if: "{{ ssh_result.returncode != 0 }}"
+      then:
+        - stop: "SSH restart selhal; další pokus neprovádím."
+          error: true
   mode: single
 
 google_home_tts_screen:
@@ -112,8 +127,31 @@ restart_modu_topeni:
   icon: mdi:restart
 obnov_mod_topeni:
   alias: Topení - Obnovit režim
-  description: Přepočítá termostaty, ventily a kotel bez změny ručních boostů.
+  description: Jednorázově opraví presety termostatů a obnoví řízení topení podle aktuálních režimů.
   sequence:
+    # Po startu HA může generic_thermostat obnovit away s komfortní teplotou.
+    # Skutečný přechod away -> none odstraní nesoulad presetu a cílové teploty;
+    # následná automatizace vybere výsledný režim. Číselné teploty zde neduplikujeme.
+    # Jde jen o startovací/ručně vyvolanou opravu, nikoli o minutové řízení.
+    # Přechod přes none může krátce zapnout topení; uživatel toto chování schválil.
+    - variables:
+        termostaty:
+          - group.prodejna_termostaty
+          - climate.zkusebna_termostat
+          - climate.kino_termostat
+          - climate.marek_termostat
+          - climate.ivan_termostat
+          - climate.pavla_termostat
+    - action: climate.set_preset_mode
+      data:
+        preset_mode: away
+      target:
+        entity_id: "{{ termostaty }}"
+    - action: climate.set_preset_mode
+      data:
+        preset_mode: none
+      target:
+        entity_id: "{{ termostaty }}"
     - action: automation.trigger
       data:
         skip_condition: true

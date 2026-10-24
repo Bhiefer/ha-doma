@@ -53,6 +53,25 @@ class YAMLValidationTests(unittest.TestCase):
             self.assertEqual(check.yaml_paths(ROOT), [ROOT / "configuration.yaml", ROOT / "new.yml"])
 
 
+class BoilerErrorTests(unittest.TestCase):
+    def test_error_states_and_recovery(self):
+        # Ztráta dat patří mezi chyby; po návratu jiného stavu se chyba zruší.
+        config = check.load_yaml(ROOT / "configuration.yaml")
+        entity = next(entity for block in config["template"]
+                      for entity in block.get("binary_sensor", [])
+                      if entity["name"] == "Topení Peletkový Kotel Chyba")
+        template = NativeEnvironment(undefined=jinja2.StrictUndefined).from_string(entity["state"])
+        for status, expected in (
+            ("MEMORY ALLARM", True), ("OFF", True), ("ALARM ACTIVE", True),
+            ("unknown", True), ("unavailable", True), ("", False),
+        ):
+            with self.subTest(status=status):
+                self.assertEqual(template.render(
+                    is_state=lambda entity_id, value: (
+                        entity_id == "sensor.kotel_peletkovy_status" and status == value
+                    )), expected)
+
+
 class BatteryDischargeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
