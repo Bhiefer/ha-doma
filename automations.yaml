@@ -1437,32 +1437,174 @@
   mode: single
 - id: '1767652230337'
   alias: Zigbee Evans - restart
-  description: ''
+  description: Jeden restart serveru přes SSH při výpadku bridge, se zámkem přes restart HA.
+  # Bridge _2 patří Evans. Stávající skript přes SSH restartuje celý server,
+  # takže obnova nezávisí na příjmu MQTT povelů procesem Zigbee2MQTT.
+  # Jeden pokus na výpadek výslovně požadoval uživatel; zámek se ukládá přes restart HA.
   triggers:
-  - entity_id:
-    - sensor.marek_teplomer_temperature
-    to:
-    - unavailable
-    trigger: state
-    for:
-      hours: 0
-      minutes: 10
-      seconds: 0
-  conditions:
-  - condition: state
-    entity_id: sensor.prodejna_recepce_teplomer_temperature
-    state:
-    - unavailable
-  - condition: state
-    entity_id: sensor.marek_teplomer_temperature
-    state:
-    - unavailable
+  - trigger: state
+    entity_id: binary_sensor.zigbee2mqtt_bridge_connection_state_2
+    to: null
+  - trigger: homeassistant
+    event: start
+    id: start_ha
+  - trigger: time_pattern
+    minutes: /1
+  variables:
+    bridge_entity: binary_sensor.zigbee2mqtt_bridge_connection_state_2
   actions:
-  - device_id: addfbbfaa93a433ef45e9f8251456b2e
-    domain: button
-    entity_id: f0b1276573c2b9ed0daad1013584f780
-    type: press
+  # Po startu necháme MQTT deset minut na připojení; minutová kontrola pokryje
+  # i již trvající nedostupnost po reloadu, který by samotný state trigger minul.
+  - if:
+    - condition: trigger
+      id: start_ha
+    then:
+    - delay: '00:10:00'
+  - choose:
+    # Krátké on při neúspěšné obnově nestačí k povolení dalšího restartu.
+    - conditions:
+      - condition: template
+        value_template: >-
+          {% set bridge = states[bridge_entity] %}
+          {{ bridge is not none and bridge.state == 'on'
+             and as_timestamp(now()) - as_timestamp(bridge.last_changed) >= 600
+             and is_state('input_boolean.zigbee_evans_obnova_pokus', 'on') }}
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.zigbee_evans_obnova_pokus
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: zigbee_evans_obnova
+    - conditions:
+      - condition: template
+        value_template: >-
+          {% set bridge = states[bridge_entity] %}
+          {{ bridge is not none and bridge.state in ['off', 'unknown', 'unavailable']
+             and as_timestamp(now()) - as_timestamp(bridge.last_changed) >= 600
+             and is_state('input_boolean.zigbee_evans_obnova_pokus', 'off') }}
+      sequence:
+      # Zamknout před voláním: chyba SSH ani restart HA nesmí vyvolat smyčku.
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.zigbee_evans_obnova_pokus
+      - action: persistent_notification.create
+        data:
+          notification_id: zigbee_evans_obnova
+          title: Zigbee Evans - výpadek bridge
+          message: >-
+            Bridge je nejméně deset minut nedostupný. Zkouším jediný restart
+            celého serveru Zigbee2MQTT přes SSH; další pokus se povolí až po deseti minutách
+            souvislého stavu on.
+      - condition: template
+        value_template: "{{ states(bridge_entity) in ['off', 'unknown', 'unavailable'] }}"
+      # Přímé volání počká na skript; jeho chyba nevynechá oznámení výsledku.
+      # Skript používá existující secrets a sudo /sbin/reboot, nikoli restart proxy.
+      - action: script.zigbee2mqtt_reboot
+        continue_on_error: true
+      - wait_template: "{{ is_state(bridge_entity, 'on') }}"
+        timeout: '00:05:00'
+        continue_on_timeout: true
+      - action: persistent_notification.create
+        data:
+          notification_id: zigbee_evans_obnova
+          title: Zigbee Evans - výsledek pokusu o obnovu
+          message: >-
+            {% if wait.completed and is_state(bridge_entity, 'on') %}
+              Bridge je opět připojený. Zámek dalších restartů zůstává aktivní
+              do deseti minut souvislého stavu on.
+            {% else %}
+              Návrat bridge se do pěti minut od ukončení skriptu nepotvrdil.
+              Další automatický restart je blokován. Zkontroluj SSH přístup,
+              server Zigbee2MQTT a MQTT broker.
+            {% endif %}
   mode: single
+  max_exceeded: silent
+- id: '1767652230338'
+  alias: Zigbee Doma - restart
+  description: Jeden restart serveru přes SSH při výpadku bridge, se zámkem přes restart HA.
+  # Bridge bez přípony _2 patří Doma (hbiefer/zb), server 10.0.0.58. Stávající skript přes SSH restartuje celý server,
+  # takže obnova nezávisí na příjmu MQTT povelů procesem Zigbee2MQTT.
+  # Jeden pokus na výpadek výslovně požadoval uživatel; zámek se ukládá přes restart HA.
+  triggers:
+  - trigger: state
+    entity_id: binary_sensor.zigbee2mqtt_bridge_connection_state
+    to: null
+  - trigger: homeassistant
+    event: start
+    id: start_ha
+  - trigger: time_pattern
+    minutes: /1
+  variables:
+    bridge_entity: binary_sensor.zigbee2mqtt_bridge_connection_state
+  actions:
+  # Po startu necháme MQTT deset minut na připojení; minutová kontrola pokryje
+  # i již trvající nedostupnost po reloadu, který by samotný state trigger minul.
+  - if:
+    - condition: trigger
+      id: start_ha
+    then:
+    - delay: '00:10:00'
+  - choose:
+    # Krátké on při neúspěšné obnově nestačí k povolení dalšího restartu.
+    - conditions:
+      - condition: template
+        value_template: >-
+          {% set bridge = states[bridge_entity] %}
+          {{ bridge is not none and bridge.state == 'on'
+             and as_timestamp(now()) - as_timestamp(bridge.last_changed) >= 600
+             and is_state('input_boolean.zigbee_doma_obnova_pokus', 'on') }}
+      sequence:
+      - action: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.zigbee_doma_obnova_pokus
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: zigbee_doma_obnova
+    - conditions:
+      - condition: template
+        value_template: >-
+          {% set bridge = states[bridge_entity] %}
+          {{ bridge is not none and bridge.state in ['off', 'unknown', 'unavailable']
+             and as_timestamp(now()) - as_timestamp(bridge.last_changed) >= 600
+             and is_state('input_boolean.zigbee_doma_obnova_pokus', 'off') }}
+      sequence:
+      # Zamknout před voláním: chyba SSH ani restart HA nesmí vyvolat smyčku.
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.zigbee_doma_obnova_pokus
+      - action: persistent_notification.create
+        data:
+          notification_id: zigbee_doma_obnova
+          title: Zigbee Doma - výpadek bridge
+          message: >-
+            Bridge je nejméně deset minut nedostupný. Zkouším jediný restart
+            celého serveru Zigbee2MQTT přes SSH; další pokus se povolí až po deseti minutách
+            souvislého stavu on.
+      - condition: template
+        value_template: "{{ states(bridge_entity) in ['off', 'unknown', 'unavailable'] }}"
+      # Přímé volání počká na skript; jeho chyba nevynechá oznámení výsledku.
+      # Skript používá existující secrets a sudo /sbin/reboot, nikoli restart proxy.
+      - action: script.zigbee2mqtt_doma_reboot
+        continue_on_error: true
+      - wait_template: "{{ is_state(bridge_entity, 'on') }}"
+        timeout: '00:05:00'
+        continue_on_timeout: true
+      - action: persistent_notification.create
+        data:
+          notification_id: zigbee_doma_obnova
+          title: Zigbee Doma - výsledek pokusu o obnovu
+          message: >-
+            {% if wait.completed and is_state(bridge_entity, 'on') %}
+              Bridge je opět připojený. Zámek dalších restartů zůstává aktivní
+              do deseti minut souvislého stavu on.
+            {% else %}
+              Návrat bridge se do pěti minut od ukončení skriptu nepotvrdil.
+              Další automatický restart je blokován. Zkontroluj SSH přístup,
+              server Zigbee2MQTT a MQTT broker.
+            {% endif %}
+  mode: single
+  max_exceeded: silent
 - id: '1768301069234'
   alias: M Květiny - denní report
   description: ''
