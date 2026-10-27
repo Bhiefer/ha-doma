@@ -1,0 +1,313 @@
+# Výřez UI dashboardu Evans, záložka Topení: první tři skupiny ovládacích karet.
+# Nasazeno přes editor dashboardu 27. 10. 2026; soubor se automaticky nenačítá.
+# Neaktivní ikona je průsvitně bílá, aktivní v modrém kolečku tmavší oranžová.
+# Na oranžové ploše zůstává ikona bílá; zásobník si zachovává stavové barvy.
+cards:
+- type: vertical-stack
+  cards:
+  - type: custom:bubble-card
+    card_type: separator
+    name: Peletkový kotel
+  - type: custom:bubble-card
+    card_type: climate
+    entity: climate.kotel_peletkovy_voda
+    styles: |-
+      :host {
+        --bubble-state-climate-heat-color: #E77910AA;
+      }
+      /* Neaktivní ikony jsou průsvitně bílé. Aktivita sleduje stejnou
+         podmínku jako oranžové pozadí Bubble Card, i při nečinném heat. */
+      .bubble-icon, .bubble-sub-button-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-icon,
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-sub-button-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      /* Oranžová patří jen do modrého kolečka; na oranžové ploše zůstává bílá. */
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+    sub_button:
+    - entity: sensor.kotel_peletkovy_real_power
+      show_state: true
+      show_background: false
+      show_name: false
+      show_icon: true
+      state_background: false
+    - entity: number.kotel_peletkovy_vykon
+      show_attribute: false
+      show_icon: false
+      show_background: false
+      show_name: true
+      name: /
+      show_last_changed: false
+      show_state: true
+    - name: HVAC modes menu
+      select_attribute: hvac_modes
+      state_background: false
+      show_arrow: false
+      show_name: false
+    name: Kotel
+    icon: mdi:heat-pump
+    show_attribute: true
+    attribute: current_temperature
+    show_icon: true
+    show_state: false
+    state_color: false
+    scrolling_effect: false
+    show_name: false
+    show_last_changed: false
+    card_layout: normal
+  - type: custom:bubble-card
+    card_type: button
+    button_type: state
+    entity: sensor.peletkovy_kotel_zasobnik_zbyva
+    styles: ":host{\n    --color-ok-icon: #226243 ;\n    --color-warning-icon: #E77910AA ;\n    --color-alert-icon: #b61b3a\
+      \ ;\n    --color-ok: #226243 ;\n    --color-warning: #E77910AA ;\n    --color-alert: #b61b3a ;\n    --color-bar: ${state\
+      \ > 50 ? 'var(--color-ok)'\n                   : state > 30 ? 'var(--color-warning)'\n                   : 'var(--color-alert)'}\
+      \ ;\n    --color-background: var(--bubble-button-main-background-color, var(--bubble-main-background-color, var(--background-color-2,\
+      \ var(--secondary-background-color))));\n    --color-notification-bubble: #b61b3a;\n}\n\nha-icon {\n  color: var(${\
+      \ state > 50 ? '--color-ok-icon':\n                state > 30 ? '--color-warning-icon' :\n                         \
+      \   '--color-alert-icon'}) \n            !important; }\n\n.bubble-button-card-container {\n    background: linear-gradient(\n\
+      \  to right, \n  var(--color-bar) 0%, \n  var(--color-bar) ${Math.round(state)}%, \n  var(--color-background) ${Math.round(state)}%,\n\
+      \  var(--color-background) 100%\n) !important;\n}\n\nha-card::after {\n  position: absolute;\n  top: -10px;\n  left:\
+      \ -10px;\n  padding: 0 10px;\n  border-radius: 999px;\n  border: 0px solid black;\n  color: #fff;\n  content: \"${Math.round(state)\
+      \ < 20 ? '!' : ''}\";\n  background: var(--color-notification-bubble);\n  display: block;\n}"
+    icon: mdi:stack-overflow
+    name: ''
+    sub_button:
+    - entity: sensor.kotel_peletkovy_status
+      show_attribute: false
+      show_state: true
+      show_icon: false
+      state_background: true
+      show_background: false
+    - entity: sensor.kotel_peletkovy_alarm
+      show_last_changed: false
+      show_state: true
+      show_icon: false
+      show_background: false
+    layout_options:
+      grid_columns: 2
+      grid_rows: 1
+    show_name: false
+- type: horizontal-stack
+  cards:
+  - type: custom:bubble-card
+    card_type: climate
+    entity: climate.kancelar_termostat
+    styles: |-
+      :host {
+        --bubble-state-climate-heat-color: #E77910AA;
+      }
+      /* Neaktivní ikony jsou průsvitně bílé. Aktivita sleduje stejnou
+         podmínku jako oranžové pozadí Bubble Card, i při nečinném heat. */
+      .bubble-icon, .bubble-sub-button-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-icon,
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-sub-button-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      /* Oranžová patří jen do modrého kolečka; na oranžové ploše zůstává bílá. */
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+    sub_button: []
+    show_attribute: true
+    show_state: false
+    show_last_changed: false
+    attribute: current_temperature
+    icon: mdi:chair-rolling
+    name: Kancelář
+    card_layout: normal
+    scrolling_effect: false
+    show_icon: false
+  - type: custom:bubble-card
+    card_type: climate
+    entity: climate.prodejna_recepce_termostat
+    styles: |-
+      :host {
+        --bubble-state-climate-heat-color: #E77910AA;
+      }
+      /* Neaktivní ikony jsou průsvitně bílé. Aktivita sleduje stejnou
+         podmínku jako oranžové pozadí Bubble Card, i při nečinném heat. */
+      .bubble-icon, .bubble-sub-button-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-icon,
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-sub-button-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      /* Oranžová patří jen do modrého kolečka; na oranžové ploše zůstává bílá. */
+      ha-card:has(.bubble-color-background[style*="--bubble-state-climate-heat-color"]) .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+    sub_button: []
+    show_attribute: true
+    show_state: false
+    show_last_changed: false
+    attribute: current_temperature
+    icon: mdi:cash-register
+    name: Prodejna
+    scrolling_effect: false
+    show_icon: false
+- square: false
+  type: grid
+  cards:
+  - type: custom:bubble-card
+    card_type: button
+    entity: input_boolean.topeni_ivan
+    icon: mdi:radiator
+    show_icon: true
+    scrolling_effect: false
+    name: Ivan
+    show_state: false
+    button_type: state
+    styles: |-
+      /* Vypnuto: průsvitná bílá. Zapnuto: tmavší oranžová jen v modrém kolečku. */
+      .bubble-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      .is-on .bubble-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      .is-on .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+      .bubble-button-background {
+        opacity: 1 !important;
+        background-color: ${state === 'on' ? '#E77910AA' : '#00000000'} !important;
+      }
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    sub_button:
+      main:
+      - entity: sensor.ivan_teplomer_teplota
+        show_state: true
+        show_icon: false
+        show_background: false
+      bottom: []
+  - type: custom:bubble-card
+    card_type: button
+    entity: input_boolean.topeni_pavla
+    icon: mdi:radiator
+    show_icon: true
+    scrolling_effect: false
+    name: Pavla
+    show_state: false
+    button_type: state
+    styles: |-
+      /* Vypnuto: průsvitná bílá. Zapnuto: tmavší oranžová jen v modrém kolečku. */
+      .bubble-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      .is-on .bubble-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      .is-on .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+      .bubble-button-background {
+        opacity: 1 !important;
+        background-color: ${state === 'on' ? '#E77910AA' : '#00000000'} !important;
+      }
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    sub_button:
+      main:
+      - entity: sensor.pavla_teplomer_teplota
+        show_icon: false
+        show_background: false
+        show_last_changed: false
+        show_state: true
+      bottom: []
+  - type: custom:bubble-card
+    card_type: button
+    entity: switch.laky_bojler_vypinac
+    icon: mdi:water-boiler
+    show_icon: true
+    scrolling_effect: false
+    name: Bojler
+    show_state: false
+    button_type: state
+    styles: |-
+      /* Vypnuto: průsvitná bílá. Zapnuto: tmavší oranžová jen v modrém kolečku. */
+      .bubble-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      .is-on .bubble-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      .is-on .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+      .bubble-button-background {
+        opacity: 1 !important;
+        background-color: ${state === 'on' ? '#E77910AA' : '#00000000'} !important;
+      }
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+    sub_button:
+      main:
+      - entity: sensor.laky_bojler_teplomer_temperature
+        show_last_changed: false
+        show_state: true
+        show_background: false
+        show_icon: false
+        scrolling_effect: false
+      bottom: []
+  - type: custom:bubble-card
+    card_type: button
+    entity: input_boolean.kotel_turbo
+    icon: mdi:fire-circle
+    show_icon: true
+    scrolling_effect: false
+    name: Oba kotle
+    show_state: false
+    button_type: state
+    styles: |-
+      /* Vypnuto: průsvitná bílá. Zapnuto: tmavší oranžová jen v modrém kolečku. */
+      .bubble-icon {
+        color: #fff !important;
+        opacity: 0.6 !important;
+      }
+      .is-on .bubble-icon {
+        color: #fff !important;
+        opacity: 1 !important;
+      }
+      .is-on .bubble-icon-container .bubble-icon {
+        color: #E77910AA !important;
+      }
+      .bubble-button-background {
+        opacity: 1 !important;
+        background-color: ${state === 'on' ? '#E77910AA' : '#00000000'} !important;
+      }
+    tap_action:
+      action: toggle
+    button_action:
+      tap_action:
+        action: toggle
+  columns: 2

@@ -31,3 +31,6 @@
 /.worktrees/
 __pycache__/
 secrets.yaml
+
+# Verzovaný výřez barev ovládacích karet UI dashboardu Evans.
+!/ui/evans-topeni-ovladani.yaml
